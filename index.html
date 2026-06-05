@@ -4,16 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RedKick</title>
-
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VDYDSJCG1H"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-VDYDSJCG1H');
-    </script>
-
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -43,6 +33,71 @@
             position: relative;
         }
 
+        /* ================================================================
+           شاشة التحميل
+           ================================================================ */
+        .loading-screen {
+            position: fixed; inset: 0; z-index: 2000;
+            background: #000;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+        .loading-screen.done {
+            opacity: 0; visibility: hidden; pointer-events: none;
+        }
+
+        .loading-logo {
+            width: 70px; height: 70px; border-radius: 18px;
+            overflow: hidden; margin-bottom: 28px;
+            animation: loadLogoPulse 1s ease-in-out infinite alternate;
+            box-shadow: 0 0 30px var(--accent-glow-strong);
+        }
+        .loading-logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        @keyframes loadLogoPulse {
+            0% { transform: scale(1); box-shadow: 0 0 20px var(--accent-glow); }
+            100% { transform: scale(1.08); box-shadow: 0 0 40px var(--accent-glow-strong); }
+        }
+
+        .loading-text {
+            font-size: 16px; font-weight: 700; color: var(--muted);
+            margin-bottom: 20px; letter-spacing: 1px;
+            animation: loadTextFade 1.5s ease-in-out infinite;
+        }
+        @keyframes loadTextFade { 0%,100%{opacity:0.4} 50%{opacity:1} }
+
+        .loading-bar-track {
+            width: 240px; height: 4px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 4px; overflow: hidden;
+            position: relative;
+        }
+        .loading-bar-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #c62828, var(--accent), var(--accent-light));
+            border-radius: 4px;
+            animation: barFill 3s ease-in-out forwards;
+            box-shadow: 0 0 12px var(--accent-glow-strong);
+        }
+        @keyframes barFill {
+            0% { width: 0%; }
+            15% { width: 20%; }
+            30% { width: 35%; }
+            50% { width: 55%; }
+            70% { width: 75%; }
+            85% { width: 90%; }
+            100% { width: 100%; }
+        }
+
+        .loading-percent {
+            margin-top: 12px; font-size: 13px; font-weight: 900;
+            color: var(--accent-light); letter-spacing: 2px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ================================================================
+           خلفية
+           ================================================================ */
         .bg-grid {
             position: fixed; inset: 0;
             background-image:
@@ -79,36 +134,33 @@
         .screen.hidden { opacity: 0; transform: scale(0.95); pointer-events: none; }
         .screen.slide-out { opacity: 0; transform: translateY(-60px) scale(1.03); pointer-events: none; }
 
-        .intro-curtain {
-            position: fixed; inset: 0; z-index: 1000;
-            background: #000;
-            animation: curtainOut 0.8s ease-in-out 0.3s both;
-        }
-        @keyframes curtainOut { 0%{opacity:1} 100%{opacity:0;pointer-events:none} }
-
+        /* ================================================================
+           شاشة البداية
+           ================================================================ */
         .start-content {
             display: flex; flex-direction: column; align-items: center;
             gap: 0; position: relative;
         }
 
         .logo-stage {
-            position: relative; width: 320px; height: 320px;
+            position: relative; width: 300px; height: 300px;
             display: flex; align-items: center; justify-content: center;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .shockwave {
-            position: absolute; width: 100px; height: 100px;
+            position: absolute; width: 80px; height: 80px;
             border-radius: 50%; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             border: 2px solid var(--accent); opacity: 0;
         }
-        .shockwave.s1 { animation: shockExpand 1.5s ease-out 0.8s both; }
-        .shockwave.s2 { animation: shockExpand 1.8s ease-out 1s both; }
-        .shockwave.s3 { animation: shockExpand 2s ease-out 1.2s both; }
+        .shockwave.s1 { animation: shockExpand 1.2s ease-out 0.5s both; }
+        .shockwave.s2 { animation: shockExpand 1.5s ease-out 0.7s both; }
+        .shockwave.s3 { animation: shockExpand 1.8s ease-out 0.9s both; }
+        .shockwave.s4 { animation: shockExpand 2s ease-out 1.1s both; }
         @keyframes shockExpand {
-            0% { width: 80px; height: 80px; opacity: 0.8; border-width: 3px; }
-            100% { width: 400px; height: 400px; opacity: 0; border-width: 0.5px; }
+            0% { width: 60px; height: 60px; opacity: 0.9; border-width: 3px; }
+            100% { width: 500px; height: 500px; opacity: 0; border-width: 0.5px; }
         }
 
         .orbit-ring {
@@ -116,33 +168,33 @@
             border: 1px solid rgba(229,57,53,0.08);
             animation: orbitSpin linear infinite;
         }
-        .orbit-ring.r1 { width: 200px; height: 200px; border-color: rgba(229,57,53,0.15); animation-duration: 10s; }
-        .orbit-ring.r2 { width: 250px; height: 250px; border-color: rgba(229,57,53,0.1); animation-duration: 16s; animation-direction: reverse; }
-        .orbit-ring.r3 { width: 300px; height: 300px; border-color: rgba(229,57,53,0.05); animation-duration: 22s; }
+        .orbit-ring.r1 { width: 180px; height: 180px; border-color: rgba(229,57,53,0.15); animation-duration: 8s; }
+        .orbit-ring.r2 { width: 220px; height: 220px; border-color: rgba(229,57,53,0.1); animation-duration: 14s; animation-direction: reverse; }
+        .orbit-ring.r3 { width: 270px; height: 270px; border-color: rgba(229,57,53,0.05); animation-duration: 20s; }
         @keyframes orbitSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
 
         .orbit-dot {
-            position: absolute; width: 6px; height: 6px;
+            position: absolute; width: 5px; height: 5px;
             background: var(--accent); border-radius: 50%;
-            box-shadow: 0 0 12px var(--accent-glow-strong), 0 0 4px var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow-strong), 0 0 3px var(--accent);
         }
-        .orbit-ring.r1 .orbit-dot { top: -3px; left: 50%; margin-left: -3px; }
-        .orbit-ring.r2 .orbit-dot { bottom: -3px; right: 25%; }
-        .orbit-ring.r3 .orbit-dot { top: 35%; left: -3px; }
+        .orbit-ring.r1 .orbit-dot { top: -2.5px; left: 50%; margin-left: -2.5px; }
+        .orbit-ring.r2 .orbit-dot { bottom: -2.5px; right: 25%; }
+        .orbit-ring.r3 .orbit-dot { top: 35%; left: -2.5px; }
 
         .lightning {
             position: absolute; width: 100%; height: 100%;
             top: 0; left: 0; pointer-events: none; opacity: 0;
         }
-        .lightning.l1 { animation: lightningFlash 4s ease-in-out 1.5s infinite; }
-        .lightning.l2 { animation: lightningFlash 5s ease-in-out 2.5s infinite; }
+        .lightning.l1 { animation: lightningFlash 3s ease-in-out 1.2s infinite; }
+        .lightning.l2 { animation: lightningFlash 4s ease-in-out 2s infinite; }
         @keyframes lightningFlash {
-            0%,90%,100%{opacity:0} 92%{opacity:0.8} 94%{opacity:0} 96%{opacity:0.5} 98%{opacity:0}
+            0%,88%,92%,96%,100%{opacity:0} 89%{opacity:0.9} 91%{opacity:0} 93%{opacity:0.6} 95%{opacity:0} 97%{opacity:0.3}
         }
         .lightning svg { width: 100%; height: 100%; }
         .lightning path {
             fill: none; stroke: var(--accent); stroke-width: 1.5;
-            filter: drop-shadow(0 0 6px var(--accent-glow-strong));
+            filter: drop-shadow(0 0 8px var(--accent-glow-strong));
         }
 
         .burst-particle {
@@ -150,103 +202,119 @@
             background: var(--accent); top: 50%; left: 50%;
             opacity: 0; pointer-events: none;
         }
-        .bp1{width:4px;height:4px;animation:burst1 1s ease-out .7s both}
-        .bp2{width:3px;height:3px;animation:burst2 1.2s ease-out .75s both}
-        .bp3{width:5px;height:5px;animation:burst3 1.1s ease-out .65s both}
-        .bp4{width:3px;height:3px;animation:burst4 1.3s ease-out .8s both}
-        .bp5{width:4px;height:4px;animation:burst5 1s ease-out .72s both}
-        .bp6{width:2px;height:2px;animation:burst6 1.4s ease-out .85s both}
-        .bp7{width:4px;height:4px;animation:burst7 1.1s ease-out .68s both}
-        .bp8{width:3px;height:3px;animation:burst8 1.2s ease-out .78s both}
-        .bp9{width:5px;height:5px;animation:burst9 1s ease-out .82s both}
-        .bp10{width:3px;height:3px;animation:burst10 1.3s ease-out .9s both}
-        .bp11{width:4px;height:4px;animation:burst11 1.1s ease-out .66s both}
-        .bp12{width:2px;height:2px;animation:burst12 1.4s ease-out .88s both}
+        .bp1{width:4px;height:4px;animation:burst1 .9s ease-out .4s both}
+        .bp2{width:3px;height:3px;animation:burst2 1.1s ease-out .45s both}
+        .bp3{width:5px;height:5px;animation:burst3 1s ease-out .35s both}
+        .bp4{width:3px;height:3px;animation:burst4 1.2s ease-out .5s both}
+        .bp5{width:4px;height:4px;animation:burst5 .9s ease-out .42s both}
+        .bp6{width:2px;height:2px;animation:burst6 1.3s ease-out .55s both}
+        .bp7{width:4px;height:4px;animation:burst7 1s ease-out .38s both}
+        .bp8{width:3px;height:3px;animation:burst8 1.1s ease-out .48s both}
+        .bp9{width:5px;height:5px;animation:burst9 .9s ease-out .52s both}
+        .bp10{width:3px;height:3px;animation:burst10 1.2s ease-out .58s both}
+        .bp11{width:4px;height:4px;animation:burst11 1s ease-out .36s both}
+        .bp12{width:2px;height:2px;animation:burst12 1.3s ease-out .53s both}
 
-        @keyframes burst1{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(120px,-80px);opacity:0}}
-        @keyframes burst2{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(-100px,-110px);opacity:0}}
-        @keyframes burst3{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(80px,120px);opacity:0}}
-        @keyframes burst4{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(-130px,60px);opacity:0}}
-        @keyframes burst5{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(60px,-130px);opacity:0}}
-        @keyframes burst6{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(-80px,-60px);opacity:0}}
-        @keyframes burst7{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(140px,40px);opacity:0}}
-        @keyframes burst8{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(-50px,140px);opacity:0}}
-        @keyframes burst9{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(110px,-120px);opacity:0}}
-        @keyframes burst10{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(-140px,-30px);opacity:0}}
-        @keyframes burst11{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(30px,150px);opacity:0}}
-        @keyframes burst12{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(-110px,100px);opacity:0}}
+        @keyframes burst1{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(130px,-90px);opacity:0}}
+        @keyframes burst2{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(-110px,-120px);opacity:0}}
+        @keyframes burst3{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(90px,130px);opacity:0}}
+        @keyframes burst4{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(-140px,70px);opacity:0}}
+        @keyframes burst5{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(70px,-140px);opacity:0}}
+        @keyframes burst6{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(-90px,-70px);opacity:0}}
+        @keyframes burst7{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(150px,50px);opacity:0}}
+        @keyframes burst8{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(-60px,150px);opacity:0}}
+        @keyframes burst9{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(120px,-130px);opacity:0}}
+        @keyframes burst10{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(-150px,-40px);opacity:0}}
+        @keyframes burst11{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(40px,160px);opacity:0}}
+        @keyframes burst12{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(-120px,110px);opacity:0}}
 
         .logo-flash {
-            position: absolute; width: 120px; height: 120px;
-            border-radius: 28px; top: 50%; left: 50%;
+            position: absolute; width: 90px; height: 90px;
+            border-radius: 22px; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             background: var(--accent); z-index: 1; opacity: 0;
-            animation: flashBurst 1s ease-out 0.6s both; filter: blur(30px);
+            animation: flashBurst 0.8s ease-out 0.3s both; filter: blur(30px);
         }
         @keyframes flashBurst {
-            0%{opacity:1;transform:translate(-50%,-50%) scale(0.3)}
-            30%{opacity:0.9;transform:translate(-50%,-50%) scale(1.5)}
-            100%{opacity:0;transform:translate(-50%,-50%) scale(3)}
+            0%{opacity:1;transform:translate(-50%,-50%) scale(0.2)}
+            25%{opacity:1;transform:translate(-50%,-50%) scale(2)}
+            100%{opacity:0;transform:translate(-50%,-50%) scale(4)}
         }
 
         .logo-aura {
-            position: absolute; width: 140px; height: 140px;
-            border-radius: 30px; top: 50%; left: 50%;
+            position: absolute; width: 110px; height: 110px;
+            border-radius: 24px; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            background: radial-gradient(circle, rgba(229,57,53,0.3) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(229,57,53,0.35) 0%, transparent 70%);
             z-index: 0; opacity: 0;
-            animation: auraIn 0.6s ease-out 1.2s both, auraPulse 3s ease-in-out 1.8s infinite;
+            animation: auraIn 0.5s ease-out 0.8s both, auraPulse 2.5s ease-in-out 1.3s infinite;
         }
-        @keyframes auraIn{from{opacity:0;transform:translate(-50%,-50%) scale(0.5)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-        @keyframes auraPulse{0%,100%{opacity:0.6;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}}
+        @keyframes auraIn{from{opacity:0;transform:translate(-50%,-50%) scale(0.3)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+        @keyframes auraPulse{0%,100%{opacity:0.5;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}}
 
+        /* الشعار - أصغر */
         .logo-img-wrapper {
-            position: relative; width: 110px; height: 110px; border-radius: 26px;
+            position: relative; width: 85px; height: 85px; border-radius: 20px;
             overflow: hidden; z-index: 2;
             box-shadow: 0 0 0 rgba(229,57,53,0);
-            animation: logoSlam 0.6s cubic-bezier(0.2,1.2,0.4,1) 0.5s both, logoBreath 4s ease-in-out 1.5s infinite;
+            animation: logoSlam 0.7s cubic-bezier(0.15,1.3,0.4,1) 0.2s both,
+                       logoBreath 3.5s ease-in-out 1.2s infinite;
         }
         @keyframes logoSlam {
-            0%{opacity:0;transform:scale(3) rotate(-20deg);filter:brightness(3);box-shadow:0 0 80px rgba(229,57,53,0.8)}
-            50%{filter:brightness(1.5)}
-            70%{transform:scale(0.9) rotate(2deg)}
-            85%{transform:scale(1.05) rotate(-1deg)}
+            0%{opacity:0;transform:scale(4) rotate(-30deg);filter:brightness(4);box-shadow:0 0 100px rgba(229,57,53,1)}
+            40%{filter:brightness(2)}
+            60%{transform:scale(0.85) rotate(3deg);filter:brightness(1.2)}
+            80%{transform:scale(1.08) rotate(-2deg)}
             100%{opacity:1;transform:scale(1) rotate(0deg);filter:brightness(1);box-shadow:0 8px 40px var(--accent-glow-strong)}
         }
-        @keyframes logoBreath{0%,100%{box-shadow:0 8px 40px var(--accent-glow),0 0 60px rgba(229,57,53,0.1);transform:scale(1)}50%{box-shadow:0 8px 50px var(--accent-glow-strong),0 0 90px var(--accent-glow);transform:scale(1.04)}}
+        @keyframes logoBreath{0%,100%{box-shadow:0 8px 40px var(--accent-glow),0 0 60px rgba(229,57,53,0.1);transform:scale(1)}50%{box-shadow:0 8px 50px var(--accent-glow-strong),0 0 100px var(--accent-glow);transform:scale(1.05)}}
         .logo-img-wrapper img{width:100%;height:100%;object-fit:cover;display:block}
+
+        /* رجّة الشاشة عند ظهور الشعار */
+        .screen-shake {
+            animation: screenShake 0.5s ease-out 0.2s both;
+        }
+        @keyframes screenShake {
+            0%{transform:translate(0,0)}
+            15%{transform:translate(-6px,4px)}
+            30%{transform:translate(5px,-3px)}
+            45%{transform:translate(-4px,2px)}
+            60%{transform:translate(3px,-2px)}
+            75%{transform:translate(-1px,1px)}
+            100%{transform:translate(0,0)}
+        }
 
         .app-name {
             font-size: 52px; font-weight: 900; letter-spacing: -1px; line-height: 1;
             position: relative; margin-bottom: 14px;
-            animation: nameSlam 0.7s cubic-bezier(0.2,1.2,0.4,1) 1s both;
+            animation: nameSlam 0.6s cubic-bezier(0.15,1.3,0.4,1) 0.7s both;
         }
         @keyframes nameSlam {
-            0%{opacity:0;transform:translateY(40px) scale(1.3);letter-spacing:15px;filter:blur(8px)}
-            60%{filter:blur(0)}
-            80%{transform:translateY(-3px) scale(0.98);letter-spacing:-2px}
+            0%{opacity:0;transform:translateY(50px) scale(1.4);letter-spacing:20px;filter:blur(10px)}
+            50%{filter:blur(0)}
+            75%{transform:translateY(-4px) scale(0.97);letter-spacing:-3px}
             100%{opacity:1;transform:translateY(0) scale(1);letter-spacing:-1px}
         }
         .app-name span{color:var(--accent)}
         .app-name::before,.app-name::after{content:attr(data-text);position:absolute;top:0;left:0;right:0;overflow:hidden}
-        .app-name::before{color:#ff0000;z-index:-1;animation:glitch1 3s ease-in-out 1.8s infinite}
-        .app-name::after{color:#00ffff;z-index:-2;animation:glitch2 3s ease-in-out 1.8s infinite}
-        @keyframes glitch1{0%,88%,92%,96%,100%{clip-path:inset(0 0 0 0);transform:translate(0)}89%{clip-path:inset(20% 0 40% 0);transform:translate(-4px,2px)}93%{clip-path:inset(60% 0 10% 0);transform:translate(3px,-1px)}97%{clip-path:inset(30% 0 50% 0);transform:translate(-2px,1px)}}
-        @keyframes glitch2{0%,87%,91%,95%,100%{clip-path:inset(0 0 0 0);transform:translate(0)}88%{clip-path:inset(50% 0 20% 0);transform:translate(3px,-2px)}92%{clip-path:inset(10% 0 70% 0);transform:translate(-4px,1px)}96%{clip-path:inset(40% 0 30% 0);transform:translate(2px,-1px)}}
+        .app-name::before{color:#ff0000;z-index:-1;animation:glitch1 2.5s ease-in-out 1.5s infinite}
+        .app-name::after{color:#00ffff;z-index:-2;animation:glitch2 2.5s ease-in-out 1.5s infinite}
+        @keyframes glitch1{0%,85%,89%,93%,97%,100%{clip-path:inset(0 0 0 0);transform:translate(0)}86%{clip-path:inset(15% 0 45% 0);transform:translate(-5px,3px)}90%{clip-path:inset(55% 0 15% 0);transform:translate(4px,-2px)}94%{clip-path:inset(25% 0 55% 0);transform:translate(-3px,2px)}98%{clip-path:inset(65% 0 5% 0);transform:translate(2px,-1px)}}
+        @keyframes glitch2{0%,84%,88%,92%,96%,100%{clip-path:inset(0 0 0 0);transform:translate(0)}85%{clip-path:inset(45% 0 25% 0);transform:translate(4px,-3px)}89%{clip-path:inset(5% 0 65% 0);transform:translate(-5px,2px)}93%{clip-path:inset(35% 0 35% 0);transform:translate(3px,-1px)}97%{clip-path:inset(75% 0 5% 0);transform:translate(-2px,1px)}}
 
         .divider-glow {
             width: 60px; height: 2px;
             background: linear-gradient(90deg, transparent, var(--accent), transparent);
             border-radius: 1px; margin-bottom: 14px;
-            animation: dividerIn 0.6s ease-out 1.3s both, dividerPulse 3s ease-in-out 1.9s infinite;
+            animation: dividerIn 0.5s ease-out 1s both, dividerPulse 2.5s ease-in-out 1.5s infinite;
         }
         @keyframes dividerIn{from{width:0;opacity:0}to{width:60px;opacity:1}}
-        @keyframes dividerPulse{0%,100%{opacity:0.5;width:60px}50%{opacity:1;width:80px}}
+        @keyframes dividerPulse{0%,100%{opacity:0.4;width:60px}50%{opacity:1;width:90px}}
 
         .app-desc {
             color: var(--muted); font-size: 16px; text-align: center;
             max-width: 300px; line-height: 1.7;
-            animation: descIn 0.6s ease-out 1.4s both; margin-bottom: 36px;
+            animation: descIn 0.5s ease-out 1.1s both; margin-bottom: 36px;
         }
         @keyframes descIn{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
 
@@ -257,9 +325,9 @@
             display: flex; align-items: center; justify-content: center;
             z-index: 1; transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
             -webkit-tap-highlight-color: transparent;
-            animation: btnSlam 0.7s cubic-bezier(0.2,1.2,0.4,1) 1.6s both;
+            animation: btnSlam 0.7s cubic-bezier(0.15,1.3,0.4,1) 1.3s both;
         }
-        @keyframes btnSlam{0%{opacity:0;transform:translateY(30px) scale(0.6);filter:brightness(2)}60%{filter:brightness(1)}80%{transform:translateY(-3px) scale(1.04)}100%{opacity:1;transform:translateY(0) scale(1)}}
+        @keyframes btnSlam{0%{opacity:0;transform:translateY(35px) scale(0.5);filter:brightness(3)}50%{filter:brightness(1.5)}75%{transform:translateY(-4px) scale(1.06)}100%{opacity:1;transform:translateY(0) scale(1)}}
         .btn-start .btn-bg{position:absolute;inset:0;border-radius:16px;background:linear-gradient(135deg,#c62828,var(--accent),var(--accent-light),#ff8a80);background-size:300% 300%;animation:gradientShift 4s ease-in-out infinite;z-index:-2}
         @keyframes gradientShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
         .btn-start .btn-border{position:absolute;inset:-2px;border-radius:18px;background:linear-gradient(135deg,var(--accent),#ff8a80,var(--accent-light),var(--accent));background-size:300% 300%;animation:gradientShift 4s ease-in-out infinite;z-index:-3;opacity:0.6;filter:blur(6px)}
@@ -272,11 +340,14 @@
         .btn-start:active{transform:translateY(1px) scale(0.97)}
         .btn-start .btn-text{position:relative;z-index:1;text-shadow:0 2px 8px rgba(0,0,0,0.3)}
 
-        .start-hint{margin-top:20px;color:var(--muted);font-size:13px;animation:hintIn 0.6s ease-out 2s both;display:flex;align-items:center;gap:6px}
+        .start-hint{margin-top:20px;color:var(--muted);font-size:13px;animation:hintIn 0.6s ease-out 1.7s both;display:flex;align-items:center;gap:6px}
         .start-hint i{animation:hintPulse 2s ease-in-out infinite}
         @keyframes hintIn{from{opacity:0}to{opacity:0.5}}
         @keyframes hintPulse{0%,100%{opacity:0.3}50%{opacity:1}}
 
+        /* ================================================================
+           شاشة الرابط
+           ================================================================ */
         .container{width:100%;max-width:520px;padding:20px}
         .card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:36px 32px;position:relative;overflow:hidden;animation:cardIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both}
         @keyframes cardIn{from{opacity:0;transform:translateY(20px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
@@ -373,11 +444,11 @@
         @media(max-width:480px){
             .card{padding:28px 18px}
             .app-name{font-size:40px}
-            .logo-stage{width:260px;height:260px}
-            .logo-img-wrapper{width:90px;height:90px;border-radius:20px}
-            .orbit-ring.r1{width:170px;height:170px}
-            .orbit-ring.r2{width:210px;height:210px}
-            .orbit-ring.r3{width:250px;height:250px}
+            .logo-stage{width:250px;height:250px}
+            .logo-img-wrapper{width:70px;height:70px;border-radius:16px}
+            .orbit-ring.r1{width:150px;height:150px}
+            .orbit-ring.r2{width:190px;height:190px}
+            .orbit-ring.r3{width:230px;height:230px}
             .btn-start{padding:16px 56px;font-size:20px}
             .saved-card{padding:20px 16px}
             .whatsapp-fab{width:52px;height:52px;font-size:26px;bottom:20px;left:20px}
@@ -388,23 +459,36 @@
 </head>
 <body>
 
-    <div class="intro-curtain"></div>
+    <!-- شاشة التحميل -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-logo">
+            <img src="https://z-cdn-media.chatglm.cn/files/4667b5ab-2a0a-4537-a7fa-56154f5c352f.png?auth_key=1880614056-5b68869a69904016bad8f58f2268eaf8-0-73ba7132285b2a810c1d8f49e39889d8" alt="RedKick">
+        </div>
+        <div class="loading-text">جارٍ التحميل</div>
+        <div class="loading-bar-track">
+            <div class="loading-bar-fill" id="loadingBarFill"></div>
+        </div>
+        <div class="loading-percent" id="loadingPercent">0%</div>
+    </div>
+
     <div class="bg-grid"></div>
     <div class="bg-blob one"></div>
     <div class="bg-blob two"></div>
     <div class="particles" id="particles"></div>
 
+    <!-- شاشة البداية -->
     <section class="screen" id="startScreen">
         <div class="start-content">
             <div class="logo-stage">
                 <div class="shockwave s1"></div>
                 <div class="shockwave s2"></div>
                 <div class="shockwave s3"></div>
+                <div class="shockwave s4"></div>
                 <div class="orbit-ring r1"><div class="orbit-dot"></div></div>
                 <div class="orbit-ring r2"><div class="orbit-dot"></div></div>
                 <div class="orbit-ring r3"><div class="orbit-dot"></div></div>
-                <div class="lightning l1"><svg viewBox="0 0 320 320"><path d="M160 40 L170 90 L155 95 L175 150 L160 155 L185 220 L165 215 L180 280" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                <div class="lightning l2"><svg viewBox="0 0 320 320"><path d="M280 100 L230 130 L235 145 L180 160 L185 170 L120 190 L130 195 L60 220" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                <div class="lightning l1"><svg viewBox="0 0 300 300"><path d="M150 30 L162 85 L145 90 L168 150 L152 155 L178 225 L158 220 L172 290" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                <div class="lightning l2"><svg viewBox="0 0 300 300"><path d="M270 90 L215 120 L220 138 L165 155 L170 165 L105 188 L118 193 L45 220" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
                 <div class="burst-particle bp1"></div><div class="burst-particle bp2"></div><div class="burst-particle bp3"></div><div class="burst-particle bp4"></div><div class="burst-particle bp5"></div><div class="burst-particle bp6"></div><div class="burst-particle bp7"></div><div class="burst-particle bp8"></div><div class="burst-particle bp9"></div><div class="burst-particle bp10"></div><div class="burst-particle bp11"></div><div class="burst-particle bp12"></div>
                 <div class="logo-flash"></div>
                 <div class="logo-aura"></div>
@@ -422,6 +506,7 @@
         </div>
     </section>
 
+    <!-- شاشة الرابط -->
     <section class="screen hidden" id="mainScreen">
         <main class="container">
             <div class="card">
@@ -474,6 +559,36 @@
     <div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg">تم النسخ</span></div>
 
     <script>
+        // === شاشة التحميل ===
+        const loadingScreen = document.getElementById('loadingScreen');
+        const loadingPercent = document.getElementById('loadingPercent');
+        let loadProgress = 0;
+        const loadInterval = setInterval(function() {
+            // محاكاة تقدم غير منتظم
+            if (loadProgress < 30) loadProgress += Math.random() * 4 + 2;
+            else if (loadProgress < 60) loadProgress += Math.random() * 3 + 1;
+            else if (loadProgress < 85) loadProgress += Math.random() * 2 + 0.5;
+            else if (loadProgress < 95) loadProgress += Math.random() * 1 + 0.3;
+            else loadProgress += 0.5;
+
+            if (loadProgress >= 100) {
+                loadProgress = 100;
+                clearInterval(loadInterval);
+                loadingPercent.textContent = '100%';
+                setTimeout(function() {
+                    loadingScreen.classList.add('done');
+                    // إضافة رجّة للشاشة عند ظهور المحتوى
+                    document.getElementById('startScreen').classList.add('screen-shake');
+                    setTimeout(function() {
+                        document.getElementById('startScreen').classList.remove('screen-shake');
+                    }, 600);
+                }, 300);
+            } else {
+                loadingPercent.textContent = Math.floor(loadProgress) + '%';
+            }
+        }, 50);
+
+        // === العناصر ===
         const startScreen=document.getElementById('startScreen');
         const mainScreen=document.getElementById('mainScreen');
         const startBtn=document.getElementById('startBtn');
