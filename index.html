@@ -33,6 +33,7 @@
             position: relative;
         }
 
+        /* === خلفية === */
         .bg-grid {
             position: fixed; inset: 0;
             background-image:
@@ -41,10 +42,7 @@
             background-size: 60px 60px;
             animation: gridMove 20s linear infinite;
         }
-        @keyframes gridMove {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(60px, 60px); }
-        }
+        @keyframes gridMove { 0%{transform:translate(0,0)} 100%{transform:translate(60px,60px)} }
 
         .bg-blob {
             position: fixed; width: 500px; height: 500px;
@@ -62,40 +60,248 @@
             background: var(--accent); border-radius: 50%;
             opacity: 0; animation: particleFade 4s ease-in-out infinite;
         }
-        @keyframes particleFade {
-            0%,100%{opacity:0;transform:translateY(0)} 50%{opacity:0.35;transform:translateY(-30px)}
-        }
+        @keyframes particleFade { 0%,100%{opacity:0;transform:translateY(0)} 50%{opacity:0.35;transform:translateY(-30px)} }
 
         .screen {
             position: fixed; inset: 0;
             display: flex; align-items: center; justify-content: center;
-            z-index: 1; transition: opacity 0.5s ease, transform 0.5s ease;
+            z-index: 1; transition: opacity 0.6s ease, transform 0.6s ease;
         }
         .screen.hidden { opacity: 0; transform: scale(0.95); pointer-events: none; }
-        .screen.slide-out { opacity: 0; transform: translateY(-40px) scale(1.02); pointer-events: none; }
+        .screen.slide-out { opacity: 0; transform: translateY(-60px) scale(1.03); pointer-events: none; }
+
+        /* ================================================================
+           شاشة البداية - الدخولية الخارقة
+           ================================================================ */
+
+        /* غطاء بداية أسود يختفي */
+        .intro-curtain {
+            position: fixed; inset: 0; z-index: 1000;
+            background: #000;
+            animation: curtainOut 0.8s ease-in-out 0.3s both;
+        }
+        @keyframes curtainOut {
+            0% { opacity: 1; }
+            100% { opacity: 0; pointer-events: none; }
+        }
 
         .start-content {
             display: flex; flex-direction: column; align-items: center;
-            gap: 28px; animation: fadeInUp 0.8s ease-out;
+            gap: 0; position: relative;
         }
-        @keyframes fadeInUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
 
-        .logo-img-wrapper {
-            position: relative; width: 140px; height: 140px; border-radius: 32px;
-            overflow: hidden;
-            box-shadow: 0 8px 40px var(--accent-glow-strong), 0 0 80px var(--accent-glow);
-            animation: logoPulse 3s ease-in-out infinite;
+        /* === منطقة الشعار مع التأثيرات === */
+        .logo-stage {
+            position: relative;
+            width: 320px; height: 320px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 24px;
         }
-        @keyframes logoPulse {
-            0%,100%{box-shadow:0 8px 40px var(--accent-glow),0 0 80px rgba(229,57,53,0.15)}
-            50%{box-shadow:0 8px 50px var(--accent-glow-strong),0 0 100px var(--accent-glow)}
+
+        /* موجة صدمة تخرج من الشعار */
+        .shockwave {
+            position: absolute; width: 100px; height: 100px;
+            border-radius: 50%; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px solid var(--accent);
+            opacity: 0;
+        }
+        .shockwave.s1 { animation: shockExpand 1.5s ease-out 0.8s both; }
+        .shockwave.s2 { animation: shockExpand 1.8s ease-out 1s both; }
+        .shockwave.s3 { animation: shockExpand 2s ease-out 1.2s both; }
+        @keyframes shockExpand {
+            0% { width: 80px; height: 80px; opacity: 0.8; border-width: 3px; }
+            100% { width: 400px; height: 400px; opacity: 0; border-width: 0.5px; }
+        }
+
+        /* حلقات مدارية */
+        .orbit-ring {
+            position: absolute; border-radius: 50%;
+            border: 1px solid rgba(229,57,53,0.08);
+            animation: orbitSpin linear infinite;
+        }
+        .orbit-ring.r1 { width: 200px; height: 200px; border-color: rgba(229,57,53,0.15); animation-duration: 10s; }
+        .orbit-ring.r2 { width: 250px; height: 250px; border-color: rgba(229,57,53,0.1); animation-duration: 16s; animation-direction: reverse; }
+        .orbit-ring.r3 { width: 300px; height: 300px; border-color: rgba(229,57,53,0.05); animation-duration: 22s; }
+        @keyframes orbitSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+        .orbit-dot {
+            position: absolute; width: 6px; height: 6px;
+            background: var(--accent); border-radius: 50%;
+            box-shadow: 0 0 12px var(--accent-glow-strong), 0 0 4px var(--accent);
+        }
+        .orbit-ring.r1 .orbit-dot { top: -3px; left: 50%; margin-left: -3px; }
+        .orbit-ring.r2 .orbit-dot { bottom: -3px; right: 25%; }
+        .orbit-ring.r3 .orbit-dot { top: 35%; left: -3px; }
+
+        /* برق حول الشعار */
+        .lightning {
+            position: absolute; width: 100%; height: 100%;
+            top: 0; left: 0; pointer-events: none;
+            opacity: 0;
+        }
+        .lightning.l1 { animation: lightningFlash 4s ease-in-out 1.5s infinite; }
+        .lightning.l2 { animation: lightningFlash 5s ease-in-out 2.5s infinite; }
+        @keyframes lightningFlash {
+            0%,90%,100% { opacity: 0; }
+            92% { opacity: 0.8; }
+            94% { opacity: 0; }
+            96% { opacity: 0.5; }
+            98% { opacity: 0; }
+        }
+        .lightning svg { width: 100%; height: 100%; }
+        .lightning path {
+            fill: none; stroke: var(--accent); stroke-width: 1.5;
+            filter: drop-shadow(0 0 6px var(--accent-glow-strong));
+        }
+
+        /* انفجار جسيمات */
+        .burst-particle {
+            position: absolute; border-radius: 50%;
+            background: var(--accent);
+            top: 50%; left: 50%;
+            opacity: 0; pointer-events: none;
+        }
+        .bp1 { width: 4px; height: 4px; animation: burst1 1s ease-out 0.7s both; }
+        .bp2 { width: 3px; height: 3px; animation: burst2 1.2s ease-out 0.75s both; }
+        .bp3 { width: 5px; height: 5px; animation: burst3 1.1s ease-out 0.65s both; }
+        .bp4 { width: 3px; height: 3px; animation: burst4 1.3s ease-out 0.8s both; }
+        .bp5 { width: 4px; height: 4px; animation: burst5 1s ease-out 0.72s both; }
+        .bp6 { width: 2px; height: 2px; animation: burst6 1.4s ease-out 0.85s both; }
+        .bp7 { width: 4px; height: 4px; animation: burst7 1.1s ease-out 0.68s both; }
+        .bp8 { width: 3px; height: 3px; animation: burst8 1.2s ease-out 0.78s both; }
+        .bp9 { width: 5px; height: 5px; animation: burst9 1s ease-out 0.82s both; }
+        .bp10 { width: 3px; height: 3px; animation: burst10 1.3s ease-out 0.9s both; }
+        .bp11 { width: 4px; height: 4px; animation: burst11 1.1s ease-out 0.66s both; }
+        .bp12 { width: 2px; height: 2px; animation: burst12 1.4s ease-out 0.88s both; }
+
+        @keyframes burst1 { 0%{transform:translate(-50%,-50%) translate(0,0);opacity:1} 100%{transform:translate(-50%,-50%) translate(120px,-80px);opacity:0} }
+        @keyframes burst2 { 0%{transform:translate(-50%,-50%) translate(0,0);opacity:1} 100%{transform:translate(-50%,-50%) translate(-100px,-110px);opacity:0} }
+        @keyframes burst3 { 0%{transform:translate(-50%,-50%) translate(0,0);opacity:1} 100%{transform:translate(-50%,-50%) translate(80px,120px);opacity:0} }
+        @keyframes burst4 { 0%{transform:translate(-50%,-50%) translate(0,0);opacity:1} 100%{transform:translate(-50%,-50%) translate(-130px,60px);opacity:0} }
+        @keyframes burst5 { 0%{transform:translate(-50%,-50%) translate(0,0);opacity:1} 100%{transform:translate(-50%,-50%) translate(60px,-130px);opacity:0} }
+        @keyframes burst6 { 0%{transform:translate(-50%,-50%) translate(0,0);opacity:1} 100%{transform:translate(-50%,-50%) translate(-80px,-60px);opacity:0} }
+        @keyframes burst7 { 0%{transform:translate(-50%,-50%) translate(0,0);opacity:1} 100%{transform:translate(-50%,-50%) translate(140px,40px);opacity:0} }
+        @keyframes burst8 { 0%{transform:translate(-50%,-50%) translate(0,0);opacity:1} 100%{transform:translate(-50%,-50%) translate(-50px,140px);opacity:0} }
+        @keyframes burst9 { 0%{transform:translate(-50%,-50%) translate(0,0);opacity:1} 100%{transform:translate(-50%,-50%) translate(110px,-120px);opacity:0} }
+        @keyframes burst10 { 0%{transform:translate(-50%,-50%) translate(0,0);opacity:1} 100%{transform:translate(-50%,-50%) translate(-140px,-30px);opacity:0} }
+        @keyframes burst11 { 0%{transform:translate(-50%,-50%) translate(0,0);opacity:1} 100%{transform:translate(-50%,-50%) translate(30px,150px);opacity:0} }
+        @keyframes burst12 { 0%{transform:translate(-50%,-50%) translate(0,0);opacity:1} 100%{transform:translate(-50%,-50%) translate(-110px,100px);opacity:0} }
+
+        /* وميض خلف الشعار */
+        .logo-flash {
+            position: absolute; width: 120px; height: 120px;
+            border-radius: 28px; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--accent); z-index: 1; opacity: 0;
+            animation: flashBurst 1s ease-out 0.6s both;
+            filter: blur(30px);
+        }
+        @keyframes flashBurst {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(0.3); }
+            30% { opacity: 0.9; transform: translate(-50%, -50%) scale(1.5); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(3); }
+        }
+
+        /* هالة متوهجة دائمة */
+        .logo-aura {
+            position: absolute; width: 140px; height: 140px;
+            border-radius: 30px; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(229,57,53,0.3) 0%, transparent 70%);
+            z-index: 0; opacity: 0;
+            animation: auraIn 0.6s ease-out 1.2s both, auraPulse 3s ease-in-out 1.8s infinite;
+        }
+        @keyframes auraIn { from{opacity:0;transform:translate(-50%,-50%) scale(0.5)} to{opacity:1;transform:translate(-50%,-50%) scale(1)} }
+        @keyframes auraPulse {
+            0%,100% { opacity: 0.6; transform: translate(-50%,-50%) scale(1); }
+            50% { opacity: 1; transform: translate(-50%,-50%) scale(1.15); }
+        }
+
+        /* الشعار */
+        .logo-img-wrapper {
+            position: relative; width: 110px; height: 110px; border-radius: 26px;
+            overflow: hidden; z-index: 2;
+            box-shadow: 0 0 0 rgba(229,57,53,0);
+            animation: logoSlam 0.6s cubic-bezier(0.2,1.2,0.4,1) 0.5s both,
+                       logoBreath 4s ease-in-out 1.5s infinite;
+        }
+        @keyframes logoSlam {
+            0% { opacity: 0; transform: scale(3) rotate(-20deg); filter: brightness(3); box-shadow: 0 0 80px rgba(229,57,53,0.8); }
+            50% { filter: brightness(1.5); }
+            70% { transform: scale(0.9) rotate(2deg); }
+            85% { transform: scale(1.05) rotate(-1deg); }
+            100% { opacity: 1; transform: scale(1) rotate(0deg); filter: brightness(1); box-shadow: 0 8px 40px var(--accent-glow-strong); }
+        }
+        @keyframes logoBreath {
+            0%,100% { box-shadow: 0 8px 40px var(--accent-glow), 0 0 60px rgba(229,57,53,0.1); transform: scale(1); }
+            50% { box-shadow: 0 8px 50px var(--accent-glow-strong), 0 0 90px var(--accent-glow); transform: scale(1.04); }
         }
         .logo-img-wrapper img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-        .app-name { font-size: 42px; font-weight: 900; letter-spacing: -1px; line-height: 1; }
+        /* === تأثير Glitch على العنوان === */
+        .app-name {
+            font-size: 52px; font-weight: 900; letter-spacing: -1px; line-height: 1;
+            position: relative; margin-bottom: 14px;
+            animation: nameSlam 0.7s cubic-bezier(0.2,1.2,0.4,1) 1s both;
+        }
+        @keyframes nameSlam {
+            0% { opacity: 0; transform: translateY(40px) scale(1.3); letter-spacing: 15px; filter: blur(8px); }
+            60% { filter: blur(0); }
+            80% { transform: translateY(-3px) scale(0.98); letter-spacing: -2px; }
+            100% { opacity: 1; transform: translateY(0) scale(1); letter-spacing: -1px; }
+        }
         .app-name span { color: var(--accent); }
-        .app-desc { color: var(--muted); font-size: 16px; text-align: center; max-width: 300px; line-height: 1.6; }
 
+        /* طبقات Glitch */
+        .app-name::before, .app-name::after {
+            content: attr(data-text);
+            position: absolute; top: 0; left: 0; right: 0;
+            overflow: hidden;
+        }
+        .app-name::before {
+            color: #ff0000; z-index: -1;
+            animation: glitch1 3s ease-in-out 1.8s infinite;
+        }
+        .app-name::after {
+            color: #00ffff; z-index: -2;
+            animation: glitch2 3s ease-in-out 1.8s infinite;
+        }
+        @keyframes glitch1 {
+            0%,88%,92%,96%,100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+            89% { clip-path: inset(20% 0 40% 0); transform: translate(-4px, 2px); }
+            93% { clip-path: inset(60% 0 10% 0); transform: translate(3px, -1px); }
+            97% { clip-path: inset(30% 0 50% 0); transform: translate(-2px, 1px); }
+        }
+        @keyframes glitch2 {
+            0%,87%,91%,95%,100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+            88% { clip-path: inset(50% 0 20% 0); transform: translate(3px, -2px); }
+            92% { clip-path: inset(10% 0 70% 0); transform: translate(-4px, 1px); }
+            96% { clip-path: inset(40% 0 30% 0); transform: translate(2px, -1px); }
+        }
+
+        /* خط فاصل متوهج */
+        .divider-glow {
+            width: 60px; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            border-radius: 1px; margin-bottom: 14px;
+            animation: dividerIn 0.6s ease-out 1.3s both, dividerPulse 3s ease-in-out 1.9s infinite;
+        }
+        @keyframes dividerIn { from{width:0;opacity:0} to{width:60px;opacity:1} }
+        @keyframes dividerPulse {
+            0%,100% { opacity: 0.5; width: 60px; }
+            50% { opacity: 1; width: 80px; }
+        }
+
+        .app-desc {
+            color: var(--muted); font-size: 16px; text-align: center;
+            max-width: 300px; line-height: 1.7;
+            animation: descIn 0.6s ease-out 1.4s both;
+            margin-bottom: 36px;
+        }
+        @keyframes descIn { from{opacity:0;transform:translateY(15px)} to{opacity:1;transform:translateY(0)} }
+
+        /* زر Start */
         .btn-start {
             position: relative; padding: 18px 72px; background: transparent; border: none;
             border-radius: 16px; color: #fff; font-size: 22px; font-weight: 900;
@@ -103,6 +309,13 @@
             display: flex; align-items: center; justify-content: center;
             z-index: 1; transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
             -webkit-tap-highlight-color: transparent;
+            animation: btnSlam 0.7s cubic-bezier(0.2,1.2,0.4,1) 1.6s both;
+        }
+        @keyframes btnSlam {
+            0% { opacity: 0; transform: translateY(30px) scale(0.6); filter: brightness(2); }
+            60% { filter: brightness(1); }
+            80% { transform: translateY(-3px) scale(1.04); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
         }
         .btn-start .btn-bg {
             position: absolute; inset: 0; border-radius: 16px;
@@ -133,31 +346,34 @@
         .btn-start:active { transform: translateY(1px) scale(0.97); }
         .btn-start .btn-text { position: relative; z-index: 1; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
 
+        .start-hint {
+            margin-top: 20px; color: var(--muted); font-size: 13px;
+            animation: hintIn 0.6s ease-out 2s both;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .start-hint i { animation: hintPulse 2s ease-in-out infinite; }
+        @keyframes hintIn { from{opacity:0} to{opacity:0.5} }
+        @keyframes hintPulse { 0%,100%{opacity:0.3} 50%{opacity:1} }
+
+        /* شاشة الرابط */
         .container { width: 100%; max-width: 520px; padding: 20px; }
         .card {
             background: var(--card); border: 1px solid var(--border);
             border-radius: 20px; padding: 36px 32px; position: relative; overflow: hidden;
+            animation: cardIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
         }
+        @keyframes cardIn { from{opacity:0;transform:translateY(20px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
         .card::before {
             content: ''; position: absolute; top: 0; right: 0; left: 0; height: 2px;
             background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0.8;
         }
-
-        .card-top-bar {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 16px;
-        }
+        .card-top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
         .card-header { display: flex; align-items: center; gap: 12px; }
-        .card-logo {
-            width: 44px; height: 44px; border-radius: 12px; overflow: hidden;
-            box-shadow: 0 2px 12px var(--accent-glow); flex-shrink: 0;
-        }
+        .card-logo { width: 44px; height: 44px; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px var(--accent-glow); flex-shrink: 0; }
         .card-logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .card-title { font-size: 24px; font-weight: 900; }
         .card-title span { color: var(--accent); }
-
         .top-actions { display: flex; gap: 8px; }
-
         .btn-icon {
             background: rgba(229,57,53,0.08); border: 1px solid rgba(229,57,53,0.15);
             color: var(--accent-light); width: 40px; height: 40px; border-radius: 10px;
@@ -174,9 +390,7 @@
             font-weight: 900; padding: 0 4px; border: 2px solid var(--card);
         }
         .badge.show { display: flex; }
-
         .subtitle { text-align: center; color: var(--muted); font-size: 15px; margin-bottom: 28px; }
-
         .input-group { position: relative; margin-bottom: 20px; }
         .input-label { display: block; font-size: 14px; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
         .input-field {
@@ -188,7 +402,6 @@
         }
         .input-field::placeholder { color: var(--muted); opacity: 0.5; direction: rtl; text-align: right; }
         .input-field:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
-
         .btn-generate {
             width: 100%; padding: 14px;
             background: linear-gradient(135deg, var(--accent), var(--accent-light));
@@ -199,103 +412,57 @@
         }
         .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 6px 24px var(--accent-glow-strong); }
         .btn-generate:active { transform: translateY(0); }
-
-        .result {
-            margin-top: 24px; opacity: 0; transform: translateY(10px);
-            transition: opacity 0.4s, transform 0.4s; pointer-events: none;
-        }
+        .result { margin-top: 24px; opacity: 0; transform: translateY(10px); transition: opacity 0.4s, transform 0.4s; pointer-events: none; }
         .result.visible { opacity: 1; transform: translateY(0); pointer-events: all; }
         .result-label { font-size: 13px; color: var(--muted); margin-bottom: 8px; font-weight: 700; }
-        .result-box {
-            display: flex; align-items: center; gap: 8px;
-            background: var(--input-bg); border: 1.5px solid var(--accent);
-            border-radius: 12px; padding: 12px 14px; direction: ltr;
+        .result-box { display: flex; align-items: center; gap: 8px; background: var(--input-bg); border: 1.5px solid var(--accent); border-radius: 12px; padding: 12px 14px; direction: ltr; }
+        .result-link { flex: 1; font-size: 14px; color: var(--accent-light); word-break: break-all; user-select: all; font-weight: 700; }
+        .result-btns { display: flex; gap: 6px; flex-shrink: 0; }
+        .btn-result-action {
+            padding: 8px 14px; border-radius: 8px; cursor: pointer; font-family: 'Tajawal', sans-serif; font-size: 13px;
+            font-weight: 700; transition: background 0.2s, transform 0.15s; display: flex; align-items: center; gap: 6px; white-space: nowrap;
         }
-        .result-link {
-            flex: 1; font-size: 14px; color: var(--accent-light);
-            word-break: break-all; user-select: all; font-weight: 700;
-        }
-        .btn-copy-small {
-            background: rgba(229,57,53,0.1); border: 1px solid rgba(229,57,53,0.3);
-            color: var(--accent-light); padding: 8px 14px; border-radius: 8px;
-            cursor: pointer; font-family: 'Tajawal', sans-serif; font-size: 13px;
-            font-weight: 700; transition: background 0.2s, transform 0.15s;
-            display: flex; align-items: center; gap: 6px; white-space: nowrap;
-        }
-        .btn-copy-small:hover { background: rgba(229,57,53,0.2); transform: scale(1.03); }
-        .btn-copy-small.copied { background: var(--accent); color: #fff; }
-
-        .result-actions {
-            margin-top: 12px;
-            display: flex; justify-content: center;
-        }
+        .btn-result-action:hover { transform: scale(1.03); }
+        .btn-result-action:active { transform: scale(0.97); }
+        .btn-copy-main { background: rgba(229,57,53,0.1); border: 1px solid rgba(229,57,53,0.3); color: var(--accent-light); }
+        .btn-copy-main:hover { background: rgba(229,57,53,0.2); }
+        .btn-copy-main.copied { background: var(--accent); color: #fff; }
+        .btn-open-main { background: rgba(229,57,53,0.1); border: 1px solid rgba(229,57,53,0.3); color: var(--accent-light); text-decoration: none; }
+        .btn-open-main:hover { background: rgba(229,57,53,0.2); }
+        .result-actions { margin-top: 12px; display: flex; justify-content: center; }
         .btn-save {
-            padding: 10px 28px;
-            background: rgba(229,57,53,0.08);
-            border: 1.5px solid rgba(229,57,53,0.25);
-            color: var(--accent-light); border-radius: 10px;
-            cursor: pointer; font-family: 'Tajawal', sans-serif;
-            font-size: 14px; font-weight: 700;
-            transition: background 0.2s, transform 0.15s, border-color 0.2s;
+            padding: 10px 28px; background: rgba(229,57,53,0.08);
+            border: 1.5px solid rgba(229,57,53,0.25); color: var(--accent-light);
+            border-radius: 10px; cursor: pointer; font-family: 'Tajawal', sans-serif;
+            font-size: 14px; font-weight: 700; transition: background 0.2s, transform 0.15s, border-color 0.2s;
             display: flex; align-items: center; gap: 8px;
         }
-        .btn-save:hover {
-            background: rgba(229,57,53,0.15);
-            border-color: rgba(229,57,53,0.45);
-            transform: scale(1.04);
-        }
+        .btn-save:hover { background: rgba(229,57,53,0.15); border-color: rgba(229,57,53,0.45); transform: scale(1.04); }
         .btn-save:active { transform: scale(0.97); }
-        .btn-save.saved {
-            background: rgba(229,57,53,0.2);
-            border-color: var(--accent);
-            color: #fff;
-        }
+        .btn-save.saved { background: rgba(229,57,53,0.2); border-color: var(--accent); color: #fff; }
         .btn-save.saved .save-text { display: none; }
         .btn-save.saved .saved-text { display: flex; align-items: center; gap: 6px; }
         .btn-save .saved-text { display: none; }
 
-        /* === زر واتساب عائم === */
         .whatsapp-fab {
-            position: fixed;
-            bottom: 28px;
-            left: 28px;
-            width: 58px;
-            height: 58px;
-            background: var(--wa-green);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 30px;
-            box-shadow: 0 4px 18px var(--wa-glow);
-            z-index: 50;
-            text-decoration: none;
+            position: fixed; bottom: 28px; left: 28px; width: 58px; height: 58px;
+            background: var(--wa-green); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 30px; box-shadow: 0 4px 18px var(--wa-glow);
+            z-index: 50; text-decoration: none;
             transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s;
             animation: waFloat 3s ease-in-out infinite;
         }
-        @keyframes waFloat {
-            0%,100% { transform: translateY(0); }
-            50% { transform: translateY(-4px); }
-        }
-        .whatsapp-fab:hover {
-            transform: scale(1.12) translateY(-2px);
-            box-shadow: 0 8px 28px rgba(37, 211, 102, 0.6);
-        }
-        .whatsapp-fab:active {
-            transform: scale(0.95);
-        }
+        @keyframes waFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+        .whatsapp-fab:hover { transform: scale(1.12) translateY(-2px); box-shadow: 0 8px 28px rgba(37,211,102,0.6); }
 
-        /* === لوحة المحفوظات === */
         .saved-panel {
             position: fixed; inset: 0; z-index: 100;
             display: flex; align-items: center; justify-content: center;
             background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
-            opacity: 0; pointer-events: none;
-            transition: opacity 0.35s ease;
+            opacity: 0; pointer-events: none; transition: opacity 0.35s ease;
         }
         .saved-panel.open { opacity: 1; pointer-events: all; }
-
         .saved-card {
             background: var(--card); border: 1px solid var(--border);
             border-radius: 20px; padding: 28px 24px; width: 90%;
@@ -304,106 +471,39 @@
             transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
         }
         .saved-panel.open .saved-card { transform: translateY(0) scale(1); }
-
-        .saved-header {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 20px; padding-bottom: 14px;
-            border-bottom: 1px solid var(--border);
-        }
-        .saved-title {
-            font-size: 20px; font-weight: 900;
-            display: flex; align-items: center; gap: 10px;
-        }
+        .saved-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+        .saved-title { font-size: 20px; font-weight: 900; display: flex; align-items: center; gap: 10px; }
         .saved-title i { color: var(--accent-light); }
         .saved-count { color: var(--muted); font-size: 13px; font-weight: 700; }
-
-        .btn-close-panel {
-            background: rgba(229,57,53,0.08); border: 1px solid rgba(229,57,53,0.2);
-            color: var(--accent-light); width: 36px; height: 36px; border-radius: 10px;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-            font-size: 15px; transition: background 0.2s, transform 0.15s;
-        }
+        .btn-close-panel { background: rgba(229,57,53,0.08); border: 1px solid rgba(229,57,53,0.2); color: var(--accent-light); width: 36px; height: 36px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: background 0.2s, transform 0.15s; }
         .btn-close-panel:hover { background: rgba(229,57,53,0.18); transform: scale(1.05); }
-
-        .saved-list {
-            flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
-            padding-left: 4px;
-        }
+        .saved-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-left: 4px; }
         .saved-list::-webkit-scrollbar { width: 4px; }
         .saved-list::-webkit-scrollbar-track { background: transparent; }
         .saved-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-        .saved-item {
-            display: flex; align-items: center; gap: 12px;
-            background: var(--input-bg); border: 1px solid var(--border);
-            border-radius: 12px; padding: 12px 14px;
-            transition: border-color 0.2s, background 0.2s;
-            animation: itemIn 0.3s ease-out backwards;
-        }
+        .saved-item { display: flex; align-items: center; gap: 12px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; transition: border-color 0.2s, background 0.2s; animation: itemIn 0.3s ease-out backwards; }
         .saved-item:hover { border-color: rgba(229,57,53,0.3); background: rgba(229,57,53,0.03); }
-        @keyframes itemIn {
-            from { opacity: 0; transform: translateX(10px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        .saved-item-icon {
-            width: 38px; height: 38px; border-radius: 10px;
-            background: rgba(229,57,53,0.1); display: flex;
-            align-items: center; justify-content: center;
-            color: var(--accent-light); font-size: 16px; flex-shrink: 0;
-        }
+        @keyframes itemIn { from{opacity:0;transform:translateX(10px)} to{opacity:1;transform:translateX(0)} }
+        .saved-item-icon { width: 38px; height: 38px; border-radius: 10px; background: rgba(229,57,53,0.1); display: flex; align-items: center; justify-content: center; color: var(--accent-light); font-size: 16px; flex-shrink: 0; }
         .saved-item-info { flex: 1; min-width: 0; }
-        .saved-item-name {
-            font-weight: 900; font-size: 15px; color: var(--fg);
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            direction: ltr; text-align: left;
-        }
-        .saved-item-url {
-            font-size: 12px; color: var(--muted); margin-top: 2px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            direction: ltr; text-align: left;
-        }
+        .saved-item-name { font-weight: 900; font-size: 15px; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; direction: ltr; text-align: left; }
+        .saved-item-url { font-size: 12px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; direction: ltr; text-align: left; }
         .saved-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
-
-        .btn-item-action {
-            width: 34px; height: 34px; border-radius: 8px;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-            transition: background 0.2s, transform 0.15s;
-        }
+        .btn-item-action { width: 34px; height: 34px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s, transform 0.15s, color 0.2s; text-decoration: none; }
         .btn-item-action:hover { transform: scale(1.08); }
-
-        .btn-item-copy {
-            background: rgba(229,57,53,0.1); border: 1px solid rgba(229,57,53,0.25);
-            color: var(--accent-light); font-size: 13px;
-        }
+        .btn-item-copy { background: rgba(229,57,53,0.1); border: 1px solid rgba(229,57,53,0.25); color: var(--accent-light); font-size: 13px; }
         .btn-item-copy:hover { background: rgba(229,57,53,0.2); }
         .btn-item-copy.copied { background: var(--accent); color: #fff; }
-
-        .btn-item-delete {
-            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
-            color: var(--muted); font-size: 12px;
-        }
+        .btn-item-open { background: rgba(229,57,53,0.1); border: 1px solid rgba(229,57,53,0.25); color: var(--accent-light); font-size: 12px; }
+        .btn-item-open:hover { background: rgba(229,57,53,0.2); color: #fff; }
+        .btn-item-delete { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--muted); font-size: 12px; }
         .btn-item-delete:hover { background: rgba(255,82,82,0.15); color: #ff5252; }
-
-        .empty-state {
-            display: flex; flex-direction: column; align-items: center;
-            justify-content: center; padding: 40px 20px; gap: 12px;
-        }
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; gap: 12px; }
         .empty-state i { font-size: 40px; color: var(--border); }
         .empty-state p { color: var(--muted); font-size: 14px; text-align: center; }
-
-        .btn-clear-all {
-            margin-top: 16px; padding: 10px 20px;
-            background: rgba(229,57,53,0.08); border: 1px solid rgba(229,57,53,0.2);
-            color: var(--accent-light); border-radius: 10px;
-            cursor: pointer; font-family: 'Tajawal', sans-serif;
-            font-size: 13px; font-weight: 700;
-            transition: background 0.2s, transform 0.15s;
-            display: flex; align-items: center; gap: 6px;
-        }
+        .btn-clear-all { margin-top: 16px; padding: 10px 20px; background: rgba(229,57,53,0.08); border: 1px solid rgba(229,57,53,0.2); color: var(--accent-light); border-radius: 10px; cursor: pointer; font-family: 'Tajawal', sans-serif; font-size: 13px; font-weight: 700; transition: background 0.2s, transform 0.15s; display: flex; align-items: center; gap: 6px; }
         .btn-clear-all:hover { background: rgba(229,57,53,0.18); transform: scale(1.03); }
 
-        /* توست */
         .toast {
             position: fixed; bottom: 30px; left: 50%;
             transform: translateX(-50%) translateY(80px);
@@ -412,29 +512,34 @@
             font-family: 'Tajawal', sans-serif; font-weight: 700; font-size: 14px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.5);
             transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s;
-            opacity: 0; z-index: 999;
-            display: flex; align-items: center; gap: 8px;
+            opacity: 0; z-index: 999; display: flex; align-items: center; gap: 8px;
         }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         .toast i { color: var(--accent-light); }
 
         @media (prefers-reduced-motion: reduce) {
-            .bg-grid,.bg-blob,.particle { animation: none !important; }
-            .screen,.result,.toast,.saved-panel,.saved-card,.saved-item { transition: none !important; }
-            .btn-start .btn-bg,.btn-start .btn-border,.btn-start .btn-shine,
-            .btn-start .btn-glow,.logo-img-wrapper,.whatsapp-fab { animation: none !important; }
+            *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
         }
         @media (max-width: 480px) {
             .card { padding: 28px 18px; }
-            .app-name { font-size: 34px; }
-            .logo-img-wrapper { width: 110px; height: 110px; border-radius: 26px; }
+            .app-name { font-size: 40px; }
+            .logo-stage { width: 260px; height: 260px; }
+            .logo-img-wrapper { width: 90px; height: 90px; border-radius: 20px; }
+            .orbit-ring.r1 { width: 170px; height: 170px; }
+            .orbit-ring.r2 { width: 210px; height: 210px; }
+            .orbit-ring.r3 { width: 250px; height: 250px; }
             .btn-start { padding: 16px 56px; font-size: 20px; }
             .saved-card { padding: 20px 16px; }
             .whatsapp-fab { width: 52px; height: 52px; font-size: 26px; bottom: 20px; left: 20px; }
+            .btn-result-action { padding: 8px 10px; font-size: 12px; }
+            .btn-result-action span { display: none; }
         }
     </style>
 </head>
 <body>
+
+    <!-- غطاء البداية الأسود -->
+    <div class="intro-curtain"></div>
 
     <div class="bg-grid"></div>
     <div class="bg-blob one"></div>
@@ -444,11 +549,57 @@
     <!-- شاشة البداية -->
     <section class="screen" id="startScreen">
         <div class="start-content">
-            <div class="logo-img-wrapper">
-                <img src="https://z-cdn-media.chatglm.cn/files/4667b5ab-2a0a-4537-a7fa-56154f5c352f.png?auth_key=1880614056-5b68869a69904016bad8f58f2268eaf8-0-73ba7132285b2a810c1d8f49e39889d8" alt="RedKick Logo">
+            <div class="logo-stage">
+                <!-- موجات صدمة -->
+                <div class="shockwave s1"></div>
+                <div class="shockwave s2"></div>
+                <div class="shockwave s3"></div>
+
+                <!-- حلقات مدارية -->
+                <div class="orbit-ring r1"><div class="orbit-dot"></div></div>
+                <div class="orbit-ring r2"><div class="orbit-dot"></div></div>
+                <div class="orbit-ring r3"><div class="orbit-dot"></div></div>
+
+                <!-- برق -->
+                <div class="lightning l1">
+                    <svg viewBox="0 0 320 320">
+                        <path d="M160 40 L170 90 L155 95 L175 150 L160 155 L185 220 L165 215 L180 280" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="lightning l2">
+                    <svg viewBox="0 0 320 320">
+                        <path d="M280 100 L230 130 L235 145 L180 160 L185 170 L120 190 L130 195 L60 220" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+
+                <!-- انفجار جسيمات -->
+                <div class="burst-particle bp1"></div>
+                <div class="burst-particle bp2"></div>
+                <div class="burst-particle bp3"></div>
+                <div class="burst-particle bp4"></div>
+                <div class="burst-particle bp5"></div>
+                <div class="burst-particle bp6"></div>
+                <div class="burst-particle bp7"></div>
+                <div class="burst-particle bp8"></div>
+                <div class="burst-particle bp9"></div>
+                <div class="burst-particle bp10"></div>
+                <div class="burst-particle bp11"></div>
+                <div class="burst-particle bp12"></div>
+
+                <!-- وميض وهالة -->
+                <div class="logo-flash"></div>
+                <div class="logo-aura"></div>
+
+                <!-- الشعار -->
+                <div class="logo-img-wrapper">
+                    <img src="https://z-cdn-media.chatglm.cn/files/4667b5ab-2a0a-4537-a7fa-56154f5c352f.png?auth_key=1880614056-5b68869a69904016bad8f58f2268eaf8-0-73ba7132285b2a810c1d8f49e39889d8" alt="RedKick Logo">
+                </div>
             </div>
-            <h1 class="app-name">Red<span>Kick</span></h1>
+
+            <h1 class="app-name" data-text="RedKick">Red<span>Kick</span></h1>
+            <div class="divider-glow"></div>
             <p class="app-desc">ولّد رابط متجر البوت لأي ستريمر على كيك بسهولة وسرعة</p>
+
             <button class="btn-start" id="startBtn">
                 <span class="btn-border"></span>
                 <span class="btn-bg"></span>
@@ -456,6 +607,11 @@
                 <span class="btn-glow"></span>
                 <span class="btn-text">Start</span>
             </button>
+
+            <div class="start-hint">
+                <i class="fas fa-chevron-left"></i>
+                اضغط للبدء
+            </div>
         </div>
     </section>
 
@@ -471,76 +627,47 @@
                         <h2 class="card-title">Red<span>Kick</span></h2>
                     </div>
                     <div class="top-actions">
-                        <button class="btn-icon" id="backBtn" aria-label="رجوع">
-                            <i class="fas fa-arrow-right"></i>
-                        </button>
-                        <button class="btn-icon" id="savedBtn" aria-label="المحفوظات">
-                            <i class="fas fa-bookmark"></i>
-                            <span class="badge" id="savedBadge">0</span>
-                        </button>
+                        <button class="btn-icon" id="backBtn" aria-label="رجوع"><i class="fas fa-arrow-right"></i></button>
+                        <button class="btn-icon" id="savedBtn" aria-label="المحفوظات"><i class="fas fa-bookmark"></i><span class="badge" id="savedBadge">0</span></button>
                     </div>
                 </div>
-
                 <p class="subtitle">أدخل اسم الستريمر للحصول على رابط المتجر</p>
-
                 <div class="input-group">
                     <label class="input-label" for="streamerInput">اسم الستريمر</label>
                     <input type="text" id="streamerInput" class="input-field" placeholder="أدخل اسم الستريمر هنا..." autocomplete="off" spellcheck="false">
                 </div>
-
-                <button class="btn-generate" id="generateBtn">
-                    <i class="fas fa-bolt"></i>
-                    توليد الرابط
-                </button>
-
+                <button class="btn-generate" id="generateBtn"><i class="fas fa-bolt"></i> توليد الرابط</button>
                 <div class="result" id="result">
                     <div class="result-label">الرابط جاهز</div>
                     <div class="result-box">
                         <span class="result-link" id="resultLink"></span>
-                        <button class="btn-copy-small" id="copyBtn" aria-label="نسخ الرابط">
-                            <i class="fas fa-copy"></i>
-                            نسخ
-                        </button>
+                        <div class="result-btns">
+                            <button class="btn-result-action btn-copy-main" id="copyBtn" aria-label="نسخ"><i class="fas fa-copy"></i><span>نسخ</span></button>
+                            <a class="btn-result-action btn-open-main" id="openBtn" target="_blank" rel="noopener noreferrer" aria-label="فتح"><i class="fas fa-external-link-alt"></i><span>فتح</span></a>
+                        </div>
                     </div>
                     <div class="result-actions">
-                        <button class="btn-save" id="saveBtn">
-                            <i class="fas fa-bookmark"></i>
-                            <span class="save-text">Save</span>
-                            <span class="saved-text"><i class="fas fa-check"></i> تم الحفظ</span>
-                        </button>
+                        <button class="btn-save" id="saveBtn"><i class="fas fa-bookmark"></i><span class="save-text">Save</span><span class="saved-text"><i class="fas fa-check"></i> تم الحفظ</span></button>
                     </div>
                 </div>
             </div>
         </main>
     </section>
 
-    <!-- زر واتساب عائم -->
-    <a href="https://wa.me/963995271182" target="_blank" rel="noopener noreferrer" class="whatsapp-fab" aria-label="تواصل معنا عبر واتساب">
-        <i class="fab fa-whatsapp"></i>
-    </a>
+    <a href="https://wa.me/963995271182" target="_blank" rel="noopener noreferrer" class="whatsapp-fab" aria-label="واتساب"><i class="fab fa-whatsapp"></i></a>
 
-    <!-- لوحة المحفوظات -->
     <div class="saved-panel" id="savedPanel">
         <div class="saved-card">
             <div class="saved-header">
-                <div>
-                    <div class="saved-title"><i class="fas fa-bookmark"></i> المحفوظات</div>
-                    <div class="saved-count" id="savedCountLabel">0 ستريمر محفوظ</div>
-                </div>
-                <button class="btn-close-panel" id="closePanelBtn" aria-label="إغلاق">
-                    <i class="fas fa-times"></i>
-                </button>
+                <div><div class="saved-title"><i class="fas fa-bookmark"></i> المحفوظات</div><div class="saved-count" id="savedCountLabel">0 ستريمر محفوظ</div></div>
+                <button class="btn-close-panel" id="closePanelBtn" aria-label="إغلاق"><i class="fas fa-times"></i></button>
             </div>
             <div class="saved-list" id="savedList"></div>
             <div style="display:flex;justify-content:center" id="clearAllWrap"></div>
         </div>
     </div>
 
-    <!-- توست -->
-    <div class="toast" id="toast">
-        <i class="fas fa-check-circle"></i>
-        <span id="toastMsg">تم النسخ</span>
-    </div>
+    <div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg">تم النسخ</span></div>
 
     <script>
         const startScreen = document.getElementById('startScreen');
@@ -552,6 +679,7 @@
         const resultDiv = document.getElementById('result');
         const resultLink = document.getElementById('resultLink');
         const copyBtn = document.getElementById('copyBtn');
+        const openBtn = document.getElementById('openBtn');
         const saveBtn = document.getElementById('saveBtn');
         const toast = document.getElementById('toast');
         const toastMsg = document.getElementById('toastMsg');
@@ -563,270 +691,90 @@
         const savedCountLabel = document.getElementById('savedCountLabel');
         const clearAllWrap = document.getElementById('clearAllWrap');
 
-        // الجسيمات
         const particlesContainer = document.getElementById('particles');
         for (let i = 0; i < 20; i++) {
-            const p = document.createElement('div');
-            p.className = 'particle';
-            p.style.left = Math.random() * 100 + '%';
-            p.style.top = Math.random() * 100 + '%';
-            p.style.animationDelay = (Math.random() * 4) + 's';
-            p.style.animationDuration = (3 + Math.random() * 3) + 's';
+            const p = document.createElement('div'); p.className = 'particle';
+            p.style.left = Math.random()*100+'%'; p.style.top = Math.random()*100+'%';
+            p.style.animationDelay = (Math.random()*4)+'s'; p.style.animationDuration = (3+Math.random()*3)+'s';
             particlesContainer.appendChild(p);
         }
 
-        // البيانات المحفوظة
         let savedStreamers = [];
+        function loadSaved() { try { const d = localStorage.getItem('redkick_saved'); if(d) savedStreamers = JSON.parse(d); } catch(e){savedStreamers=[];} updateBadge(); }
+        function saveToStorage() { localStorage.setItem('redkick_saved', JSON.stringify(savedStreamers)); updateBadge(); }
+        function updateBadge() { const c=savedStreamers.length; savedBadge.textContent=c; if(c>0) savedBadge.classList.add('show'); else savedBadge.classList.remove('show'); }
 
-        function loadSaved() {
-            try {
-                const data = localStorage.getItem('redkick_saved');
-                if (data) savedStreamers = JSON.parse(data);
-            } catch(e) { savedStreamers = []; }
-            updateBadge();
-        }
-
-        function saveToStorage() {
-            localStorage.setItem('redkick_saved', JSON.stringify(savedStreamers));
-            updateBadge();
-        }
-
-        function updateBadge() {
-            const count = savedStreamers.length;
-            savedBadge.textContent = count;
-            if (count > 0) {
-                savedBadge.classList.add('show');
-            } else {
-                savedBadge.classList.remove('show');
-            }
-        }
-
-        // الانتقال بين الشاشات
         startBtn.addEventListener('click', function() {
             startScreen.classList.add('slide-out');
-            setTimeout(function() {
-                startScreen.classList.add('hidden');
-                startScreen.classList.remove('slide-out');
-                mainScreen.classList.remove('hidden');
-                setTimeout(function() { streamerInput.focus(); }, 300);
-            }, 400);
+            setTimeout(function() { startScreen.classList.add('hidden'); startScreen.classList.remove('slide-out'); mainScreen.classList.remove('hidden'); setTimeout(function(){streamerInput.focus();},300); }, 500);
         });
+        backBtn.addEventListener('click', function() { mainScreen.classList.add('hidden'); startScreen.classList.remove('hidden'); streamerInput.value=''; resultDiv.classList.remove('visible'); saveBtn.classList.remove('saved'); });
 
-        backBtn.addEventListener('click', function() {
-            mainScreen.classList.add('hidden');
-            startScreen.classList.remove('hidden');
-            streamerInput.value = '';
-            resultDiv.classList.remove('visible');
-            saveBtn.classList.remove('saved');
-        });
-
-        // توليد الرابط
-        let currentName = '';
-        let currentUrl = '';
-
+        let currentName='', currentUrl='';
         function generateLink() {
             const name = streamerInput.value.trim();
-            if (!name) {
-                showToast('يرجى إدخال اسم الستريمر', false);
-                streamerInput.focus();
-                return;
-            }
-            currentName = name.replace(/\s+/g, '');
-            currentUrl = 'https://botrix.live/k/' + currentName + '/shop';
-            resultLink.textContent = currentUrl;
+            if(!name){showToast('يرجى إدخال اسم الستريمر',false);streamerInput.focus();return;}
+            currentName=name.replace(/\s+/g,''); currentUrl='https://botrix.live/k/'+currentName+'/shop';
+            resultLink.textContent=currentUrl; openBtn.href=currentUrl;
             resultDiv.classList.add('visible');
-
-            const exists = savedStreamers.some(function(s) { return s.name.toLowerCase() === currentName.toLowerCase(); });
-            if (exists) {
-                saveBtn.classList.add('saved');
-            } else {
-                saveBtn.classList.remove('saved');
-            }
+            const exists=savedStreamers.some(function(s){return s.name.toLowerCase()===currentName.toLowerCase();});
+            if(exists) saveBtn.classList.add('saved'); else saveBtn.classList.remove('saved');
         }
-
         generateBtn.addEventListener('click', generateLink);
+        streamerInput.addEventListener('keydown', function(e){if(e.key==='Enter')generateLink();});
+        streamerInput.addEventListener('input', function(){resultDiv.classList.remove('visible');saveBtn.classList.remove('saved');});
 
-        streamerInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') generateLink();
+        copyBtn.addEventListener('click', function(){copyText(resultLink.textContent,copyBtn);});
+        saveBtn.addEventListener('click', function(){
+            if(!currentName||!currentUrl)return;
+            const exists=savedStreamers.some(function(s){return s.name.toLowerCase()===currentName.toLowerCase();});
+            if(exists){showToast('هذا الستريمر محفوظ مسبقاً',false);return;}
+            savedStreamers.unshift({name:currentName,url:currentUrl,date:Date.now()});
+            saveToStorage(); saveBtn.classList.add('saved'); showToast('تم حفظ '+currentName+' في المحفوظات');
         });
 
-        streamerInput.addEventListener('input', function() {
-            resultDiv.classList.remove('visible');
-            saveBtn.classList.remove('saved');
-        });
-
-        // نسخ الرابط الرئيسي
-        copyBtn.addEventListener('click', function() {
-            copyText(resultLink.textContent, copyBtn);
-        });
-
-        // حفظ الرابط
-        saveBtn.addEventListener('click', function() {
-            if (!currentName || !currentUrl) return;
-
-            const exists = savedStreamers.some(function(s) { return s.name.toLowerCase() === currentName.toLowerCase(); });
-            if (exists) {
-                showToast('هذا الستريمر محفوظ مسبقاً', false);
-                return;
-            }
-
-            savedStreamers.unshift({ name: currentName, url: currentUrl, date: Date.now() });
-            saveToStorage();
-            saveBtn.classList.add('saved');
-            showToast('تم حفظ ' + currentName + ' في المحفوظات');
-        });
-
-        // دالة النسخ
-        function copyText(text, btnEl) {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(function() {
-                    showCopied(btnEl);
-                    showToast('تم نسخ الرابط بنجاح');
-                }).catch(function() {
-                    fallbackCopy(text, btnEl);
-                });
-            } else {
-                fallbackCopy(text, btnEl);
-            }
+        function copyText(text,btnEl){
+            if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){showCopied(btnEl);showToast('تم نسخ الرابط بنجاح');}).catch(function(){fallbackCopy(text,btnEl);});}
+            else{fallbackCopy(text,btnEl);}
         }
-
-        function fallbackCopy(text, btnEl) {
-            const ta = document.createElement('textarea');
-            ta.value = text;
-            ta.style.position = 'fixed';
-            ta.style.left = '-9999px';
-            document.body.appendChild(ta);
-            ta.select();
-            try {
-                document.execCommand('copy');
-                showCopied(btnEl);
-                showToast('تم نسخ الرابط بنجاح');
-            } catch(e) {
-                showToast('فشل النسخ', false);
-            }
+        function fallbackCopy(text,btnEl){
+            const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.left='-9999px';
+            document.body.appendChild(ta);ta.select();
+            try{document.execCommand('copy');showCopied(btnEl);showToast('تم نسخ الرابط بنجاح');}catch(e){showToast('فشل النسخ',false);}
             document.body.removeChild(ta);
         }
-
-        function showCopied(btnEl) {
-            if (!btnEl) return;
-            btnEl.classList.add('copied');
-            const origHTML = btnEl.innerHTML;
-            setTimeout(function() {
-                btnEl.classList.remove('copied');
-                btnEl.innerHTML = origHTML;
-            }, 1500);
+        function showCopied(btnEl){
+            if(!btnEl)return;btnEl.classList.add('copied');const o=btnEl.innerHTML;btnEl.innerHTML='<i class="fas fa-check"></i>';
+            setTimeout(function(){btnEl.classList.remove('copied');btnEl.innerHTML=o;},1500);
         }
 
-        // لوحة المحفوظات
-        savedBtn.addEventListener('click', function() {
-            renderSavedList();
-            savedPanel.classList.add('open');
-        });
+        savedBtn.addEventListener('click',function(){renderSavedList();savedPanel.classList.add('open');});
+        closePanelBtn.addEventListener('click',function(){savedPanel.classList.remove('open');});
+        savedPanel.addEventListener('click',function(e){if(e.target===savedPanel)savedPanel.classList.remove('open');});
 
-        closePanelBtn.addEventListener('click', function() {
-            savedPanel.classList.remove('open');
-        });
-
-        savedPanel.addEventListener('click', function(e) {
-            if (e.target === savedPanel) savedPanel.classList.remove('open');
-        });
-
-        function renderSavedList() {
-            savedList.innerHTML = '';
-            clearAllWrap.innerHTML = '';
-
-            if (savedStreamers.length === 0) {
-                savedList.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد بيانات محفوظة بعد</p></div>';
-                savedCountLabel.textContent = '0 ستريمر محفوظ';
-                return;
-            }
-
-            savedCountLabel.textContent = savedStreamers.length + ' ستريمر محفوظ';
-
-            savedStreamers.forEach(function(item, index) {
-                const el = document.createElement('div');
-                el.className = 'saved-item';
-                el.style.animationDelay = (index * 0.05) + 's';
-
-                el.innerHTML =
-                    '<div class="saved-item-icon"><i class="fas fa-user"></i></div>' +
-                    '<div class="saved-item-info">' +
-                        '<div class="saved-item-name">' + escapeHTML(item.name) + '</div>' +
-                        '<div class="saved-item-url">' + escapeHTML(item.url) + '</div>' +
-                    '</div>' +
-                    '<div class="saved-item-actions">' +
-                        '<button class="btn-item-action btn-item-copy" data-url="' + escapeAttr(item.url) + '" aria-label="نسخ الرابط"><i class="fas fa-copy"></i></button>' +
-                        '<button class="btn-item-action btn-item-delete" data-index="' + index + '" aria-label="حذف"><i class="fas fa-trash-alt"></i></button>' +
-                    '</div>';
-
+        function renderSavedList(){
+            savedList.innerHTML='';clearAllWrap.innerHTML='';
+            if(savedStreamers.length===0){savedList.innerHTML='<div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد بيانات محفوظة بعد</p></div>';savedCountLabel.textContent='0 ستريمر محفوظ';return;}
+            savedCountLabel.textContent=savedStreamers.length+' ستريمر محفوظ';
+            savedStreamers.forEach(function(item,index){
+                const el=document.createElement('div');el.className='saved-item';el.style.animationDelay=(index*0.05)+'s';
+                el.innerHTML='<div class="saved-item-icon"><i class="fas fa-user"></i></div><div class="saved-item-info"><div class="saved-item-name">'+escapeHTML(item.name)+'</div><div class="saved-item-url">'+escapeHTML(item.url)+'</div></div><div class="saved-item-actions"><button class="btn-item-action btn-item-copy" data-url="'+escapeAttr(item.url)+'" aria-label="نسخ"><i class="fas fa-copy"></i></button><a class="btn-item-action btn-item-open" href="'+escapeAttr(item.url)+'" target="_blank" rel="noopener noreferrer" aria-label="فتح"><i class="fas fa-external-link-alt"></i></a><button class="btn-item-action btn-item-delete" data-index="'+index+'" aria-label="حذف"><i class="fas fa-trash-alt"></i></button></div>';
                 savedList.appendChild(el);
             });
-
-            if (savedStreamers.length > 1) {
-                const clearBtn = document.createElement('button');
-                clearBtn.className = 'btn-clear-all';
-                clearBtn.innerHTML = '<i class="fas fa-trash-alt"></i> حذف الكل';
-                clearBtn.addEventListener('click', function() {
-                    savedStreamers = [];
-                    saveToStorage();
-                    renderSavedList();
-                    saveBtn.classList.remove('saved');
-                    showToast('تم حذف جميع المحفوظات');
-                });
-                clearAllWrap.appendChild(clearBtn);
-            }
-
-            savedList.querySelectorAll('.btn-item-copy').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    const url = this.getAttribute('data-url');
-                    copyText(url, this);
-                });
-            });
-
-            savedList.querySelectorAll('.btn-item-delete').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    const idx = parseInt(this.getAttribute('data-index'));
-                    const deletedName = savedStreamers[idx].name;
-                    savedStreamers.splice(idx, 1);
-                    saveToStorage();
-                    renderSavedList();
-                    if (currentName && !savedStreamers.some(function(s) { return s.name.toLowerCase() === currentName.toLowerCase(); })) {
-                        saveBtn.classList.remove('saved');
-                    }
-                    showToast('تم حذف ' + deletedName);
-                });
-            });
+            if(savedStreamers.length>1){const cb=document.createElement('button');cb.className='btn-clear-all';cb.innerHTML='<i class="fas fa-trash-alt"></i> حذف الكل';cb.addEventListener('click',function(){savedStreamers=[];saveToStorage();renderSavedList();saveBtn.classList.remove('saved');showToast('تم حذف جميع المحفوظات');});clearAllWrap.appendChild(cb);}
+            savedList.querySelectorAll('.btn-item-copy').forEach(function(btn){btn.addEventListener('click',function(){copyText(this.getAttribute('data-url'),this);});});
+            savedList.querySelectorAll('.btn-item-delete').forEach(function(btn){btn.addEventListener('click',function(){const idx=parseInt(this.getAttribute('data-index'));const dn=savedStreamers[idx].name;savedStreamers.splice(idx,1);saveToStorage();renderSavedList();if(currentName&&!savedStreamers.some(function(s){return s.name.toLowerCase()===currentName.toLowerCase();}))saveBtn.classList.remove('saved');showToast('تم حذف '+dn);});});
         }
+        function escapeHTML(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+        function escapeAttr(s){return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-        function escapeHTML(str) {
-            const d = document.createElement('div');
-            d.textContent = str;
-            return d.innerHTML;
-        }
-
-        function escapeAttr(str) {
-            return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        }
-
-        // توست
         let toastTimer;
-        function showToast(msg, success) {
-            clearTimeout(toastTimer);
-            toastMsg.textContent = msg;
-            const icon = toast.querySelector('i');
-            if (success === false) {
-                icon.className = 'fas fa-exclamation-circle';
-                icon.style.color = '#ff5252';
-                toast.style.borderColor = '#ff5252';
-            } else {
-                icon.className = 'fas fa-check-circle';
-                icon.style.color = 'var(--accent-light)';
-                toast.style.borderColor = 'var(--accent)';
-            }
-            toast.classList.add('show');
-            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 2500);
+        function showToast(msg,success){
+            clearTimeout(toastTimer);toastMsg.textContent=msg;const icon=toast.querySelector('i');
+            if(success===false){icon.className='fas fa-exclamation-circle';icon.style.color='#ff5252';toast.style.borderColor='#ff5252';}
+            else{icon.className='fas fa-check-circle';icon.style.color='var(--accent-light)';toast.style.borderColor='var(--accent)';}
+            toast.classList.add('show');toastTimer=setTimeout(function(){toast.classList.remove('show');},2500);
         }
-
         loadSaved();
     </script>
 </body>
