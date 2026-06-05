@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RedKick</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --card: #12121a;
+            --border: #1e1e2e;
+            --accent: #e53935;
+            --accent-light: #ff5252;
+            --accent-glow: rgba(229, 57, 53, 0.25);
+            --accent-glow-strong: rgba(229, 57, 53, 0.5);
+            --fg: #e8e8ec;
+            --muted: #6b6b80;
+            --input-bg: #0e0e16;
+            --wa-green: #25D366;
+            --wa-glow: rgba(37, 211, 102, 0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bg-grid {
+            position: fixed; inset: 0;
+            background-image:
+                linear-gradient(rgba(229,57,53,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(229,57,53,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            animation: gridMove 20s linear infinite;
+        }
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(60px, 60px); }
+        }
+
+        .bg-blob {
+            position: fixed; width: 500px; height: 500px;
+            border-radius: 50%; filter: blur(120px);
+            opacity: 0.12; pointer-events: none;
+        }
+        .bg-blob.one { background: var(--accent); top: -200px; right: -100px; animation: float1 8s ease-in-out infinite; }
+        .bg-blob.two { background: #ff8a80; bottom: -200px; left: -100px; animation: float2 10s ease-in-out infinite; }
+        @keyframes float1 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-40px,30px) scale(1.1)} }
+        @keyframes float2 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(30px,-40px) scale(1.05)} }
+
+        .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+        .particle {
+            position: absolute; width: 3px; height: 3px;
+            background: var(--accent); border-radius: 50%;
+            opacity: 0; animation: particleFade 4s ease-in-out infinite;
+        }
+        @keyframes particleFade {
+            0%,100%{opacity:0;transform:translateY(0)} 50%{opacity:0.35;transform:translateY(-30px)}
+        }
+
+        .screen {
+            position: fixed; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1; transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .screen.hidden { opacity: 0; transform: scale(0.95); pointer-events: none; }
+        .screen.slide-out { opacity: 0; transform: translateY(-40px) scale(1.02); pointer-events: none; }
+
+        .start-content {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 28px; animation: fadeInUp 0.8s ease-out;
+        }
+        @keyframes fadeInUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+
+        .logo-img-wrapper {
+            position: relative; width: 140px; height: 140px; border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 8px 40px var(--accent-glow-strong), 0 0 80px var(--accent-glow);
+            animation: logoPulse 3s ease-in-out infinite;
+        }
+        @keyframes logoPulse {
+            0%,100%{box-shadow:0 8px 40px var(--accent-glow),0 0 80px rgba(229,57,53,0.15)}
+            50%{box-shadow:0 8px 50px var(--accent-glow-strong),0 0 100px var(--accent-glow)}
+        }
+        .logo-img-wrapper img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        .app-name { font-size: 42px; font-weight: 900; letter-spacing: -1px; line-height: 1; }
+        .app-name span { color: var(--accent); }
+        .app-desc { color: var(--muted); font-size: 16px; text-align: center; max-width: 300px; line-height: 1.6; }
+
+        .btn-start {
+            position: relative; padding: 18px 72px; background: transparent; border: none;
+            border-radius: 16px; color: #fff; font-size: 22px; font-weight: 900;
+            font-family: 'Tajawal', sans-serif; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1; transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-start .btn-bg {
+            position: absolute; inset: 0; border-radius: 16px;
+            background: linear-gradient(135deg,#c62828,var(--accent),var(--accent-light),#ff8a80);
+            background-size: 300% 300%; animation: gradientShift 4s ease-in-out infinite; z-index: -2;
+        }
+        @keyframes gradientShift { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+        .btn-start .btn-border {
+            position: absolute; inset: -2px; border-radius: 18px;
+            background: linear-gradient(135deg,var(--accent),#ff8a80,var(--accent-light),var(--accent));
+            background-size: 300% 300%; animation: gradientShift 4s ease-in-out infinite;
+            z-index: -3; opacity: 0.6; filter: blur(6px);
+        }
+        .btn-start .btn-glow {
+            position: absolute; bottom: -8px; left: 15%; right: 15%; height: 24px;
+            border-radius: 50%; background: var(--accent); filter: blur(18px);
+            opacity: 0.45; z-index: -4; animation: glowPulse 2s ease-in-out infinite;
+        }
+        @keyframes glowPulse { 0%,100%{opacity:0.35;transform:scaleX(1)} 50%{opacity:0.55;transform:scaleX(1.05)} }
+        .btn-start .btn-shine {
+            position: absolute; inset: 0; border-radius: 16px;
+            background: linear-gradient(105deg,transparent 35%,rgba(255,255,255,0.12) 45%,rgba(255,255,255,0.2) 50%,rgba(255,255,255,0.12) 55%,transparent 65%);
+            background-size: 250% 100%; animation: shineMove 3s ease-in-out infinite; z-index: -1;
+        }
+        @keyframes shineMove { 0%{background-position:200% 0} 60%,100%{background-position:-50% 0} }
+        .btn-start:hover { transform: translateY(-4px) scale(1.05); }
+        .btn-start:hover .btn-glow { opacity: 0.7; filter: blur(22px); }
+        .btn-start:active { transform: translateY(1px) scale(0.97); }
+        .btn-start .btn-text { position: relative; z-index: 1; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+
+        .container { width: 100%; max-width: 520px; padding: 20px; }
+        .card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 20px; padding: 36px 32px; position: relative; overflow: hidden;
+        }
+        .card::before {
+            content: ''; position: absolute; top: 0; right: 0; left: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0.8;
+        }
+
+        .card-top-bar {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .card-header { display: flex; align-items: center; gap: 12px; }
+        .card-logo {
+            width: 44px; height: 44px; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 2px 12px var(--accent-glow); flex-shrink: 0;
+        }
+        .card-logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .card-title { font-size: 24px; font-weight: 900; }
+        .card-title span { color: var(--accent); }
+
+        .top-actions { display: flex; gap: 8px; }
+
+        .btn-icon {
+            background: rgba(229,57,53,0.08); border: 1px solid rgba(229,57,53,0.15);
+            color: var(--accent-light); width: 40px; height: 40px; border-radius: 10px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 16px; transition: background 0.2s, transform 0.15s, border-color 0.2s;
+            position: relative;
+        }
+        .btn-icon:hover { background: rgba(229,57,53,0.18); transform: scale(1.08); border-color: rgba(229,57,53,0.35); }
+        .btn-icon .badge {
+            position: absolute; top: -5px; left: -5px;
+            background: var(--accent); color: #fff; font-size: 10px;
+            min-width: 18px; height: 18px; border-radius: 9px;
+            display: none; align-items: center; justify-content: center;
+            font-weight: 900; padding: 0 4px; border: 2px solid var(--card);
+        }
+        .badge.show { display: flex; }
+
+        .subtitle { text-align: center; color: var(--muted); font-size: 15px; margin-bottom: 28px; }
+
+        .input-group { position: relative; margin-bottom: 20px; }
+        .input-label { display: block; font-size: 14px; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
+        .input-field {
+            width: 100%; padding: 14px 16px; background: var(--input-bg);
+            border: 1.5px solid var(--border); border-radius: 12px;
+            color: var(--fg); font-size: 16px; font-family: 'Tajawal', sans-serif;
+            outline: none; transition: border-color 0.3s, box-shadow 0.3s;
+            direction: ltr; text-align: left;
+        }
+        .input-field::placeholder { color: var(--muted); opacity: 0.5; direction: rtl; text-align: right; }
+        .input-field:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+        .btn-generate {
+            width: 100%; padding: 14px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            border: none; border-radius: 12px; color: #fff; font-size: 17px;
+            font-weight: 900; font-family: 'Tajawal', sans-serif; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 6px 24px var(--accent-glow-strong); }
+        .btn-generate:active { transform: translateY(0); }
+
+        .result {
+            margin-top: 24px; opacity: 0; transform: translateY(10px);
+            transition: opacity 0.4s, transform 0.4s; pointer-events: none;
+        }
+        .result.visible { opacity: 1; transform: translateY(0); pointer-events: all; }
+        .result-label { font-size: 13px; color: var(--muted); margin-bottom: 8px; font-weight: 700; }
+        .result-box {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--input-bg); border: 1.5px solid var(--accent);
+            border-radius: 12px; padding: 12px 14px; direction: ltr;
+        }
+        .result-link {
+            flex: 1; font-size: 14px; color: var(--accent-light);
+            word-break: break-all; user-select: all; font-weight: 700;
+        }
+        .btn-copy-small {
+            background: rgba(229,57,53,0.1); border: 1px solid rgba(229,57,53,0.3);
+            color: var(--accent-light); padding: 8px 14px; border-radius: 8px;
+            cursor: pointer; font-family: 'Tajawal', sans-serif; font-size: 13px;
+            font-weight: 700; transition: background 0.2s, transform 0.15s;
+            display: flex; align-items: center; gap: 6px; white-space: nowrap;
+        }
+        .btn-copy-small:hover { background: rgba(229,57,53,0.2); transform: scale(1.03); }
+        .btn-copy-small.copied { background: var(--accent); color: #fff; }
+
+        .result-actions {
+            margin-top: 12px;
+            display: flex; justify-content: center;
+        }
+        .btn-save {
+            padding: 10px 28px;
+            background: rgba(229,57,53,0.08);
+            border: 1.5px solid rgba(229,57,53,0.25);
+            color: var(--accent-light); border-radius: 10px;
+            cursor: pointer; font-family: 'Tajawal', sans-serif;
+            font-size: 14px; font-weight: 700;
+            transition: background 0.2s, transform 0.15s, border-color 0.2s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .btn-save:hover {
+            background: rgba(229,57,53,0.15);
+            border-color: rgba(229,57,53,0.45);
+            transform: scale(1.04);
+        }
+        .btn-save:active { transform: scale(0.97); }
+        .btn-save.saved {
+            background: rgba(229,57,53,0.2);
+            border-color: var(--accent);
+            color: #fff;
+        }
+        .btn-save.saved .save-text { display: none; }
+        .btn-save.saved .saved-text { display: flex; align-items: center; gap: 6px; }
+        .btn-save .saved-text { display: none; }
+
+        /* === زر واتساب عائم === */
+        .whatsapp-fab {
+            position: fixed;
+            bottom: 28px;
+            left: 28px;
+            width: 58px;
+            height: 58px;
+            background: var(--wa-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 30px;
+            box-shadow: 0 4px 18px var(--wa-glow);
+            z-index: 50;
+            text-decoration: none;
+            transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s;
+            animation: waFloat 3s ease-in-out infinite;
+        }
+        @keyframes waFloat {
+            0%,100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+        .whatsapp-fab:hover {
+            transform: scale(1.12) translateY(-2px);
+            box-shadow: 0 8px 28px rgba(37, 211, 102, 0.6);
+        }
+        .whatsapp-fab:active {
+            transform: scale(0.95);
+        }
+
+        /* === لوحة المحفوظات === */
+        .saved-panel {
+            position: fixed; inset: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.35s ease;
+        }
+        .saved-panel.open { opacity: 1; pointer-events: all; }
+
+        .saved-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 20px; padding: 28px 24px; width: 90%;
+            max-width: 500px; max-height: 75vh; display: flex; flex-direction: column;
+            transform: translateY(20px) scale(0.97);
+            transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .saved-panel.open .saved-card { transform: translateY(0) scale(1); }
+
+        .saved-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 20px; padding-bottom: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .saved-title {
+            font-size: 20px; font-weight: 900;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .saved-title i { color: var(--accent-light); }
+        .saved-count { color: var(--muted); font-size: 13px; font-weight: 700; }
+
+        .btn-close-panel {
+            background: rgba(229,57,53,0.08); border: 1px solid rgba(229,57,53,0.2);
+            color: var(--accent-light); width: 36px; height: 36px; border-radius: 10px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 15px; transition: background 0.2s, transform 0.15s;
+        }
+        .btn-close-panel:hover { background: rgba(229,57,53,0.18); transform: scale(1.05); }
+
+        .saved-list {
+            flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+            padding-left: 4px;
+        }
+        .saved-list::-webkit-scrollbar { width: 4px; }
+        .saved-list::-webkit-scrollbar-track { background: transparent; }
+        .saved-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .saved-item {
+            display: flex; align-items: center; gap: 12px;
+            background: var(--input-bg); border: 1px solid var(--border);
+            border-radius: 12px; padding: 12px 14px;
+            transition: border-color 0.2s, background 0.2s;
+            animation: itemIn 0.3s ease-out backwards;
+        }
+        .saved-item:hover { border-color: rgba(229,57,53,0.3); background: rgba(229,57,53,0.03); }
+        @keyframes itemIn {
+            from { opacity: 0; transform: translateX(10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .saved-item-icon {
+            width: 38px; height: 38px; border-radius: 10px;
+            background: rgba(229,57,53,0.1); display: flex;
+            align-items: center; justify-content: center;
+            color: var(--accent-light); font-size: 16px; flex-shrink: 0;
+        }
+        .saved-item-info { flex: 1; min-width: 0; }
+        .saved-item-name {
+            font-weight: 900; font-size: 15px; color: var(--fg);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            direction: ltr; text-align: left;
+        }
+        .saved-item-url {
+            font-size: 12px; color: var(--muted); margin-top: 2px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            direction: ltr; text-align: left;
+        }
+        .saved-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+        .btn-item-action {
+            width: 34px; height: 34px; border-radius: 8px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .btn-item-action:hover { transform: scale(1.08); }
+
+        .btn-item-copy {
+            background: rgba(229,57,53,0.1); border: 1px solid rgba(229,57,53,0.25);
+            color: var(--accent-light); font-size: 13px;
+        }
+        .btn-item-copy:hover { background: rgba(229,57,53,0.2); }
+        .btn-item-copy.copied { background: var(--accent); color: #fff; }
+
+        .btn-item-delete {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+            color: var(--muted); font-size: 12px;
+        }
+        .btn-item-delete:hover { background: rgba(255,82,82,0.15); color: #ff5252; }
+
+        .empty-state {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; padding: 40px 20px; gap: 12px;
+        }
+        .empty-state i { font-size: 40px; color: var(--border); }
+        .empty-state p { color: var(--muted); font-size: 14px; text-align: center; }
+
+        .btn-clear-all {
+            margin-top: 16px; padding: 10px 20px;
+            background: rgba(229,57,53,0.08); border: 1px solid rgba(229,57,53,0.2);
+            color: var(--accent-light); border-radius: 10px;
+            cursor: pointer; font-family: 'Tajawal', sans-serif;
+            font-size: 13px; font-weight: 700;
+            transition: background 0.2s, transform 0.15s;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .btn-clear-all:hover { background: rgba(229,57,53,0.18); transform: scale(1.03); }
+
+        /* توست */
+        .toast {
+            position: fixed; bottom: 30px; left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: var(--card); border: 1px solid var(--accent);
+            color: var(--fg); padding: 12px 24px; border-radius: 12px;
+            font-family: 'Tajawal', sans-serif; font-weight: 700; font-size: 14px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s;
+            opacity: 0; z-index: 999;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast i { color: var(--accent-light); }
+
+        @media (prefers-reduced-motion: reduce) {
+            .bg-grid,.bg-blob,.particle { animation: none !important; }
+            .screen,.result,.toast,.saved-panel,.saved-card,.saved-item { transition: none !important; }
+            .btn-start .btn-bg,.btn-start .btn-border,.btn-start .btn-shine,
+            .btn-start .btn-glow,.logo-img-wrapper,.whatsapp-fab { animation: none !important; }
+        }
+        @media (max-width: 480px) {
+            .card { padding: 28px 18px; }
+            .app-name { font-size: 34px; }
+            .logo-img-wrapper { width: 110px; height: 110px; border-radius: 26px; }
+            .btn-start { padding: 16px 56px; font-size: 20px; }
+            .saved-card { padding: 20px 16px; }
+            .whatsapp-fab { width: 52px; height: 52px; font-size: 26px; bottom: 20px; left: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-grid"></div>
+    <div class="bg-blob one"></div>
+    <div class="bg-blob two"></div>
+    <div class="particles" id="particles"></div>
+
+    <!-- شاشة البداية -->
+    <section class="screen" id="startScreen">
+        <div class="start-content">
+            <div class="logo-img-wrapper">
+                <img src="https://z-cdn-media.chatglm.cn/files/4667b5ab-2a0a-4537-a7fa-56154f5c352f.png?auth_key=1880614056-5b68869a69904016bad8f58f2268eaf8-0-73ba7132285b2a810c1d8f49e39889d8" alt="RedKick Logo">
+            </div>
+            <h1 class="app-name">Red<span>Kick</span></h1>
+            <p class="app-desc">ولّد رابط متجر البوت لأي ستريمر على كيك بسهولة وسرعة</p>
+            <button class="btn-start" id="startBtn">
+                <span class="btn-border"></span>
+                <span class="btn-bg"></span>
+                <span class="btn-shine"></span>
+                <span class="btn-glow"></span>
+                <span class="btn-text">Start</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- شاشة الرابط -->
+    <section class="screen hidden" id="mainScreen">
+        <main class="container">
+            <div class="card">
+                <div class="card-top-bar">
+                    <div class="card-header">
+                        <div class="card-logo">
+                            <img src="https://z-cdn-media.chatglm.cn/files/4667b5ab-2a0a-4537-a7fa-56154f5c352f.png?auth_key=1880614056-5b68869a69904016bad8f58f2268eaf8-0-73ba7132285b2a810c1d8f49e39889d8" alt="RedKick">
+                        </div>
+                        <h2 class="card-title">Red<span>Kick</span></h2>
+                    </div>
+                    <div class="top-actions">
+                        <button class="btn-icon" id="backBtn" aria-label="رجوع">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                        <button class="btn-icon" id="savedBtn" aria-label="المحفوظات">
+                            <i class="fas fa-bookmark"></i>
+                            <span class="badge" id="savedBadge">0</span>
+                        </button>
+                    </div>
+                </div>
+
+                <p class="subtitle">أدخل اسم الستريمر للحصول على رابط المتجر</p>
+
+                <div class="input-group">
+                    <label class="input-label" for="streamerInput">اسم الستريمر</label>
+                    <input type="text" id="streamerInput" class="input-field" placeholder="أدخل اسم الستريمر هنا..." autocomplete="off" spellcheck="false">
+                </div>
+
+                <button class="btn-generate" id="generateBtn">
+                    <i class="fas fa-bolt"></i>
+                    توليد الرابط
+                </button>
+
+                <div class="result" id="result">
+                    <div class="result-label">الرابط جاهز</div>
+                    <div class="result-box">
+                        <span class="result-link" id="resultLink"></span>
+                        <button class="btn-copy-small" id="copyBtn" aria-label="نسخ الرابط">
+                            <i class="fas fa-copy"></i>
+                            نسخ
+                        </button>
+                    </div>
+                    <div class="result-actions">
+                        <button class="btn-save" id="saveBtn">
+                            <i class="fas fa-bookmark"></i>
+                            <span class="save-text">Save</span>
+                            <span class="saved-text"><i class="fas fa-check"></i> تم الحفظ</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </section>
+
+    <!-- زر واتساب عائم -->
+    <a href="https://wa.me/963995271182" target="_blank" rel="noopener noreferrer" class="whatsapp-fab" aria-label="تواصل معنا عبر واتساب">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <!-- لوحة المحفوظات -->
+    <div class="saved-panel" id="savedPanel">
+        <div class="saved-card">
+            <div class="saved-header">
+                <div>
+                    <div class="saved-title"><i class="fas fa-bookmark"></i> المحفوظات</div>
+                    <div class="saved-count" id="savedCountLabel">0 ستريمر محفوظ</div>
+                </div>
+                <button class="btn-close-panel" id="closePanelBtn" aria-label="إغلاق">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="saved-list" id="savedList"></div>
+            <div style="display:flex;justify-content:center" id="clearAllWrap"></div>
+        </div>
+    </div>
+
+    <!-- توست -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMsg">تم النسخ</span>
+    </div>
+
+    <script>
+        const startScreen = document.getElementById('startScreen');
+        const mainScreen = document.getElementById('mainScreen');
+        const startBtn = document.getElementById('startBtn');
+        const backBtn = document.getElementById('backBtn');
+        const streamerInput = document.getElementById('streamerInput');
+        const generateBtn = document.getElementById('generateBtn');
+        const resultDiv = document.getElementById('result');
+        const resultLink = document.getElementById('resultLink');
+        const copyBtn = document.getElementById('copyBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toastMsg');
+        const savedBtn = document.getElementById('savedBtn');
+        const savedBadge = document.getElementById('savedBadge');
+        const savedPanel = document.getElementById('savedPanel');
+        const closePanelBtn = document.getElementById('closePanelBtn');
+        const savedList = document.getElementById('savedList');
+        const savedCountLabel = document.getElementById('savedCountLabel');
+        const clearAllWrap = document.getElementById('clearAllWrap');
+
+        // الجسيمات
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 20; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.top = Math.random() * 100 + '%';
+            p.style.animationDelay = (Math.random() * 4) + 's';
+            p.style.animationDuration = (3 + Math.random() * 3) + 's';
+            particlesContainer.appendChild(p);
+        }
+
+        // البيانات المحفوظة
+        let savedStreamers = [];
+
+        function loadSaved() {
+            try {
+                const data = localStorage.getItem('redkick_saved');
+                if (data) savedStreamers = JSON.parse(data);
+            } catch(e) { savedStreamers = []; }
+            updateBadge();
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('redkick_saved', JSON.stringify(savedStreamers));
+            updateBadge();
+        }
+
+        function updateBadge() {
+            const count = savedStreamers.length;
+            savedBadge.textContent = count;
+            if (count > 0) {
+                savedBadge.classList.add('show');
+            } else {
+                savedBadge.classList.remove('show');
+            }
+        }
+
+        // الانتقال بين الشاشات
+        startBtn.addEventListener('click', function() {
+            startScreen.classList.add('slide-out');
+            setTimeout(function() {
+                startScreen.classList.add('hidden');
+                startScreen.classList.remove('slide-out');
+                mainScreen.classList.remove('hidden');
+                setTimeout(function() { streamerInput.focus(); }, 300);
+            }, 400);
+        });
+
+        backBtn.addEventListener('click', function() {
+            mainScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+            streamerInput.value = '';
+            resultDiv.classList.remove('visible');
+            saveBtn.classList.remove('saved');
+        });
+
+        // توليد الرابط
+        let currentName = '';
+        let currentUrl = '';
+
+        function generateLink() {
+            const name = streamerInput.value.trim();
+            if (!name) {
+                showToast('يرجى إدخال اسم الستريمر', false);
+                streamerInput.focus();
+                return;
+            }
+            currentName = name.replace(/\s+/g, '');
+            currentUrl = 'https://botrix.live/k/' + currentName + '/shop';
+            resultLink.textContent = currentUrl;
+            resultDiv.classList.add('visible');
+
+            const exists = savedStreamers.some(function(s) { return s.name.toLowerCase() === currentName.toLowerCase(); });
+            if (exists) {
+                saveBtn.classList.add('saved');
+            } else {
+                saveBtn.classList.remove('saved');
+            }
+        }
+
+        generateBtn.addEventListener('click', generateLink);
+
+        streamerInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') generateLink();
+        });
+
+        streamerInput.addEventListener('input', function() {
+            resultDiv.classList.remove('visible');
+            saveBtn.classList.remove('saved');
+        });
+
+        // نسخ الرابط الرئيسي
+        copyBtn.addEventListener('click', function() {
+            copyText(resultLink.textContent, copyBtn);
+        });
+
+        // حفظ الرابط
+        saveBtn.addEventListener('click', function() {
+            if (!currentName || !currentUrl) return;
+
+            const exists = savedStreamers.some(function(s) { return s.name.toLowerCase() === currentName.toLowerCase(); });
+            if (exists) {
+                showToast('هذا الستريمر محفوظ مسبقاً', false);
+                return;
+            }
+
+            savedStreamers.unshift({ name: currentName, url: currentUrl, date: Date.now() });
+            saveToStorage();
+            saveBtn.classList.add('saved');
+            showToast('تم حفظ ' + currentName + ' في المحفوظات');
+        });
+
+        // دالة النسخ
+        function copyText(text, btnEl) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function() {
+                    showCopied(btnEl);
+                    showToast('تم نسخ الرابط بنجاح');
+                }).catch(function() {
+                    fallbackCopy(text, btnEl);
+                });
+            } else {
+                fallbackCopy(text, btnEl);
+            }
+        }
+
+        function fallbackCopy(text, btnEl) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                document.execCommand('copy');
+                showCopied(btnEl);
+                showToast('تم نسخ الرابط بنجاح');
+            } catch(e) {
+                showToast('فشل النسخ', false);
+            }
+            document.body.removeChild(ta);
+        }
+
+        function showCopied(btnEl) {
+            if (!btnEl) return;
+            btnEl.classList.add('copied');
+            const origHTML = btnEl.innerHTML;
+            setTimeout(function() {
+                btnEl.classList.remove('copied');
+                btnEl.innerHTML = origHTML;
+            }, 1500);
+        }
+
+        // لوحة المحفوظات
+        savedBtn.addEventListener('click', function() {
+            renderSavedList();
+            savedPanel.classList.add('open');
+        });
+
+        closePanelBtn.addEventListener('click', function() {
+            savedPanel.classList.remove('open');
+        });
+
+        savedPanel.addEventListener('click', function(e) {
+            if (e.target === savedPanel) savedPanel.classList.remove('open');
+        });
+
+        function renderSavedList() {
+            savedList.innerHTML = '';
+            clearAllWrap.innerHTML = '';
+
+            if (savedStreamers.length === 0) {
+                savedList.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد بيانات محفوظة بعد</p></div>';
+                savedCountLabel.textContent = '0 ستريمر محفوظ';
+                return;
+            }
+
+            savedCountLabel.textContent = savedStreamers.length + ' ستريمر محفوظ';
+
+            savedStreamers.forEach(function(item, index) {
+                const el = document.createElement('div');
+                el.className = 'saved-item';
+                el.style.animationDelay = (index * 0.05) + 's';
+
+                el.innerHTML =
+                    '<div class="saved-item-icon"><i class="fas fa-user"></i></div>' +
+                    '<div class="saved-item-info">' +
+                        '<div class="saved-item-name">' + escapeHTML(item.name) + '</div>' +
+                        '<div class="saved-item-url">' + escapeHTML(item.url) + '</div>' +
+                    '</div>' +
+                    '<div class="saved-item-actions">' +
+                        '<button class="btn-item-action btn-item-copy" data-url="' + escapeAttr(item.url) + '" aria-label="نسخ الرابط"><i class="fas fa-copy"></i></button>' +
+                        '<button class="btn-item-action btn-item-delete" data-index="' + index + '" aria-label="حذف"><i class="fas fa-trash-alt"></i></button>' +
+                    '</div>';
+
+                savedList.appendChild(el);
+            });
+
+            if (savedStreamers.length > 1) {
+                const clearBtn = document.createElement('button');
+                clearBtn.className = 'btn-clear-all';
+                clearBtn.innerHTML = '<i class="fas fa-trash-alt"></i> حذف الكل';
+                clearBtn.addEventListener('click', function() {
+                    savedStreamers = [];
+                    saveToStorage();
+                    renderSavedList();
+                    saveBtn.classList.remove('saved');
+                    showToast('تم حذف جميع المحفوظات');
+                });
+                clearAllWrap.appendChild(clearBtn);
+            }
+
+            savedList.querySelectorAll('.btn-item-copy').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const url = this.getAttribute('data-url');
+                    copyText(url, this);
+                });
+            });
+
+            savedList.querySelectorAll('.btn-item-delete').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const idx = parseInt(this.getAttribute('data-index'));
+                    const deletedName = savedStreamers[idx].name;
+                    savedStreamers.splice(idx, 1);
+                    saveToStorage();
+                    renderSavedList();
+                    if (currentName && !savedStreamers.some(function(s) { return s.name.toLowerCase() === currentName.toLowerCase(); })) {
+                        saveBtn.classList.remove('saved');
+                    }
+                    showToast('تم حذف ' + deletedName);
+                });
+            });
+        }
+
+        function escapeHTML(str) {
+            const d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
+        function escapeAttr(str) {
+            return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        // توست
+        let toastTimer;
+        function showToast(msg, success) {
+            clearTimeout(toastTimer);
+            toastMsg.textContent = msg;
+            const icon = toast.querySelector('i');
+            if (success === false) {
+                icon.className = 'fas fa-exclamation-circle';
+                icon.style.color = '#ff5252';
+                toast.style.borderColor = '#ff5252';
+            } else {
+                icon.className = 'fas fa-check-circle';
+                icon.style.color = 'var(--accent-light)';
+                toast.style.borderColor = 'var(--accent)';
+            }
+            toast.classList.add('show');
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 2500);
+        }
+
+        loadSaved();
+    </script>
+</body>
+</html>
