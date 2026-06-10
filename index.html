@@ -1,532 +1,353 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RedKick</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kick</title>
     <style>
-        :root {
-            --bg: #0a0a0f;
-            --card: #111118;
-            --border: #1c1c2a;
-            --accent: #e53935;
-            --accent-light: #ff5252;
-            --accent-glow: rgba(229,57,53,.2);
-            --accent-glow-strong: rgba(229,57,53,.45);
-            --fg: #eaeaef;
-            --muted: #65657a;
-            --input-bg: #0c0c14;
-            --wa-green: #25D366;
-            --wa-glow: rgba(37,211,102,.35);
-            --twitter: #1DA1F2;
-            --discord: #5865F2;
-            --telegram: #26A5E4;
-            --gold: #FFD700;
-            --gold-glow: rgba(255,215,0,.2);
-            --cyan: #22d3ee;
-            --cyan-glow: rgba(34,211,238,.15);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--fg);min-height:100vh;overflow:hidden;position:relative;-webkit-font-smoothing:antialiased}
 
-        /* تحميل */
-        .loading-screen{position:fixed;inset:0;z-index:2000;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .7s cubic-bezier(.4,0,.2,1),visibility .7s}
-        .loading-screen.done{opacity:0;visibility:hidden;pointer-events:none}
-        .loading-logo{width:70px;height:70px;border-radius:18px;overflow:hidden;margin-bottom:28px;animation:loadPulse 1s ease-in-out infinite alternate;box-shadow:0 0 30px var(--accent-glow-strong)}
-        .loading-logo img{width:100%;height:100%;object-fit:cover;display:block}
-        @keyframes loadPulse{0%{transform:scale(1);box-shadow:0 0 20px var(--accent-glow)}100%{transform:scale(1.06);box-shadow:0 0 40px var(--accent-glow-strong)}}
-        .loading-text{font-size:15px;font-weight:700;color:var(--muted);margin-bottom:20px;letter-spacing:1px;animation:loadFade 1.5s ease-in-out infinite}
-        @keyframes loadFade{0%,100%{opacity:.4}50%{opacity:1}}
-        .loading-bar-track{width:220px;height:3px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden}
-        .loading-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#c62828,var(--accent),var(--accent-light));border-radius:3px;animation:barFill 3s cubic-bezier(.4,0,.2,1) forwards;box-shadow:0 0 10px var(--accent-glow-strong)}
-        @keyframes barFill{0%{width:0}15%{width:18%}30%{width:33%}50%{width:54%}70%{width:74%}85%{width:89%}100%{width:100%}}
-        .loading-percent{margin-top:12px;font-size:12px;font-weight:900;color:var(--accent-light);letter-spacing:2px}
-
-        /* خلفية */
-        .bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(229,57,53,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(229,57,53,.025) 1px,transparent 1px);background-size:60px 60px;animation:gridMove 25s linear infinite}
-        @keyframes gridMove{0%{transform:translate(0,0)}100%{transform:translate(60px,60px)}}
-        .bg-blob{position:fixed;width:480px;height:480px;border-radius:50%;filter:blur(130px);opacity:.1;pointer-events:none}
-        .bg-blob.one{background:var(--accent);top:-180px;right:-80px;animation:fl1 9s ease-in-out infinite}
-        .bg-blob.two{background:#ff8a80;bottom:-180px;left:-80px;animation:fl2 11s ease-in-out infinite}
-        @keyframes fl1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-35px,25px) scale(1.08)}}
-        @keyframes fl2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(25px,-35px) scale(1.06)}}
-        .particles{position:fixed;inset:0;pointer-events:none;z-index:0}
-        .particle{position:absolute;width:2px;height:2px;background:var(--accent);border-radius:50%;opacity:0;animation:pFade 5s ease-in-out infinite}
-        @keyframes pFade{0%,100%{opacity:0;transform:translateY(0)}50%{opacity:.25;transform:translateY(-25px)}}
-
-        .screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;transition:opacity .55s cubic-bezier(.4,0,.2,1),transform .55s cubic-bezier(.4,0,.2,1)}
-        .screen.hidden{opacity:0;transform:scale(.96);pointer-events:none}
-        .screen.slide-out{opacity:0;transform:translateY(-50px) scale(1.02);pointer-events:none}
-
-        /* الدخولية */
-        .start-content{display:flex;flex-direction:column;align-items:center;gap:0;position:relative}
-        .logo-stage{position:relative;width:300px;height:300px;display:flex;align-items:center;justify-content:center;margin-bottom:20px}
-        .shockwave{position:absolute;width:80px;height:80px;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);border:2px solid var(--accent);opacity:0}
-        .shockwave.s1{animation:shockE 1.2s ease-out .5s both}.shockwave.s2{animation:shockE 1.5s ease-out .7s both}.shockwave.s3{animation:shockE 1.8s ease-out .9s both}.shockwave.s4{animation:shockE 2s ease-out 1.1s both}
-        @keyframes shockE{0%{width:60px;height:60px;opacity:.85;border-width:2.5px}100%{width:500px;height:500px;opacity:0;border-width:.5px}}
-        .orbit-ring{position:absolute;border-radius:50%;border:1px solid rgba(229,57,53,.06);animation:oSpin linear infinite}
-        .orbit-ring.r1{width:175px;height:175px;border-color:rgba(229,57,53,.12);animation-duration:9s}
-        .orbit-ring.r2{width:215px;height:215px;border-color:rgba(229,57,53,.08);animation-duration:15s;animation-direction:reverse}
-        .orbit-ring.r3{width:265px;height:265px;border-color:rgba(229,57,53,.04);animation-duration:22s}
-        @keyframes oSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-        .orbit-dot{position:absolute;width:5px;height:5px;background:var(--accent);border-radius:50%;box-shadow:0 0 8px var(--accent-glow-strong)}
-        .orbit-ring.r1 .orbit-dot{top:-2.5px;left:50%;margin-left:-2.5px}.orbit-ring.r2 .orbit-dot{bottom:-2.5px;right:25%}.orbit-ring.r3 .orbit-dot{top:35%;left:-2.5px}
-        .lightning{position:absolute;width:100%;height:100%;top:0;left:0;pointer-events:none;opacity:0}
-        .lightning.l1{animation:lFlash 3.5s ease-in-out 1.2s infinite}.lightning.l2{animation:lFlash 4.5s ease-in-out 2.2s infinite}
-        @keyframes lFlash{0%,89%,93%,97%,100%{opacity:0}90%{opacity:.85}92%{opacity:0}94%{opacity:.5}96%{opacity:0}}
-        .lightning svg{width:100%;height:100%}.lightning path{fill:none;stroke:var(--accent);stroke-width:1.5;filter:drop-shadow(0 0 6px var(--accent-glow-strong))}
-        .burst-particle{position:absolute;border-radius:50%;background:var(--accent);top:50%;left:50%;opacity:0;pointer-events:none}
-        .bp1{width:3px;height:3px;animation:b1 .9s ease-out .4s both}.bp2{width:2px;height:2px;animation:b2 1.1s ease-out .45s both}.bp3{width:4px;height:4px;animation:b3 1s ease-out .35s both}.bp4{width:2px;height:2px;animation:b4 1.2s ease-out .5s both}.bp5{width:3px;height:3px;animation:b5 .9s ease-out .42s both}.bp6{width:2px;height:2px;animation:b6 1.3s ease-out .55s both}.bp7{width:3px;height:3px;animation:b7 1s ease-out .38s both}.bp8{width:2px;height:2px;animation:b8 1.1s ease-out .48s both}.bp9{width:4px;height:4px;animation:b9 .9s ease-out .52s both}.bp10{width:2px;height:2px;animation:b10 1.2s ease-out .58s both}.bp11{width:3px;height:3px;animation:b11 1s ease-out .36s both}.bp12{width:2px;height:2px;animation:b12 1.3s ease-out .53s both}
-        @keyframes b1{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(125px,-85px);opacity:0}}
-        @keyframes b2{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(-105px,-115px);opacity:0}}
-        @keyframes b3{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(85px,125px);opacity:0}}
-        @keyframes b4{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(-135px,65px);opacity:0}}
-        @keyframes b5{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(65px,-135px);opacity:0}}
-        @keyframes b6{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(-85px,-65px);opacity:0}}
-        @keyframes b7{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(145px,45px);opacity:0}}
-        @keyframes b8{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(-55px,145px);opacity:0}}
-        @keyframes b9{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(115px,-125px);opacity:0}}
-        @keyframes b10{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(-145px,-35px);opacity:0}}
-        @keyframes b11{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(35px,155px);opacity:0}}
-        @keyframes b12{0%{transform:translate(-50%,-50%) translate(0,0);opacity:1}100%{transform:translate(-50%,-50%) translate(-115px,105px);opacity:0}}
-        .logo-flash{position:absolute;width:90px;height:90px;border-radius:22px;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--accent);z-index:1;opacity:0;animation:flashB .8s ease-out .3s both;filter:blur(30px)}
-        @keyframes flashB{0%{opacity:1;transform:translate(-50%,-50%) scale(.2)}25%{opacity:1;transform:translate(-50%,-50%) scale(2)}100%{opacity:0;transform:translate(-50%,-50%) scale(4)}}
-        .logo-aura{position:absolute;width:110px;height:110px;border-radius:24px;top:50%;left:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(229,57,53,.3) 0%,transparent 70%);z-index:0;opacity:0;animation:auraIn .5s ease-out .8s both,auraP 3s ease-in-out 1.3s infinite}
-        @keyframes auraIn{from{opacity:0;transform:translate(-50%,-50%) scale(.3)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-        @keyframes auraP{0%,100%{opacity:.5;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.18)}}
-        .logo-img-wrapper{position:relative;width:85px;height:85px;border-radius:20px;overflow:hidden;z-index:2;box-shadow:0 0 0 rgba(229,57,53,0);animation:logoS .7s cubic-bezier(.15,1.3,.4,1) .2s both,logoB 3.5s ease-in-out 1.2s infinite}
-        @keyframes logoS{0%{opacity:0;transform:scale(4) rotate(-30deg);filter:brightness(4);box-shadow:0 0 100px rgba(229,57,53,1)}40%{filter:brightness(2)}60%{transform:scale(.85) rotate(3deg);filter:brightness(1.2)}80%{transform:scale(1.08) rotate(-2deg)}100%{opacity:1;transform:scale(1) rotate(0);filter:brightness(1);box-shadow:0 8px 40px var(--accent-glow-strong)}}
-        @keyframes logoB{0%,100%{box-shadow:0 8px 40px var(--accent-glow),0 0 60px rgba(229,57,53,.08);transform:scale(1)}50%{box-shadow:0 8px 50px var(--accent-glow-strong),0 0 100px var(--accent-glow);transform:scale(1.04)}}
-        .logo-img-wrapper img{width:100%;height:100%;object-fit:cover;display:block}
-        .screen-shake{animation:sshake .5s ease-out both}
-        @keyframes sshake{0%{transform:translate(0,0)}15%{transform:translate(-5px,3px)}30%{transform:translate(4px,-2px)}45%{transform:translate(-3px,2px)}60%{transform:translate(2px,-1px)}75%{transform:translate(-1px,1px)}100%{transform:translate(0,0)}}
-        .app-name{font-size:50px;font-weight:900;letter-spacing:-1px;line-height:1;position:relative;margin-bottom:14px;animation:nS .6s cubic-bezier(.15,1.3,.4,1) .7s both}
-        @keyframes nS{0%{opacity:0;transform:translateY(50px) scale(1.4);letter-spacing:20px;filter:blur(10px)}50%{filter:blur(0)}75%{transform:translateY(-3px) scale(.97);letter-spacing:-3px}100%{opacity:1;transform:translateY(0) scale(1);letter-spacing:-1px}}
-        .app-name span{color:var(--accent)}
-        .app-name::before,.app-name::after{content:attr(data-text);position:absolute;top:0;left:0;right:0;overflow:hidden}
-        .app-name::before{color:#ff0000;z-index:-1;animation:g1 2.5s ease-in-out 1.5s infinite}
-        .app-name::after{color:#00ffff;z-index:-2;animation:g2 2.5s ease-in-out 1.5s infinite}
-        @keyframes g1{0%,85%,89%,93%,97%,100%{clip-path:inset(0 0 0 0);transform:translate(0)}86%{clip-path:inset(15% 0 45% 0);transform:translate(-5px,3px)}90%{clip-path:inset(55% 0 15% 0);transform:translate(4px,-2px)}94%{clip-path:inset(25% 0 55% 0);transform:translate(-3px,2px)}98%{clip-path:inset(65% 0 5% 0);transform:translate(2px,-1px)}}
-        @keyframes g2{0%,84%,88%,92%,96%,100%{clip-path:inset(0 0 0 0);transform:translate(0)}85%{clip-path:inset(45% 0 25% 0);transform:translate(4px,-3px)}89%{clip-path:inset(5% 0 65% 0);transform:translate(-5px,2px)}93%{clip-path:inset(35% 0 35% 0);transform:translate(3px,-1px)}97%{clip-path:inset(75% 0 5% 0);transform:translate(-2px,1px)}}
-        .divider-glow{width:60px;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);border-radius:1px;margin-bottom:14px;animation:dIn .5s ease-out 1s both,dP 2.5s ease-in-out 1.5s infinite}
-        @keyframes dIn{from{width:0;opacity:0}to{width:60px;opacity:1}}
-        @keyframes dP{0%,100%{opacity:.4;width:60px}50%{opacity:1;width:85px}}
-        .app-desc{color:var(--muted);font-size:15px;text-align:center;max-width:290px;line-height:1.7;animation:descIn .5s ease-out 1.1s both;margin-bottom:36px}
-        @keyframes descIn{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
-        .btn-start{position:relative;padding:18px 72px;background:transparent;border:none;border-radius:16px;color:#fff;font-size:22px;font-weight:900;font-family:'Tajawal',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:1;transition:transform .25s cubic-bezier(.34,1.56,.64,1);-webkit-tap-highlight-color:transparent;animation:btnS .7s cubic-bezier(.15,1.3,.4,1) 1.3s both}
-        @keyframes btnS{0%{opacity:0;transform:translateY(35px) scale(.5);filter:brightness(3)}50%{filter:brightness(1.5)}75%{transform:translateY(-4px) scale(1.06)}100%{opacity:1;transform:translateY(0) scale(1)}}
-        .btn-start .btn-bg{position:absolute;inset:0;border-radius:16px;background:linear-gradient(135deg,#c62828,var(--accent),var(--accent-light),#ff8a80);background-size:300% 300%;animation:gShift 4s ease-in-out infinite;z-index:-2}
-        @keyframes gShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-        .btn-start .btn-border{position:absolute;inset:-2px;border-radius:18px;background:linear-gradient(135deg,var(--accent),#ff8a80,var(--accent-light),var(--accent));background-size:300% 300%;animation:gShift 4s ease-in-out infinite;z-index:-3;opacity:.55;filter:blur(6px)}
-        .btn-start .btn-glow{position:absolute;bottom:-8px;left:15%;right:15%;height:22px;border-radius:50%;background:var(--accent);filter:blur(18px);opacity:.4;z-index:-4;animation:glP 2s ease-in-out infinite}
-        @keyframes glP{0%,100%{opacity:.3;transform:scaleX(1)}50%{opacity:.5;transform:scaleX(1.05)}}
-        .btn-start .btn-shine{position:absolute;inset:0;border-radius:16px;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.1) 45%,rgba(255,255,255,.18) 50%,rgba(255,255,255,.1) 55%,transparent 65%);background-size:250% 100%;animation:sM 3s ease-in-out infinite;z-index:-1}
-        @keyframes sM{0%{background-position:200% 0}60%,100%{background-position:-50% 0}}
-        .btn-start:hover{transform:translateY(-4px) scale(1.05)}.btn-start:hover .btn-glow{opacity:.65;filter:blur(22px)}.btn-start:active{transform:translateY(1px) scale(.97)}
-        .btn-start .btn-text{position:relative;z-index:1;text-shadow:0 2px 8px rgba(0,0,0,.3)}
-        .start-hint{margin-top:18px;color:var(--muted);font-size:12px;animation:hIn .6s ease-out 1.7s both;display:flex;align-items:center;gap:6px}
-        .start-hint i{animation:hP 2s ease-in-out infinite}
-        @keyframes hIn{from{opacity:0}to{opacity:.45}}@keyframes hP{0%,100%{opacity:.3}50%{opacity:1}}
-
-        /* شاشة الرابط */
-        .container{width:100%;max-width:520px;padding:20px}
-        .card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:34px 30px;position:relative;overflow:hidden;animation:cIn .45s cubic-bezier(.34,1.56,.64,1) both}
-        @keyframes cIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
-        .card::before{content:'';position:absolute;top:0;right:0;left:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.7}
-        .card-top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-        .card-header{display:flex;align-items:center;gap:12px}
-        .card-logo{width:42px;height:42px;border-radius:11px;overflow:hidden;box-shadow:0 2px 10px var(--accent-glow);flex-shrink:0}
-        .card-logo img{width:100%;height:100%;object-fit:cover;display:block}
-        .card-title{font-size:22px;font-weight:900}.card-title span{color:var(--accent)}
-        .top-actions{display:flex;gap:8px}
-        .btn-icon{background:rgba(229,57,53,.06);border:1px solid rgba(229,57,53,.12);color:var(--accent-light);width:38px;height:38px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .2s ease;position:relative}
-        .btn-icon:hover{background:rgba(229,57,53,.15);transform:scale(1.06);border-color:rgba(229,57,53,.3)}
-        .btn-icon .badge{position:absolute;top:-5px;left:-5px;background:var(--accent);color:#fff;font-size:9px;min-width:17px;height:17px;border-radius:9px;display:none;align-items:center;justify-content:center;font-weight:900;padding:0 4px;border:2px solid var(--card)}
-        .badge.show{display:flex}
-        .subtitle{text-align:center;color:var(--muted);font-size:14px;margin-bottom:26px}
-        .input-group{position:relative;margin-bottom:18px}
-        .input-label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:7px}
-        .input-field{width:100%;padding:13px 16px;background:var(--input-bg);border:1.5px solid var(--border);border-radius:11px;color:var(--fg);font-size:15px;font-family:'Tajawal',sans-serif;outline:none;transition:border-color .25s,box-shadow .25s;direction:ltr;text-align:left}
-        .input-field::placeholder{color:var(--muted);opacity:.45;direction:rtl;text-align:right}
-        .input-field:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
-        .btn-generate{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),var(--accent-light));border:none;border-radius:11px;color:#fff;font-size:16px;font-weight:900;font-family:'Tajawal',sans-serif;cursor:pointer;transition:transform .2s,box-shadow .2s;display:flex;align-items:center;justify-content:center;gap:8px}
-        .btn-generate:hover{transform:translateY(-2px);box-shadow:0 5px 22px var(--accent-glow-strong)}.btn-generate:active{transform:translateY(0)}
-
-        .result{margin-top:22px;opacity:0;transform:translateY(8px);transition:opacity .35s ease,transform .35s ease;pointer-events:none}
-        .result.visible{opacity:1;transform:translateY(0);pointer-events:all}
-
-        /* صندوقي الروابط */
-        .link-box{display:flex;align-items:center;gap:7px;background:var(--input-bg);border-radius:11px;padding:11px 13px;direction:ltr;margin-bottom:8px}
-        .link-box.original{border:1.5px solid var(--accent)}
-        .link-box.lowercase{border:1.5px solid var(--cyan)}
-        .link-tag{font-size:10px;font-weight:900;padding:3px 8px;border-radius:5px;white-space:nowrap;flex-shrink:0}
-        .link-box.original .link-tag{background:rgba(229,57,53,.12);color:var(--accent-light)}
-        .link-box.lowercase .link-tag{background:rgba(34,211,238,.1);color:var(--cyan)}
-        .result-link{flex:1;font-size:12px;word-break:break-all;user-select:all;font-weight:700}
-        .link-box.original .result-link{color:var(--accent-light)}
-        .link-box.lowercase .result-link{color:var(--cyan)}
-        .link-btns{display:flex;gap:4px;flex-shrink:0}
-        .btn-link-action{padding:6px 10px;border-radius:7px;cursor:pointer;font-size:11px;font-weight:700;transition:all .18s ease;display:flex;align-items:center;gap:4px;white-space:nowrap;font-family:'Tajawal',sans-serif}
-        .btn-link-action:hover{transform:scale(1.04)}.btn-link-action:active{transform:scale(.96)}
-        .link-box.original .btn-link-action{background:rgba(229,57,53,.08);border:1px solid rgba(229,57,53,.2);color:var(--accent-light)}
-        .link-box.original .btn-link-action:hover{background:rgba(229,57,53,.16)}
-        .link-box.original .btn-link-action.copied{background:var(--accent);color:#fff}
-        .link-box.lowercase .btn-link-action{background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.18);color:var(--cyan)}
-        .link-box.lowercase .btn-link-action:hover{background:rgba(34,211,238,.12)}
-        .link-box.lowercase .btn-link-action.copied{background:var(--cyan);color:#000}
-
-        /* نفس الرابط */
-        .same-url-hint{text-align:center;font-size:11px;color:var(--muted);margin-bottom:6px;opacity:.7}
-
-        .result-extras{margin-top:12px;display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap}
-        .btn-share{padding:7px 14px;border-radius:9px;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;transition:all .2s ease;display:flex;align-items:center;gap:5px;color:#fff;border:none}
-        .btn-share:hover{transform:translateY(-2px) scale(1.03);filter:brightness(1.12)}.btn-share:active{transform:scale(.96)}
-        .btn-share.twitter{background:var(--twitter);box-shadow:0 2px 10px rgba(29,161,242,.25)}
-        .btn-share.discord{background:var(--discord);box-shadow:0 2px 10px rgba(88,101,242,.25)}
-        .btn-share.telegram{background:var(--telegram);box-shadow:0 2px 10px rgba(38,165,228,.25)}
-        .btn-share.qr-btn{background:rgba(229,57,53,.12);border:1px solid rgba(229,57,53,.25);color:var(--accent-light);box-shadow:0 2px 10px var(--accent-glow)}
-        .result-actions{margin-top:12px;display:flex;justify-content:center}
-        .btn-save{padding:9px 26px;background:rgba(229,57,53,.06);border:1.5px solid rgba(229,57,53,.2);color:var(--accent-light);border-radius:9px;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;transition:all .2s ease;display:flex;align-items:center;gap:7px}
-        .btn-save:hover{background:rgba(229,57,53,.13);border-color:rgba(229,57,53,.4);transform:scale(1.03)}.btn-save:active{transform:scale(.97)}
-        .btn-save.saved{background:rgba(229,57,53,.18);border-color:var(--accent);color:#fff}
-        .btn-save.saved .save-text{display:none}.btn-save.saved .saved-text{display:flex;align-items:center;gap:6px}.btn-save .saved-text{display:none}
-
-        /* QR */
-        .qr-panel{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity .3s ease}
-        .qr-panel.open{opacity:1;pointer-events:all}
-        .qr-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:26px 22px;width:90%;max-width:320px;text-align:center;transform:translateY(16px) scale(.97);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
-        .qr-panel.open .qr-card{transform:translateY(0) scale(1)}
-        .qr-title{font-size:18px;font-weight:900;margin-bottom:5px;display:flex;align-items:center;justify-content:center;gap:8px}
-        .qr-title i{color:var(--accent-light)}
-        .qr-subtitle{color:var(--muted);font-size:12px;margin-bottom:18px}
-        .qr-wrapper{display:inline-block;padding:14px;background:#fff;border-radius:12px;box-shadow:0 3px 16px rgba(0,0,0,.25);margin-bottom:14px}
-        .qr-wrapper canvas,.qr-wrapper img{display:block!important;border-radius:3px}
-        .qr-name{font-size:14px;font-weight:900;color:var(--fg);margin-bottom:3px;direction:ltr}
-        .qr-url{font-size:10px;color:var(--muted);direction:ltr;word-break:break-all;margin-bottom:14px}
-        .qr-close{padding:9px 24px;background:rgba(229,57,53,.06);border:1px solid rgba(229,57,53,.18);color:var(--accent-light);border-radius:9px;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;transition:all .2s ease}
-        .qr-close:hover{background:rgba(229,57,53,.14);transform:scale(1.03)}
-
-        /* واتساب */
-        .whatsapp-fab{position:fixed;bottom:26px;left:26px;width:54px;height:54px;background:var(--wa-green);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;box-shadow:0 3px 14px var(--wa-glow);z-index:50;text-decoration:none;transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s;animation:waF 3s ease-in-out infinite}
-        @keyframes waF{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
-        .whatsapp-fab:hover{transform:scale(1.1) translateY(-2px);box-shadow:0 6px 22px rgba(37,211,102,.55)}
-
-        /* المحفوظات */
-        .saved-panel{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity .3s ease}
-        .saved-panel.open{opacity:1;pointer-events:all}
-        .saved-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:26px 22px;width:92%;max-width:540px;max-height:80vh;display:flex;flex-direction:column;transform:translateY(16px) scale(.97);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
-        .saved-panel.open .saved-card{transform:translateY(0) scale(1)}
-        .saved-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border)}
-        .saved-title{font-size:18px;font-weight:900;display:flex;align-items:center;gap:9px}
-        .saved-title i{color:var(--accent-light)}
-        .saved-count{color:var(--muted);font-size:12px;font-weight:700}
-        .btn-close-panel{background:rgba(229,57,53,.06);border:1px solid rgba(229,57,53,.15);color:var(--accent-light);width:34px;height:34px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s ease}
-        .btn-close-panel:hover{background:rgba(229,57,53,.15);transform:scale(1.05)}
-        .saved-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:9px;padding-left:3px;scroll-behavior:smooth}
-        .saved-list::-webkit-scrollbar{width:3px}.saved-list::-webkit-scrollbar-track{background:transparent}.saved-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-        .saved-item{background:var(--input-bg);border:1px solid var(--border);border-radius:12px;padding:0;transition:border-color .2s;animation:iIn .3s ease-out backwards;overflow:hidden}
-        .saved-item:hover{border-color:rgba(229,57,53,.2)}
-        @keyframes iIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:translateX(0)}}
-        .saved-item-main{display:flex;align-items:center;gap:10px;padding:11px 13px}
-        .saved-item-icon{width:36px;height:36px;border-radius:9px;background:rgba(229,57,53,.08);display:flex;align-items:center;justify-content:center;color:var(--accent-light);font-size:15px;flex-shrink:0}
-        .saved-item-info{flex:1;min-width:0}
-        .saved-item-name{font-weight:900;font-size:14px;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:ltr;text-align:left}
-        .saved-item-urls{margin-top:2px;display:flex;flex-direction:column;gap:1px}
-        .saved-url-line{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:ltr;text-align:left;display:flex;align-items:center;gap:3px}
-        .saved-url-line .url-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0}
-        .saved-url-line .url-dot.red{background:var(--accent)}
-        .saved-url-line .url-dot.cyan{background:var(--cyan)}
-        .saved-url-line .url-text{color:var(--muted)}
-        .saved-item-stats-mini{display:flex;gap:8px;margin-top:3px}
-        .stat-mini{font-size:10px;font-weight:700;display:flex;align-items:center;gap:3px}
-        .stat-mini i{font-size:9px}
-        .stat-mini.pts{color:var(--gold)}.stat-mini.lvl{color:#8b5cf6}
-        .saved-item-actions{display:flex;gap:5px;flex-shrink:0;align-items:center}
-        .btn-item-action{width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s ease;text-decoration:none;font-size:12px}
-        .btn-item-action:hover{transform:scale(1.08)}
-        .btn-item-copy{background:rgba(229,57,53,.08);border:1px solid rgba(229,57,53,.2);color:var(--accent-light)}
-        .btn-item-copy:hover{background:rgba(229,57,53,.16)}.btn-item-copy.copied{background:var(--accent);color:#fff}
-        .btn-item-open{background:rgba(229,57,53,.08);border:1px solid rgba(229,57,53,.2);color:var(--accent-light)}
-        .btn-item-open:hover{background:rgba(229,57,53,.16)}
-        .btn-item-stats{background:rgba(255,215,0,.06);border:1px solid rgba(255,215,0,.15);color:var(--gold)}
-        .btn-item-stats:hover{background:rgba(255,215,0,.12)}
-        .btn-item-delete{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);color:var(--muted)}
-        .btn-item-delete:hover{background:rgba(255,82,82,.12);color:#ff5252}
-
-        .saved-item-stats-panel{max-height:0;overflow:hidden;transition:max-height .35s cubic-bezier(.4,0,.2,1),padding .35s ease;padding:0 13px;background:rgba(0,0,0,.15);border-top:1px solid transparent}
-        .saved-item-stats-panel.open{max-height:120px;padding:12px 13px;border-top-color:var(--border)}
-        .stats-row{display:flex;gap:10px;margin-bottom:8px}.stats-row:last-child{margin-bottom:0}
-        .stat-field{flex:1;display:flex;align-items:center;gap:7px}
-        .stat-field label{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap;min-width:32px}
-        .stat-field input{width:100%;padding:7px 10px;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;color:var(--fg);font-size:13px;font-family:'Tajawal',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s;direction:ltr;text-align:left}
-        .stat-field input:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-glow)}
-        .stat-field .stat-icon{font-size:13px;width:18px;text-align:center}
-        .stat-field .stat-icon.pts-icon{color:var(--gold)}.stat-field .stat-icon.lvl-icon{color:#8b5cf6}
-        .btn-save-stats{width:100%;padding:8px;background:rgba(229,57,53,.1);border:1px solid rgba(229,57,53,.25);color:var(--accent-light);border-radius:8px;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;transition:all .2s ease}
-        .btn-save-stats:hover{background:rgba(229,57,53,.18);transform:scale(1.02)}
-
-        .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:35px 20px;gap:10px}
-        .empty-state i{font-size:36px;color:var(--border)}.empty-state p{color:var(--muted);font-size:13px;text-align:center}
-        .btn-clear-all{margin-top:14px;padding:9px 18px;background:rgba(229,57,53,.06);border:1px solid rgba(229,57,53,.18);color:var(--accent-light);border-radius:9px;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;transition:all .2s ease;display:flex;align-items:center;gap:5px}
-        .btn-clear-all:hover{background:rgba(229,57,53,.15);transform:scale(1.02)}
-
-        .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--card);border:1px solid var(--accent);color:var(--fg);padding:10px 22px;border-radius:11px;font-family:'Tajawal',sans-serif;font-weight:700;font-size:13px;box-shadow:0 6px 28px rgba(0,0,0,.45);transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .35s;opacity:0;z-index:999;display:flex;align-items:center;gap:7px}
-        .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-        .toast i{color:var(--accent-light)}
-
-        @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
-        @media(max-width:480px){
-            .card{padding:26px 16px}.app-name{font-size:38px}.logo-stage{width:250px;height:250px}.logo-img-wrapper{width:70px;height:70px;border-radius:16px}
-            .orbit-ring.r1{width:150px;height:150px}.orbit-ring.r2{width:190px;height:190px}.orbit-ring.r3{width:230px;height:230px}
-            .btn-start{padding:16px 52px;font-size:19px}.saved-card,.qr-card{padding:18px 14px}
-            .whatsapp-fab{width:48px;height:48px;font-size:24px;bottom:18px;left:18px}
-            .btn-link-action span{display:none}.btn-share span{display:none}.btn-link-action{padding:6px 8px}.btn-share{padding:7px 10px}
-            .link-tag{font-size:9px;padding:2px 6px}
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            font-family: sans-serif;
         }
+
+        /* الموقع الحقيقي */
+        .site-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        /* زر التفاعل العائم */
+        .interact-btn {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: none;
+            background: #53fc18;
+            color: #000;
+            font-size: 26px; /* حجم الصاعقة */
+            font-weight: 700;
+            cursor: pointer;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            line-height: 1.1;
+            box-shadow: 0 4px 20px rgba(83, 252, 24, 0.4);
+            transition: box-shadow 0.2s;
+            touch-action: none; /* ضروري لسلاسة السحب على الهاتف */
+            user-select: none;
+        }
+
+        .interact-btn:active {
+            box-shadow: 0 6px 28px rgba(83, 252, 24, 0.6);
+        }
+
+        /* لوحة التحكم */
+        .control-panel {
+            position: fixed;
+            bottom: 95px;
+            right: 15px;
+            width: 320px;
+            max-width: calc(100vw - 30px);
+            background: #18181b;
+            border: 1px solid #2f2f35;
+            border-radius: 12px;
+            padding: 16px;
+            z-index: 9998;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        }
+
+        .control-panel.open {
+            display: block;
+        }
+
+        .panel-title {
+            color: #53fc18;
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #adadb8;
+            font-size: 12px;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .form-group select, 
+        .form-group input, 
+        .form-group textarea {
+            width: 100%;
+            background: #323239;
+            border: 1px solid #2f2f35;
+            color: #efeff1;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            font-family: sans-serif;
+        }
+
+        .form-group select:focus, 
+        .form-group input:focus, 
+        .form-group textarea:focus {
+            border-color: #53fc18;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-start {
+            flex: 1;
+            padding: 10px;
+            background: #53fc18;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn-stop {
+            flex: 1;
+            padding: 10px;
+            background: #eb0400;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 14px;
+            cursor: pointer;
+            display: none;
+        }
+
+        /* سجل التشغيل */
+        .log-area {
+            margin-top: 12px;
+            background: #0e0e10;
+            border-radius: 6px;
+            padding: 8px;
+            height: 100px;
+            overflow-y: auto;
+            font-size: 11px;
+            color: #adadb8;
+            border: 1px solid #2f2f35;
+        }
+
+        .log-area .log-success { color: #53fc18; }
+        .log-area .log-wait { color: #f59e0b; }
     </style>
 </head>
 <body>
 
-    <div class="loading-screen" id="loadingScreen">
-        <div class="loading-logo"><img src="https://z-cdn-media.chatglm.cn/files/4667b5ab-2a0a-4537-a7fa-56154f5c352f.png?auth_key=1880614056-5b68869a69904016bad8f58f2268eaf8-0-73ba7132285b2a810c1d8f49e39889d8" alt="RedKick"></div>
-        <div class="loading-text">جارٍ التحميل</div>
-        <div class="loading-bar-track"><div class="loading-bar-fill"></div></div>
-        <div class="loading-percent" id="loadingPercent">0%</div>
-    </div>
+    <iframe class="site-frame" src="https://kick.com" allow="autoplay; fullscreen; clipboard-write" allowfullscreen></iframe>
 
-    <div class="bg-grid"></div><div class="bg-blob one"></div><div class="bg-blob two"></div><div class="particles" id="particles"></div>
+    <!-- زر الصاعقة العائم -->
+    <button class="interact-btn" id="floatBtn">⚡</button>
 
-    <section class="screen" id="startScreen">
-        <div class="start-content">
-            <div class="logo-stage">
-                <div class="shockwave s1"></div><div class="shockwave s2"></div><div class="shockwave s3"></div><div class="shockwave s4"></div>
-                <div class="orbit-ring r1"><div class="orbit-dot"></div></div><div class="orbit-ring r2"><div class="orbit-dot"></div></div><div class="orbit-ring r3"><div class="orbit-dot"></div></div>
-                <div class="lightning l1"><svg viewBox="0 0 300 300"><path d="M150 30 L162 85 L145 90 L168 150 L152 155 L178 225 L158 220 L172 290" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                <div class="lightning l2"><svg viewBox="0 0 300 300"><path d="M270 90 L215 120 L220 138 L165 155 L170 165 L105 188 L118 193 L45 220" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                <div class="burst-particle bp1"></div><div class="burst-particle bp2"></div><div class="burst-particle bp3"></div><div class="burst-particle bp4"></div><div class="burst-particle bp5"></div><div class="burst-particle bp6"></div><div class="burst-particle bp7"></div><div class="burst-particle bp8"></div><div class="burst-particle bp9"></div><div class="burst-particle bp10"></div><div class="burst-particle bp11"></div><div class="burst-particle bp12"></div>
-                <div class="logo-flash"></div><div class="logo-aura"></div>
-                <div class="logo-img-wrapper"><img src="https://z-cdn-media.chatglm.cn/files/4667b5ab-2a0a-4537-a7fa-56154f5c352f.png?auth_key=1880614056-5b68869a69904016bad8f58f2268eaf8-0-73ba7132285b2a810c1d8f49e39889d8" alt="RedKick"></div>
-            </div>
-            <h1 class="app-name" data-text="RedKick">Red<span>Kick</span></h1>
-            <div class="divider-glow"></div>
-            <p class="app-desc">ولّد رابط متجر البوت لأي ستريمر على كيك بسهولة وسرعة</p>
-            <button class="btn-start" id="startBtn"><span class="btn-border"></span><span class="btn-bg"></span><span class="btn-shine"></span><span class="btn-glow"></span><span class="btn-text">Start</span></button>
-            <div class="start-hint"><i class="fas fa-chevron-left"></i> اضغط للبدء</div>
+    <!-- لوحة التحكم بالتفاعل -->
+    <div class="control-panel" id="controlPanel">
+        <div class="panel-title">⚡ لوحة التفاعل</div>
+
+        <div class="form-group">
+            <label>اختر القناة</label>
+            <select id="channelSelect">
+                <option value="xqc">xQc</option>
+                <option value="ninja">Ninja</option>
+                <option value="hasanabi">HasanAbi</option>
+                <option value="amouranth">Amouranth</option>
+                <option value="custom">-- كتابة يدوية --</option>
+            </select>
         </div>
-    </section>
 
-    <section class="screen hidden" id="mainScreen">
-        <main class="container">
-            <div class="card">
-                <div class="card-top-bar">
-                    <div class="card-header">
-                        <div class="card-logo"><img src="https://z-cdn-media.chatglm.cn/files/4667b5ab-2a0a-4537-a7fa-56154f5c352f.png?auth_key=1880614056-5b68869a69904016bad8f58f2268eaf8-0-73ba7132285b2a810c1d8f49e39889d8" alt="RedKick"></div>
-                        <h2 class="card-title">Red<span>Kick</span></h2>
-                    </div>
-                    <div class="top-actions">
-                        <button class="btn-icon" id="backBtn" aria-label="رجوع"><i class="fas fa-arrow-right"></i></button>
-                        <button class="btn-icon" id="savedBtn" aria-label="المحفوظات"><i class="fas fa-bookmark"></i><span class="badge" id="savedBadge">0</span></button>
-                    </div>
-                </div>
-                <p class="subtitle">أدخل اسم الستريمر للحصول على رابط المتجر</p>
-                <div class="input-group">
-                    <label class="input-label" for="streamerInput">اسم الستريمر</label>
-                    <input type="text" id="streamerInput" class="input-field" placeholder="أدخل اسم الستريمر هنا..." autocomplete="off" spellcheck="false">
-                </div>
-                <button class="btn-generate" id="generateBtn"><i class="fas fa-bolt"></i> توليد الرابط</button>
-                <div class="result" id="result">
-                    <!-- الرابط الأصلي -->
-                    <div class="link-box original">
-                        <span class="link-tag">أصلي</span>
-                        <span class="result-link" id="resultLinkOrig"></span>
-                        <div class="link-btns">
-                            <button class="btn-link-action" id="copyOrigBtn" aria-label="نسخ"><i class="fas fa-copy"></i><span>نسخ</span></button>
-                            <a class="btn-link-action" id="openOrigBtn" target="_blank" rel="noopener noreferrer" aria-label="فتح"><i class="fas fa-external-link-alt"></i><span>فتح</span></a>
-                        </div>
-                    </div>
-                    <!-- الرابط بحروف صغيرة -->
-                    <div class="link-box lowercase" id="lowerBox">
-                        <span class="link-tag">صغير</span>
-                        <span class="result-link" id="resultLinkLower"></span>
-                        <div class="link-btns">
-                            <button class="btn-link-action" id="copyLowerBtn" aria-label="نسخ"><i class="fas fa-copy"></i><span>نسخ</span></button>
-                            <a class="btn-link-action" id="openLowerBtn" target="_blank" rel="noopener noreferrer" aria-label="فتح"><i class="fas fa-external-link-alt"></i><span>فتح</span></a>
-                        </div>
-                    </div>
-                    <div class="same-url-hint" id="sameHint" style="display:none"><i class="fas fa-info-circle"></i> الرابطان متطابقان — الاسم بحروف صغيرة بالفعل</div>
+        <div class="form-group" id="customChannelGroup" style="display: none;">
+            <label>اسم القناة</label>
+            <input type="text" id="customChannelInput" placeholder="أدخل اسم القناة هنا...">
+        </div>
 
-                    <div class="result-extras">
-                        <button class="btn-share twitter" id="shareTwitter"><i class="fab fa-twitter"></i><span>تويتر</span></button>
-                        <button class="btn-share discord" id="shareDiscord"><i class="fab fa-discord"></i><span>ديسكورد</span></button>
-                        <button class="btn-share telegram" id="shareTelegram"><i class="fab fa-telegram-plane"></i><span>تليجرام</span></button>
-                        <button class="btn-share qr-btn" id="qrBtn"><i class="fas fa-qrcode"></i><span>QR</span></button>
-                    </div>
-                    <div class="result-actions">
-                        <button class="btn-save" id="saveBtn"><i class="fas fa-bookmark"></i><span class="save-text">Save</span><span class="saved-text"><i class="fas fa-check"></i> تم الحفظ</span></button>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </section>
+        <div class="form-group">
+            <label>الرسائل (رسالة في كل سطر)</label>
+            <textarea id="messagesInput" placeholder="مرحبا بالجميع&#10;كيف حالكم؟&#10;بث رائع!"></textarea>
+        </div>
 
-    <div class="qr-panel" id="qrPanel">
-        <div class="qr-card">
-            <div class="qr-title"><i class="fas fa-qrcode"></i> رمز QR</div>
-            <div class="qr-subtitle">امسح الرمز للدخول للمتجر مباشرة</div>
-            <div class="qr-wrapper" id="qrWrapper"></div>
-            <div class="qr-name" id="qrName"></div>
-            <div class="qr-url" id="qrUrl"></div>
-            <button class="qr-close" id="qrClose">إغلاق</button>
+        <div class="form-group">
+            <label>مؤقت التهدئة (بالثواني)</label>
+            <input type="number" id="cooldownInput" value="5" min="1">
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-start" id="startBtn" onclick="startInteraction()">تشغيل</button>
+            <button class="btn-stop" id="stopBtn" onclick="stopInteraction()">إيقاف</button>
+        </div>
+
+        <div class="log-area" id="logArea">
+            <div>سجل التشغيل جاهز...</div>
         </div>
     </div>
-
-    <a href="https://wa.me/963995271182" target="_blank" rel="noopener noreferrer" class="whatsapp-fab" aria-label="واتساب"><i class="fab fa-whatsapp"></i></a>
-
-    <div class="saved-panel" id="savedPanel">
-        <div class="saved-card">
-            <div class="saved-header">
-                <div><div class="saved-title"><i class="fas fa-bookmark"></i> المحفوظات</div><div class="saved-count" id="savedCountLabel">0 ستريمر محفوظ</div></div>
-                <button class="btn-close-panel" id="closePanelBtn" aria-label="إغلاق"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="saved-list" id="savedList"></div>
-            <div style="display:flex;justify-content:center" id="clearAllWrap"></div>
-        </div>
-    </div>
-
-    <div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg">تم النسخ</span></div>
 
     <script>
-        // تحميل
-        const ls=document.getElementById('loadingScreen'),lpEl=document.getElementById('loadingPercent');let lp=0;const li=setInterval(function(){if(lp<30)lp+=Math.random()*4+2;else if(lp<60)lp+=Math.random()*3+1;else if(lp<85)lp+=Math.random()*2+.5;else if(lp<95)lp+=Math.random()+.3;else lp+=.5;if(lp>=100){lp=100;clearInterval(li);lpEl.textContent='100%';setTimeout(function(){ls.classList.add('done');document.getElementById('startScreen').classList.add('screen-shake');setTimeout(function(){document.getElementById('startScreen').classList.remove('screen-shake');},500);},250);}else lpEl.textContent=Math.floor(lp)+'%';},50);
+        // === 1. برمجة الزر العائم (السحب والنقر) ===
+        const floatBtn = document.getElementById('floatBtn');
+        const panel = document.getElementById('controlPanel');
+        
+        let isDragging = false;
+        let startX, startY, initialLeft, initialTop;
+        let hasMoved = false;
 
-        // عناصر
-        const startScreen=document.getElementById('startScreen'),mainScreen=document.getElementById('mainScreen'),startBtn=document.getElementById('startBtn'),backBtn=document.getElementById('backBtn'),streamerInput=document.getElementById('streamerInput'),generateBtn=document.getElementById('generateBtn'),resultDiv=document.getElementById('result'),copyOrigBtn=document.getElementById('copyOrigBtn'),openOrigBtn=document.getElementById('openOrigBtn'),resultLinkOrig=document.getElementById('resultLinkOrig'),copyLowerBtn=document.getElementById('copyLowerBtn'),openLowerBtn=document.getElementById('openLowerBtn'),resultLinkLower=document.getElementById('resultLinkLower'),lowerBox=document.getElementById('lowerBox'),sameHint=document.getElementById('sameHint'),saveBtn=document.getElementById('saveBtn'),toastEl=document.getElementById('toast'),toastMsg=document.getElementById('toastMsg'),savedBtn=document.getElementById('savedBtn'),savedBadge=document.getElementById('savedBadge'),savedPanel=document.getElementById('savedPanel'),closePanelBtn=document.getElementById('closePanelBtn'),savedList=document.getElementById('savedList'),savedCountLabel=document.getElementById('savedCountLabel'),clearAllWrap=document.getElementById('clearAllWrap');
-        const shareTwitter=document.getElementById('shareTwitter'),shareDiscord=document.getElementById('shareDiscord'),shareTelegram=document.getElementById('shareTelegram'),qrBtn=document.getElementById('qrBtn'),qrPanel=document.getElementById('qrPanel'),qrClose=document.getElementById('qrClose'),qrWrapper=document.getElementById('qrWrapper'),qrName=document.getElementById('qrName'),qrUrl=document.getElementById('qrUrl');
-
-        const pc=document.getElementById('particles');for(let i=0;i<18;i++){const p=document.createElement('div');p.className='particle';p.style.left=Math.random()*100+'%';p.style.top=Math.random()*100+'%';p.style.animationDelay=(Math.random()*5)+'s';p.style.animationDuration=(4+Math.random()*4)+'s';pc.appendChild(p);}
-
-        let savedStreamers=[];
-        function loadSaved(){try{const d=localStorage.getItem('redkick_saved_v2');if(d)savedStreamers=JSON.parse(d);}catch(e){savedStreamers=[];}updateBadge();}
-        function saveToStorage(){localStorage.setItem('redkick_saved_v2',JSON.stringify(savedStreamers));updateBadge();}
-        function updateBadge(){const c=savedStreamers.length;savedBadge.textContent=c;if(c>0)savedBadge.classList.add('show');else savedBadge.classList.remove('show');}
-
-        startBtn.addEventListener('click',function(){startScreen.classList.add('slide-out');setTimeout(function(){startScreen.classList.add('hidden');startScreen.classList.remove('slide-out');mainScreen.classList.remove('hidden');setTimeout(function(){streamerInput.focus();},250);},450);});
-        backBtn.addEventListener('click',function(){mainScreen.classList.add('hidden');startScreen.classList.remove('hidden');streamerInput.value='';resultDiv.classList.remove('visible');saveBtn.classList.remove('saved');});
-
-        let currentName='',currentUrlOrig='',currentUrlLower='',isSameUrl=false;
-        function generateLink(){
-            const n=streamerInput.value.trim();
-            if(!n){showToast('يرجى إدخال اسم الستريمر',false);streamerInput.focus();return;}
-            currentName=n.replace(/\s+/g,'');
-            const lowerName=currentName.toLowerCase();
-            currentUrlOrig='https://botrix.live/k/'+currentName+'/shop';
-            currentUrlLower='https://botrix.live/k/'+lowerName+'/shop';
-            isSameUrl=(currentUrlOrig===currentUrlLower);
-
-            resultLinkOrig.textContent=currentUrlOrig;
-            resultLinkLower.textContent=currentUrlLower;
-            openOrigBtn.href=currentUrlOrig;
-            openLowerBtn.href=currentUrlLower;
-
-            if(isSameUrl){lowerBox.style.display='none';sameHint.style.display='block';}
-            else{lowerBox.style.display='flex';sameHint.style.display='none';}
-
-            resultDiv.classList.add('visible');
-            const ex=savedStreamers.some(function(s){return s.name.toLowerCase()===currentName.toLowerCase();});
-            if(ex)saveBtn.classList.add('saved');else saveBtn.classList.remove('saved');
-        }
-        generateBtn.addEventListener('click',generateLink);
-        streamerInput.addEventListener('keydown',function(e){if(e.key==='Enter')generateLink();});
-        streamerInput.addEventListener('input',function(){resultDiv.classList.remove('visible');saveBtn.classList.remove('saved');});
-
-        // نسخ
-        copyOrigBtn.addEventListener('click',function(){copyText(currentUrlOrig,this,'orig');});
-        copyLowerBtn.addEventListener('click',function(){copyText(currentUrlLower,this,'lower');});
-
-        // حفظ
-        saveBtn.addEventListener('click',function(){
-            if(!currentName||!currentUrlOrig)return;
-            const ex=savedStreamers.some(function(s){return s.name.toLowerCase()===currentName.toLowerCase();});
-            if(ex){showToast('هذا الستريمر محفوظ مسبقاً',false);return;}
-            savedStreamers.unshift({name:currentName,urlOrig:currentUrlOrig,urlLower:currentUrlLower,points:'',level:'',date:Date.now()});
-            saveToStorage();saveBtn.classList.add('saved');showToast('تم حفظ '+currentName);
+        floatBtn.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            hasMoved = false;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            
+            const rect = floatBtn.getBoundingClientRect();
+            initialLeft = rect.left;
+            initialTop = rect.top;
+            
+            floatBtn.style.right = 'auto';
+            floatBtn.style.bottom = 'auto';
+            floatBtn.style.left = initialLeft + 'px';
+            floatBtn.style.top = initialTop + 'px';
         });
 
-        // مشاركة
-        shareTwitter.addEventListener('click',function(){if(!currentUrlOrig)return;window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent('ادعم الستريمر على متجر البوت! 🤖\n'+currentUrlLower),'_blank');});
-        shareDiscord.addEventListener('click',function(){if(!currentUrlOrig)return;navigator.clipboard.writeText('ادعم الستريمر على متجر البوت! 🤖\n'+currentUrlLower).then(function(){showToast('تم نسخ نص ديسكورد');});});
-        shareTelegram.addEventListener('click',function(){if(!currentUrlOrig)return;window.open('https://t.me/share/url?url='+encodeURIComponent(currentUrlLower)+'&text='+encodeURIComponent('ادعم الستريمر على متجر البوت! 🤖'),'_blank');});
+        floatBtn.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault(); 
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            
+            if (Math.abs(currentX - startX) > 5 || Math.abs(currentY - startY) > 5) {
+                hasMoved = true;
+            }
 
-        // QR
-        let qrI=null;
-        qrBtn.addEventListener('click',function(){if(!currentUrlOrig)return;qrWrapper.innerHTML='';qrName.textContent=currentName;qrUrl.textContent=currentUrlLower;qrI=new QRCode(qrWrapper,{text:currentUrlLower,width:180,height:180,colorDark:'#0a0a0f',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});qrPanel.classList.add('open');});
-        qrClose.addEventListener('click',function(){qrPanel.classList.remove('open');});
-        qrPanel.addEventListener('click',function(e){if(e.target===qrPanel)qrPanel.classList.remove('open');});
+            let newLeft = initialLeft + (currentX - startX);
+            let newTop = initialTop + (currentY - startY);
 
-        function copyText(t,b){
-            if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){showCopied(b);showToast('تم نسخ الرابط');}).catch(function(){fbCopy(t,b);});else fbCopy(t,b);
-        }
-        function fbCopy(t,b){const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');showCopied(b);showToast('تم نسخ الرابط');}catch(e){showToast('فشل النسخ',false);}document.body.removeChild(ta);}
-        function showCopied(b){if(!b)return;b.classList.add('copied');const o=b.innerHTML;b.innerHTML='<i class="fas fa-check"></i>';setTimeout(function(){b.classList.remove('copied');b.innerHTML=o;},1200);}
+            const maxLeft = window.innerWidth - floatBtn.offsetWidth;
+            const maxTop = window.innerHeight - floatBtn.offsetHeight;
 
-        // المحفوظات
-        savedBtn.addEventListener('click',function(){renderSavedList();savedPanel.classList.add('open');});
-        closePanelBtn.addEventListener('click',function(){savedPanel.classList.remove('open');});
-        savedPanel.addEventListener('click',function(e){if(e.target===savedPanel)savedPanel.classList.remove('open');});
+            newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+            newTop = Math.max(0, Math.min(newTop, maxTop));
 
-        function renderSavedList(){
-            savedList.innerHTML='';clearAllWrap.innerHTML='';
-            if(savedStreamers.length===0){savedList.innerHTML='<div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد بيانات محفوظة بعد</p></div>';savedCountLabel.textContent='0 ستريمر محفوظ';return;}
-            savedCountLabel.textContent=savedStreamers.length+' ستريمر محفوظ';
-            savedStreamers.forEach(function(item,index){
-                const el=document.createElement('div');el.className='saved-item';el.style.animationDelay=(index*.04)+'s';
-                const pts=item.points||'';const lvl=item.level||'';
-                const ptsD=pts?'<span class="stat-mini pts"><i class="fas fa-star"></i> '+escH(pts)+'</span>':'';
-                const lvlD=lvl?'<span class="stat-mini lvl"><i class="fas fa-layer-group"></i> '+escH(lvl)+'</span>':'';
-                const same=item.urlOrig===item.urlLower;
-                const urlLines=same
-                    ?'<div class="saved-url-line"><span class="url-dot red"></span><span class="url-text">'+escH(item.urlOrig)+'</span></div>'
-                    :'<div class="saved-url-line"><span class="url-dot red"></span><span class="url-text">'+escH(item.urlOrig)+'</span></div><div class="saved-url-line"><span class="url-dot cyan"></span><span class="url-text">'+escH(item.urlLower)+'</span></div>';
+            floatBtn.style.left = newLeft + 'px';
+            floatBtn.style.top = newTop + 'px';
+        });
 
-                el.innerHTML=
-                    '<div class="saved-item-main">'+
-                        '<div class="saved-item-icon"><i class="fas fa-user"></i></div>'+
-                        '<div class="saved-item-info">'+
-                            '<div class="saved-item-name">'+escH(item.name)+'</div>'+
-                            '<div class="saved-item-urls">'+urlLines+'</div>'+
-                            (ptsD||lvlD?'<div class="saved-item-stats-mini">'+ptsD+lvlD+'</div>':'')+
-                        '</div>'+
-                        '<div class="saved-item-actions">'+
-                            '<button class="btn-item-action btn-item-copy" data-url="'+escA(item.urlLower)+'" aria-label="نسخ"><i class="fas fa-copy"></i></button>'+
-                            '<a class="btn-item-action btn-item-open" href="'+escA(item.urlLower)+'" target="_blank" rel="noopener noreferrer" aria-label="فتح"><i class="fas fa-external-link-alt"></i></a>'+
-                            '<button class="btn-item-action btn-item-stats" data-idx="'+index+'" aria-label="إحصائيات"><i class="fas fa-chart-bar"></i></button>'+
-                            '<button class="btn-item-action btn-item-delete" data-idx="'+index+'" aria-label="حذف"><i class="fas fa-trash-alt"></i></button>'+
-                        '</div>'+
-                    '</div>'+
-                    '<div class="saved-item-stats-panel" id="sp-'+index+'">'+
-                        '<div class="stats-row"><div class="stat-field"><span class="stat-icon pts-icon"><i class="fas fa-star"></i></span><label>نقاط</label><input type="text" id="pts-'+index+'" value="'+escA(pts)+'" placeholder="عدد النقاط"></div></div>'+
-                        '<div class="stats-row"><div class="stat-field"><span class="stat-icon lvl-icon"><i class="fas fa-layer-group"></i></span><label>لفل</label><input type="text" id="lvl-'+index+'" value="'+escA(lvl)+'" placeholder="المستوى"></div></div>'+
-                        '<button class="btn-save-stats" data-idx="'+index+'">حفظ</button>'+
-                    '</div>';
-                savedList.appendChild(el);
-            });
-            if(savedStreamers.length>1){const cb=document.createElement('button');cb.className='btn-clear-all';cb.innerHTML='<i class="fas fa-trash-alt"></i> حذف الكل';cb.addEventListener('click',function(){savedStreamers=[];saveToStorage();renderSavedList();saveBtn.classList.remove('saved');showToast('تم حذف جميع المحفوظات');});clearAllWrap.appendChild(cb);}
+        floatBtn.addEventListener('touchend', () => {
+            isDragging = false;
+            if (!hasMoved) {
+                panel.classList.toggle('open');
+            }
+        });
 
-            savedList.querySelectorAll('.btn-item-copy').forEach(function(b){b.addEventListener('click',function(){copyText(this.getAttribute('data-url'),this);});});
-            savedList.querySelectorAll('.btn-item-delete').forEach(function(b){b.addEventListener('click',function(){const i=parseInt(this.getAttribute('data-idx'));const dn=savedStreamers[i].name;savedStreamers.splice(i,1);saveToStorage();renderSavedList();if(currentName&&!savedStreamers.some(function(s){return s.name.toLowerCase()===currentName.toLowerCase();}))saveBtn.classList.remove('saved');showToast('تم حذف '+dn);});});
-            savedList.querySelectorAll('.btn-item-stats').forEach(function(b){b.addEventListener('click',function(){const i=this.getAttribute('data-idx');document.getElementById('sp-'+i).classList.toggle('open');});});
-            savedList.querySelectorAll('.btn-save-stats').forEach(function(b){b.addEventListener('click',function(){const i=parseInt(this.getAttribute('data-idx'));savedStreamers[i].points=document.getElementById('pts-'+i).value.trim();savedStreamers[i].level=document.getElementById('lvl-'+i).value.trim();saveToStorage();renderSavedList();showToast('تم حفظ الإحصائيات');});});
+        // === 2. إظهار/إخفاء حقل القناة اليدوية ===
+        const channelSelect = document.getElementById('channelSelect');
+        const customChannelGroup = document.getElementById('customChannelGroup');
+
+        channelSelect.addEventListener('change', () => {
+            if (channelSelect.value === 'custom') {
+                customChannelGroup.style.display = 'block';
+            } else {
+                customChannelGroup.style.display = 'none';
+            }
+        });
+
+        // === 3. منطق الإرسال ومؤقت التهدئة ===
+        let interactionInterval = null;
+        let messageArray = [];
+        let currentMsgIndex = 0;
+        const logArea = document.getElementById('logArea');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+
+        function addLog(message, type = '') {
+            const div = document.createElement('div');
+            div.className = type;
+            const time = new Date().toLocaleTimeString();
+            div.textContent = `[${time}] ${message}`;
+            logArea.appendChild(div);
+            logArea.scrollTop = logArea.scrollHeight;
         }
 
-        function escH(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
-        function escA(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+        function startInteraction() {
+            const channel = channelSelect.value === 'custom' ? 
+                document.getElementById('customChannelInput').value.trim() : 
+                channelSelect.options[channelSelect.selectedIndex].text;
+                
+            const messages = document.getElementById('messagesInput').value.trim();
+            const cooldown = parseInt(document.getElementById('cooldownInput').value);
 
-        let toastTimer;
-        function showToast(msg,ok){clearTimeout(toastTimer);toastMsg.textContent=msg;const ic=toastEl.querySelector('i');if(ok===false){ic.className='fas fa-exclamation-circle';ic.style.color='#ff5252';toastEl.style.borderColor='#ff5252';}else{ic.className='fas fa-check-circle';ic.style.color='var(--accent-light)';toastEl.style.borderColor='var(--accent)';}toastEl.classList.add('show');toastTimer=setTimeout(function(){toastEl.classList.remove('show');},2200);}
-        loadSaved();
+            if (!channel || (channelSelect.value === 'custom' && !document.getElementById('customChannelInput').value.trim())) {
+                addLog('خطأ: الرجاء اختيار أو كتابة اسم قناة!', 'log-wait');
+                return;
+            }
+            if (!messages) {
+                addLog('خطأ: الرجاء كتابة رسالة واحدة على الأقل!', 'log-wait');
+                return;
+            }
+
+            messageArray = messages.split('\n').filter(msg => msg.trim() !== '');
+            currentMsgIndex = 0;
+
+            addLog(`بدء التفاعل في: ${channel}`, 'log-success');
+            addLog(`عدد الرسائل: ${messageArray.length} | التهدئة: ${cooldown} ثانية`, 'log-success');
+
+            startBtn.style.display = 'none';
+            stopBtn.style.display = 'block';
+
+            sendMockMessage(channel);
+
+            interactionInterval = setInterval(() => {
+                sendMockMessage(channel);
+            }, cooldown * 1000);
+        }
+
+        function sendMockMessage(channel) {
+            if (currentMsgIndex >= messageArray.length) {
+                currentMsgIndex = 0;
+            }
+            const msg = messageArray[currentMsgIndex];
+            addLog(`إرسال إلى [${channel}]: ${msg}`);
+            currentMsgIndex++;
+        }
+
+        function stopInteraction() {
+            clearInterval(interactionInterval);
+            interactionInterval = null;
+            startBtn.style.display = 'block';
+            stopBtn.style.display = 'none';
+            addLog('تم إيقاف التفاعل.', 'log-wait');
+        }
     </script>
 </body>
 </html>
