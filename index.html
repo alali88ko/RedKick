@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -15,10 +15,11 @@
             width: 100vw;
             height: 100vh;
             overflow: hidden;
-            font-family: sans-serif;
+            font-family: Arial, sans-serif;
+            background: #0e0e10;
         }
 
-        /* الموقع الحقيقي */
+        /* إطار الموقع */
         .site-frame {
             width: 100%;
             height: 100%;
@@ -30,37 +31,29 @@
         .interact-btn {
             position: fixed;
             bottom: 28px;
-            right: 28px;
+            left: 28px;
             width: 56px;
             height: 56px;
             border-radius: 50%;
             border: none;
             background: #53fc18;
             color: #000;
-            font-size: 26px; /* حجم الصاعقة */
-            font-weight: 700;
+            font-size: 26px;
             cursor: pointer;
             z-index: 9999;
             display: flex;
             align-items: center;
             justify-content: center;
-            text-align: center;
-            line-height: 1.1;
             box-shadow: 0 4px 20px rgba(83, 252, 24, 0.4);
-            transition: box-shadow 0.2s;
-            touch-action: none; /* ضروري لسلاسة السحب على الهاتف */
+            touch-action: none;
             user-select: none;
-        }
-
-        .interact-btn:active {
-            box-shadow: 0 6px 28px rgba(83, 252, 24, 0.6);
         }
 
         /* لوحة التحكم */
         .control-panel {
             position: fixed;
             bottom: 95px;
-            right: 15px;
+            left: 15px;
             width: 320px;
             max-width: calc(100vw - 30px);
             background: #18181b;
@@ -70,6 +63,8 @@
             z-index: 9998;
             display: none;
             box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            max-height: 70vh;
+            overflow-y: auto;
         }
 
         .control-panel.open {
@@ -81,6 +76,7 @@
             font-size: 16px;
             font-weight: 800;
             margin-bottom: 12px;
+            text-align: center;
         }
 
         .form-group {
@@ -106,7 +102,7 @@
             border-radius: 6px;
             font-size: 14px;
             outline: none;
-            font-family: sans-serif;
+            font-family: Arial, sans-serif;
         }
 
         .form-group select:focus, 
@@ -117,7 +113,7 @@
 
         .form-group textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 60px;
         }
 
         .btn-group {
@@ -157,7 +153,7 @@
             background: #0e0e10;
             border-radius: 6px;
             padding: 8px;
-            height: 100px;
+            height: 80px;
             overflow-y: auto;
             font-size: 11px;
             color: #adadb8;
@@ -170,7 +166,14 @@
 </head>
 <body>
 
-    <iframe class="site-frame" src="https://kick.com" allow="autoplay; fullscreen; clipboard-write" allowfullscreen></iframe>
+    <!-- إطار موقع كيك مع صلاحيات قصوى لمحاولة السماح بتسجيل الدخول -->
+    <iframe 
+        class="site-frame" 
+        src="https://kick.com" 
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
+        allow="autoplay; fullscreen; clipboard-write; popups"
+        allowfullscreen>
+    </iframe>
 
     <!-- زر الصاعقة العائم -->
     <button class="interact-btn" id="floatBtn">⚡</button>
@@ -216,7 +219,7 @@
     </div>
 
     <script>
-        // === 1. برمجة الزر العائم (السحب والنقر) ===
+        // === 1. برمجة الزر العائم ===
         const floatBtn = document.getElementById('floatBtn');
         const panel = document.getElementById('controlPanel');
         
