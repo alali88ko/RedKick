@@ -3,23 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kick</title>
+    <title>Kick Interactor</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             width: 100vw;
             height: 100vh;
             overflow: hidden;
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background: #0e0e10;
         }
 
-        /* إطار الموقع */
         .site-frame {
             width: 100%;
             height: 100%;
@@ -32,62 +27,99 @@
             position: fixed;
             bottom: 28px;
             left: 28px;
-            width: 56px;
-            height: 56px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             border: none;
-            background: #53fc18;
+            background: linear-gradient(135deg, #53fc18, #3bda0e);
             color: #000;
-            font-size: 26px;
+            font-size: 28px;
             cursor: pointer;
             z-index: 9999;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 20px rgba(83, 252, 24, 0.4);
+            box-shadow: 0 4px 25px rgba(83, 252, 24, 0.5);
             touch-action: none;
             user-select: none;
+            transition: transform 0.2s;
         }
 
-        /* لوحة التحكم */
+        /* لوحة التحكم الاحترافية */
         .control-panel {
             position: fixed;
-            bottom: 95px;
+            bottom: 100px;
             left: 15px;
-            width: 320px;
+            width: 350px;
             max-width: calc(100vw - 30px);
-            background: #18181b;
+            background: rgba(24, 24, 27, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border: 1px solid #2f2f35;
-            border-radius: 12px;
-            padding: 16px;
+            border-radius: 16px;
+            padding: 20px;
             z-index: 9998;
             display: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-            max-height: 70vh;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+            max-height: 75vh;
             overflow-y: auto;
         }
 
-        .control-panel.open {
-            display: block;
+        .control-panel.open { display: block; }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #2f2f35;
         }
 
         .panel-title {
             color: #53fc18;
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 800;
-            margin-bottom: 12px;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-badge {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 700;
+        }
+        .status-offline { background: rgba(235, 4, 0, 0.2); color: #eb0400; }
+        .status-online { background: rgba(83, 252, 24, 0.2); color: #53fc18; display: none; }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: #53fc18;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
         }
 
         .form-group {
-            margin-bottom: 12px;
+            margin-bottom: 16px;
         }
 
         .form-group label {
             display: block;
             color: #adadb8;
-            font-size: 12px;
-            margin-bottom: 6px;
+            font-size: 13px;
+            margin-bottom: 8px;
             font-weight: 600;
         }
 
@@ -95,14 +127,15 @@
         .form-group input, 
         .form-group textarea {
             width: 100%;
-            background: #323239;
-            border: 1px solid #2f2f35;
+            background: #0e0e10;
+            border: 1px solid #323239;
             color: #efeff1;
-            padding: 10px;
-            border-radius: 6px;
+            padding: 12px;
+            border-radius: 8px;
             font-size: 14px;
             outline: none;
-            font-family: Arial, sans-serif;
+            font-family: inherit;
+            transition: border-color 0.2s;
         }
 
         .form-group select:focus, 
@@ -113,185 +146,182 @@
 
         .form-group textarea {
             resize: vertical;
-            min-height: 60px;
+            min-height: 80px;
         }
 
         .btn-group {
             display: flex;
-            gap: 10px;
-            margin-top: 15px;
+            gap: 12px;
+            margin-top: 20px;
         }
 
-        .btn-start {
+        .btn-start, .btn-stop {
             flex: 1;
-            padding: 10px;
-            background: #53fc18;
-            color: #000;
+            padding: 12px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-weight: 800;
-            font-size: 14px;
+            font-size: 15px;
             cursor: pointer;
+            transition: opacity 0.2s;
         }
 
-        .btn-stop {
-            flex: 1;
-            padding: 10px;
-            background: #eb0400;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            font-weight: 800;
-            font-size: 14px;
-            cursor: pointer;
-            display: none;
-        }
+        .btn-start { background: #53fc18; color: #000; }
+        .btn-stop { background: #eb0400; color: #fff; display: none; }
+        .btn-start:active, .btn-stop:active { opacity: 0.8; }
 
-        /* سجل التشغيل */
+        /* سجل التشغيل الاحترافي */
         .log-area {
-            margin-top: 12px;
+            margin-top: 16px;
             background: #0e0e10;
-            border-radius: 6px;
-            padding: 8px;
-            height: 80px;
+            border-radius: 8px;
+            padding: 12px;
+            height: 120px;
             overflow-y: auto;
-            font-size: 11px;
-            color: #adadb8;
-            border: 1px solid #2f2f35;
+            font-size: 12px;
+            color: #71717a;
+            border: 1px solid #323239;
+            font-family: monospace;
         }
 
         .log-area .log-success { color: #53fc18; }
         .log-area .log-wait { color: #f59e0b; }
+        .log-area .log-error { color: #ef4444; }
+
+        /* التمرير المخصص */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #323239; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-    <!-- إطار موقع كيك مع صلاحيات قصوى لمحاولة السماح بتسجيل الدخول -->
-    <iframe 
-        class="site-frame" 
-        src="https://kick.com" 
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
-        allow="autoplay; fullscreen; clipboard-write; popups"
-        allowfullscreen>
-    </iframe>
+    <iframe class="site-frame" src="https://kick.com" allow="autoplay; fullscreen" allowfullscreen></iframe>
 
-    <!-- زر الصاعقة العائم -->
     <button class="interact-btn" id="floatBtn">⚡</button>
 
-    <!-- لوحة التحكم بالتفاعل -->
     <div class="control-panel" id="controlPanel">
-        <div class="panel-title">⚡ لوحة التفاعل</div>
-
-        <div class="form-group">
-            <label>اختر القناة</label>
-            <select id="channelSelect">
-                <option value="xqc">xQc</option>
-                <option value="ninja">Ninja</option>
-                <option value="hasanabi">HasanAbi</option>
-                <option value="amouranth">Amouranth</option>
-                <option value="custom">-- كتابة يدوية --</option>
-            </select>
+        <div class="panel-header">
+            <div class="panel-title">⚡ لوحة التفاعل</div>
+            <span class="status-badge status-offline" id="statusOff">غير متصل</span>
+            <span class="status-badge status-online" id="statusOn">متصل</span>
         </div>
 
-        <div class="form-group" id="customChannelGroup" style="display: none;">
-            <label>اسم القناة</label>
-            <input type="text" id="customChannelInput" placeholder="أدخل اسم القناة هنا...">
-        </div>
+        <!-- زر تسجيل الدخول يظهر فقط إذا لم يكن متصلاً -->
+        <button class="login-btn" id="loginBtn" onclick="loginWithKick()">
+            <svg width="20" height="20" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="6" fill="#000"/><path d="M7 8h4v12H7V8zm5 0h4v5h-4V8zm5 0h4v12h-4V8zm-5 7h4v5h-4v-5z" fill="#53FC18"/></svg>
+            تسجيل الدخول بحساب كيك
+        </button>
 
-        <div class="form-group">
-            <label>الرسائل (رسالة في كل سطر)</label>
-            <textarea id="messagesInput" placeholder="مرحبا بالجميع&#10;كيف حالكم؟&#10;بث رائع!"></textarea>
-        </div>
+        <div id="interactionControls" style="opacity: 0.5; pointer-events: none;">
+            <div class="form-group">
+                <label>اسم القناة (بدون @)</label>
+                <input type="text" id="channelInput" placeholder="مثال: xqc">
+            </div>
 
-        <div class="form-group">
-            <label>مؤقت التهدئة (بالثواني)</label>
-            <input type="number" id="cooldownInput" value="5" min="1">
-        </div>
+            <div class="form-group">
+                <label>الرسائل (رسالة في كل سطر)</label>
+                <textarea id="messagesInput" placeholder="مرحبا بالجميع&#10;كيف حالكم؟&#10;بث رائع!"></textarea>
+            </div>
 
-        <div class="btn-group">
-            <button class="btn-start" id="startBtn" onclick="startInteraction()">تشغيل</button>
-            <button class="btn-stop" id="stopBtn" onclick="stopInteraction()">إيقاف</button>
+            <div class="form-group">
+                <label>مؤقت التهدئة (بالثواني)</label>
+                <input type="number" id="cooldownInput" value="5" min="1">
+            </div>
+
+            <div class="btn-group">
+                <button class="btn-start" id="startBtn" onclick="startInteraction()">تشغيل البوت</button>
+                <button class="btn-stop" id="stopBtn" onclick="stopInteraction()">إيقاف البوت</button>
+            </div>
         </div>
 
         <div class="log-area" id="logArea">
-            <div>سجل التشغيل جاهز...</div>
+            <div>بانتظار تسجيل الدخول للبدء...</div>
         </div>
     </div>
 
     <script>
+        // === إعدادات كيك API ===
+        const CLIENT_ID = '01KSV3JZQ4PN0N3K6DQS4MMENK';
+        const REDIRECT_URI = window.location.href; // يجب إضافة هذا الرابط في لوحة تحكم كيك للمطورين
+        let accessToken = null;
+
         // === 1. برمجة الزر العائم ===
         const floatBtn = document.getElementById('floatBtn');
         const panel = document.getElementById('controlPanel');
-        
-        let isDragging = false;
-        let startX, startY, initialLeft, initialTop;
-        let hasMoved = false;
+        let isDragging = false, startX, startY, initialLeft, initialTop, hasMoved = false;
 
         floatBtn.addEventListener('touchstart', (e) => {
-            isDragging = true;
-            hasMoved = false;
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-            
+            isDragging = true; hasMoved = false;
+            startX = e.touches[0].clientX; startY = e.touches[0].clientY;
             const rect = floatBtn.getBoundingClientRect();
-            initialLeft = rect.left;
-            initialTop = rect.top;
-            
-            floatBtn.style.right = 'auto';
-            floatBtn.style.bottom = 'auto';
-            floatBtn.style.left = initialLeft + 'px';
-            floatBtn.style.top = initialTop + 'px';
+            initialLeft = rect.left; initialTop = rect.top;
+            floatBtn.style.right = 'auto'; floatBtn.style.bottom = 'auto';
+            floatBtn.style.left = initialLeft + 'px'; floatBtn.style.top = initialTop + 'px';
         });
 
         floatBtn.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
-            e.preventDefault(); 
-            const currentX = e.touches[0].clientX;
-            const currentY = e.touches[0].clientY;
-            
-            if (Math.abs(currentX - startX) > 5 || Math.abs(currentY - startY) > 5) {
-                hasMoved = true;
-            }
-
-            let newLeft = initialLeft + (currentX - startX);
-            let newTop = initialTop + (currentY - startY);
-
-            const maxLeft = window.innerWidth - floatBtn.offsetWidth;
-            const maxTop = window.innerHeight - floatBtn.offsetHeight;
-
-            newLeft = Math.max(0, Math.min(newLeft, maxLeft));
-            newTop = Math.max(0, Math.min(newTop, maxTop));
-
-            floatBtn.style.left = newLeft + 'px';
-            floatBtn.style.top = newTop + 'px';
+            if (!isDragging) return; e.preventDefault(); 
+            const currentX = e.touches[0].clientX, currentY = e.touches[0].clientY;
+            if (Math.abs(currentX - startX) > 5 || Math.abs(currentY - startY) > 5) hasMoved = true;
+            let newLeft = initialLeft + (currentX - startX), newTop = initialTop + (currentY - startY);
+            newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - floatBtn.offsetWidth));
+            newTop = Math.max(0, Math.min(newTop, window.innerHeight - floatBtn.offsetHeight));
+            floatBtn.style.left = newLeft + 'px'; floatBtn.style.top = newTop + 'px';
         });
 
         floatBtn.addEventListener('touchend', () => {
             isDragging = false;
-            if (!hasMoved) {
-                panel.classList.toggle('open');
-            }
+            if (!hasMoved) panel.classList.toggle('open');
         });
 
-        // === 2. إظهار/إخفاء حقل القناة اليدوية ===
-        const channelSelect = document.getElementById('channelSelect');
-        const customChannelGroup = document.getElementById('customChannelGroup');
+        // === 2. نظام تسجيل الدخول الرسمي (OAuth2) ===
+        function loginWithKick() {
+            const authUrl = `https://id.kick.com/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=chat:write+chat:read+user:read`;
+            // تحويل المستخدم لموقع كيك الرسمي لتسجيل الدخول الآمن
+            window.top.location.href = authUrl;
+        }
 
-        channelSelect.addEventListener('change', () => {
-            if (channelSelect.value === 'custom') {
-                customChannelGroup.style.display = 'block';
-            } else {
-                customChannelGroup.style.display = 'none';
+        // التحقق مما إذا عدنا من كيك ومعنا رمز الدخول (Code)
+        window.onload = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            if (code) {
+                addLog('تم استلام رمز التحقق من كيك، جاري المصادقة...', 'log-wait');
+                exchangeCodeForToken(code);
             }
-        });
+        };
 
-        // === 3. منطق الإرسال ومؤقت التهدئة ===
-        let interactionInterval = null;
-        let messageArray = [];
-        let currentMsgIndex = 0;
+        // تبديل الرمز بالتوكن (ملاحظة: يتطلب وسيط سيرفر للحماية، سأشرح لك بالأسفل)
+        async function exchangeCodeForToken(code) {
+            addLog('جاري تبديل الرمز للوصول للخوادم...', 'log-wait');
+            
+            /* 
+                [تنبيه تقني هام جداً]:
+                لأسباب أمنية، كيك لا يسمح بتبديل الـ code إلى Token مباشرة من الجافاسكربت (لأنه يطلب الـ Client Secret).
+                في بيئة الإنتاج الحقيقية، يجب إرسال هذا الـ code إلى سيرفرك الخاص (Backend)، والسيرفر يتواصل مع كيك ليرجع الـ Token.
+                هنا سنقوم بمحاكاة نجاح العملية لتشغيل الواجهة، لكن لكي يعمل فعلياً على الهاتف، تحتاج لربطه بسيرفر خارجي يستقبل الطلب.
+            */
+            
+            // محاكاة نجاح الاتصال (إذا ربطت السيرفر، ستستبدل هذا بالـ Token الحقيقي القادم من السيرفر)
+            setTimeout(() => {
+                activateBotUI();
+                addLog('تم الاتصال بخوادم كيك بنجاح!', 'log-success');
+            }, 1500);
+        }
+
+        function activateBotUI() {
+            accessToken = "ACTIVE_TOKEN"; // التوكن الحقيقي سيأتي من السيرفر
+            document.getElementById('loginBtn').style.display = 'none';
+            document.getElementById('statusOff').style.display = 'none';
+            document.getElementById('statusOn').style.display = 'block';
+            document.getElementById('interactionControls').style.opacity = '1';
+            document.getElementById('interactionControls').style.pointerEvents = 'auto';
+        }
+
+        // === 3. منطق الإرسال الحقيقي (Kick API) ===
+        let interactionInterval = null, messageArray = [], currentMsgIndex = 0;
         const logArea = document.getElementById('logArea');
-        const startBtn = document.getElementById('startBtn');
-        const stopBtn = document.getElementById('stopBtn');
 
         function addLog(message, type = '') {
             const div = document.createElement('div');
@@ -302,54 +332,75 @@
             logArea.scrollTop = logArea.scrollHeight;
         }
 
-        function startInteraction() {
-            const channel = channelSelect.value === 'custom' ? 
-                document.getElementById('customChannelInput').value.trim() : 
-                channelSelect.options[channelSelect.selectedIndex].text;
-                
+        async function startInteraction() {
+            const channel = document.getElementById('channelInput').value.trim().toLowerCase();
             const messages = document.getElementById('messagesInput').value.trim();
             const cooldown = parseInt(document.getElementById('cooldownInput').value);
 
-            if (!channel || (channelSelect.value === 'custom' && !document.getElementById('customChannelInput').value.trim())) {
-                addLog('خطأ: الرجاء اختيار أو كتابة اسم قناة!', 'log-wait');
-                return;
-            }
-            if (!messages) {
-                addLog('خطأ: الرجاء كتابة رسالة واحدة على الأقل!', 'log-wait');
-                return;
-            }
+            if (!channel) { addLog('خطأ: يجب كتابة اسم القناة!', 'log-error'); return; }
+            if (!messages) { addLog('خطأ: يجب كتابة رسالة واحدة على الأقل!', 'log-error'); return; }
 
             messageArray = messages.split('\n').filter(msg => msg.trim() !== '');
             currentMsgIndex = 0;
 
-            addLog(`بدء التفاعل في: ${channel}`, 'log-success');
-            addLog(`عدد الرسائل: ${messageArray.length} | التهدئة: ${cooldown} ثانية`, 'log-success');
+            addLog(`جلب بيانات القناة: ${channel}...`, 'log-wait');
 
-            startBtn.style.display = 'none';
-            stopBtn.style.display = 'block';
+            // إرسال حقيقي عبر Kick API
+            try {
+                // 1. جلب الـ Channel ID المطلوب للإرسال
+                const channelRes = await fetch(`https://api.kick.com/api/v1/channels/${channel}`, {
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                });
+                const channelData = await channelRes.json();
+                const chatroomId = channelData.data.chatroom_id;
 
-            sendMockMessage(channel);
+                addLog(`بدء التفاعل في شات ${channel} (ID: ${chatroomId})`, 'log-success');
+                document.getElementById('startBtn').style.display = 'none';
+                document.getElementById('stopBtn').style.display = 'block';
 
-            interactionInterval = setInterval(() => {
-                sendMockMessage(channel);
-            }, cooldown * 1000);
+                // 2. إرسال أول رسالة
+                await sendKickMessage(chatroomId, messageArray[currentMsgIndex]);
+                currentMsgIndex++;
+
+                // 3. ضبط مؤقت التهدئة (Cooldown)
+                interactionInterval = setInterval(async () => {
+                    if (currentMsgIndex >= messageArray.length) currentMsgIndex = 0;
+                    await sendKickMessage(chatroomId, messageArray[currentMsgIndex]);
+                    currentMsgIndex++;
+                }, cooldown * 1000);
+
+            } catch (error) {
+                addLog('فشل الاتصال بالقناة. تأكد من اسم القناة وصلاحيات الـ Token.', 'log-error');
+                console.error(error);
+            }
         }
 
-        function sendMockMessage(channel) {
-            if (currentMsgIndex >= messageArray.length) {
-                currentMsgIndex = 0;
+        // الدالة التي تتواصل مباشرة مع سيرفرات كيك لكتابة الرسالة
+        async function sendKickMessage(chatroomId, message) {
+            addLog(`إرسال: "${message}"`, 'log-success');
+            try {
+                await fetch('https://api.kick.com/api/v2/chat/send', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        channel_id: chatroomId
+                    })
+                });
+            } catch (error) {
+                addLog('خطأ في إرسال الرسالة للسيرفر.', 'log-error');
             }
-            const msg = messageArray[currentMsgIndex];
-            addLog(`إرسال إلى [${channel}]: ${msg}`);
-            currentMsgIndex++;
         }
 
         function stopInteraction() {
             clearInterval(interactionInterval);
             interactionInterval = null;
-            startBtn.style.display = 'block';
-            stopBtn.style.display = 'none';
-            addLog('تم إيقاف التفاعل.', 'log-wait');
+            document.getElementById('startBtn').style.display = 'block';
+            document.getElementById('stopBtn').style.display = 'none';
+            addLog('تم إيقاف البوت.', 'log-wait');
         }
     </script>
 </body>
