@@ -2,406 +2,549 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kick Interactor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RedKick</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
+        :root {
+            --bg: #080404;
+            --fg: #f0e6e6;
+            --muted: #6b4a4a;
+            --accent: #FF2D2D;
+            --accent2: #FF6B1A;
+            --accent3: #FFB800;
+            --card: rgba(18,8,8,0.95);
+            --border: rgba(255,45,45,0.12);
+            --danger: #ff3b3b;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: #0e0e10;
+            background: var(--bg); color: var(--fg); font-family: 'Tajawal', sans-serif;
+            min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden;
         }
+        #fireCanvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+        .bg-vignette { position: fixed; inset: 0; background: radial-gradient(ellipse at center, transparent 30%, rgba(8,4,4,0.7) 70%, rgba(8,4,4,0.95) 100%); pointer-events: none; z-index: 1; }
+        .bg-glow { position: fixed; pointer-events: none; z-index: 0; border-radius: 50%; filter: blur(120px); }
+        .bg-glow.g1 { width: 500px; height: 500px; top: -150px; left: -100px; background: rgba(255,45,45,0.06); animation: gd1 14s ease-in-out infinite; }
+        .bg-glow.g2 { width: 400px; height: 400px; bottom: -100px; right: -80px; background: rgba(255,107,26,0.05); animation: gd2 18s ease-in-out infinite; }
+        .bg-glow.g3 { width: 300px; height: 300px; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(255,184,0,0.03); animation: gd3 10s ease-in-out infinite; }
+        @keyframes gd1{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,20px)}}
+        @keyframes gd2{0%,100%{transform:translate(0,0)}50%{transform:translate(-20px,-30px)}}
+        @keyframes gd3{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.15)}}
 
-        .site-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
+        .card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 24px;
+            padding: 36px 32px; width: 100%; max-width: 480px; position: relative; z-index: 10;
+            box-shadow: 0 0 80px rgba(255,45,45,0.04), 0 0 160px rgba(255,45,45,0.02), inset 0 1px 0 rgba(255,255,255,0.02);
         }
-
-        /* زر التفاعل العائم */
-        .interact-btn {
-            position: fixed;
-            bottom: 28px;
-            left: 28px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: none;
-            background: linear-gradient(135deg, #53fc18, #3bda0e);
-            color: #000;
-            font-size: 28px;
-            cursor: pointer;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 25px rgba(83, 252, 24, 0.5);
-            touch-action: none;
-            user-select: none;
-            transition: transform 0.2s;
+        .logo-wrap { text-align: center; margin-bottom: 32px; }
+        .logo-img {
+            width: 96px; height: 96px; border-radius: 22px; object-fit: cover; display: inline-block;
+            box-shadow: 0 0 40px rgba(255,45,45,0.25), 0 0 80px rgba(255,45,45,0.1), 0 4px 20px rgba(0,0,0,0.5);
+            animation: logoPulse 3s ease-in-out infinite;
         }
-
-        /* لوحة التحكم الاحترافية */
-        .control-panel {
-            position: fixed;
-            bottom: 100px;
-            left: 15px;
-            width: 350px;
-            max-width: calc(100vw - 30px);
-            background: rgba(24, 24, 27, 0.95);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid #2f2f35;
-            border-radius: 16px;
-            padding: 20px;
-            z-index: 9998;
-            display: none;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
-            max-height: 75vh;
-            overflow-y: auto;
+        @keyframes logoPulse {
+            0%,100% { box-shadow: 0 0 40px rgba(255,45,45,0.25), 0 0 80px rgba(255,45,45,0.1), 0 4px 20px rgba(0,0,0,0.5); }
+            50% { box-shadow: 0 0 60px rgba(255,45,45,0.35), 0 0 120px rgba(255,45,45,0.15), 0 4px 20px rgba(0,0,0,0.5); }
         }
-
-        .control-panel.open { display: block; }
-
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #2f2f35;
+        .app-name {
+            font-size: 38px; font-weight: 900; letter-spacing: -1px; margin-top: 16px;
+            background: linear-gradient(135deg, #FF2D2D 0%, #FF6B1A 50%, #FFB800 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
-
-        .panel-title {
-            color: #53fc18;
-            font-size: 18px;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .app-tagline { font-size: 13px; color: var(--muted); margin-top: 4px; }
+        label { display: block; font-size: 13px; font-weight: 700; color: var(--fg); margin-bottom: 6px; }
+        .hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+        input, textarea {
+            width: 100%; padding: 12px 14px; background: rgba(255,255,255,0.025);
+            border: 1px solid rgba(255,45,45,0.1); border-radius: 12px; color: var(--fg);
+            font-size: 14px; font-family: inherit; outline: none; transition: border .25s, box-shadow .25s;
         }
-
-        .status-badge {
-            font-size: 11px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-weight: 700;
+        input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,45,45,0.08), 0 0 24px rgba(255,45,45,0.06); }
+        input::placeholder, textarea::placeholder { color: #4a3030; }
+        textarea { resize: vertical; min-height: 100px; line-height: 1.8; }
+        .row { display: flex; gap: 8px; }
+        .row input { flex: 1; }
+        .btn {
+            padding: 12px 24px; border-radius: 12px; border: none; cursor: pointer;
+            font-weight: 700; font-size: 14px; font-family: inherit; transition: all .2s;
+            display: inline-flex; align-items: center; gap: 8px;
         }
-        .status-offline { background: rgba(235, 4, 0, 0.2); color: #eb0400; }
-        .status-online { background: rgba(83, 252, 24, 0.2); color: #53fc18; display: none; }
-
-        .login-btn {
-            width: 100%;
-            padding: 14px;
-            background: #53fc18;
-            color: #000;
-            border: none;
-            border-radius: 8px;
-            font-weight: 800;
-            font-size: 16px;
-            cursor: pointer;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
+        .btn:active:not(:disabled) { transform: scale(.97); }
+        .btn:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+        .btn-fire { background: linear-gradient(135deg, #FF2D2D, #FF6B1A); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        .btn-fire:hover:not(:disabled) { background: linear-gradient(135deg, #ff4040, #ff8030); box-shadow: 0 0 30px rgba(255,45,45,0.3), 0 0 60px rgba(255,107,26,0.15); transform: translateY(-1px); }
+        .btn-stop { background: linear-gradient(135deg, #cc0000, #990000); color: #fff; }
+        .btn-stop:hover { box-shadow: 0 0 24px rgba(204,0,0,0.3); }
+        .btn-ghost { background: rgba(255,255,255,0.03); color: var(--fg); border: 1px solid var(--border); }
+        .btn-ghost:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,45,45,0.25); }
+        .btn-sm { padding: 10px 16px; font-size: 13px; }
+        .btn-full { width: 100%; justify-content: center; }
+        .field { margin-bottom: 18px; }
+        .account-bar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 14px; background: rgba(255,45,45,0.04); border: 1px solid var(--border);
+            border-radius: 12px; margin-bottom: 18px;
         }
-
-        .form-group {
-            margin-bottom: 16px;
+        .account-bar .name { font-weight: 700; color: var(--accent); font-size: 15px; display: flex; align-items: center; gap: 8px; }
+        .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+        .dot-sending { animation: blink 1s infinite; }
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+        .progress-wrap { margin-bottom: 18px; }
+        .progress-track { height: 4px; background: rgba(255,255,255,0.04); border-radius: 2px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3)); border-radius: 2px; transition: width .3s; width: 0; }
+        .progress-info { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 4px; }
+        .log {
+            background: rgba(0,0,0,0.35); border: 1px solid rgba(255,45,45,0.06);
+            border-radius: 12px; padding: 10px; max-height: 200px; min-height: 60px; overflow-y: auto; margin-top: 8px;
         }
-
-        .form-group label {
-            display: block;
-            color: #adadb8;
-            font-size: 13px;
-            margin-bottom: 8px;
-            font-weight: 600;
+        .log::-webkit-scrollbar { width: 4px; }
+        .log::-webkit-scrollbar-thumb { background: rgba(255,45,45,0.15); border-radius: 2px; }
+        .log-entry {
+            padding: 4px 8px; border-radius: 4px; font-size: 11px; margin-bottom: 3px;
+            direction: ltr; text-align: left; font-family: 'Courier New', monospace;
+            word-break: break-all; animation: lfade .2s;
         }
-
-        .form-group select, 
-        .form-group input, 
-        .form-group textarea {
-            width: 100%;
-            background: #0e0e10;
-            border: 1px solid #323239;
-            color: #efeff1;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            outline: none;
-            font-family: inherit;
-            transition: border-color 0.2s;
-        }
-
-        .form-group select:focus, 
-        .form-group input:focus, 
-        .form-group textarea:focus {
-            border-color: #53fc18;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-        }
-
-        .btn-start, .btn-stop {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 800;
-            font-size: 15px;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        .btn-start { background: #53fc18; color: #000; }
-        .btn-stop { background: #eb0400; color: #fff; display: none; }
-        .btn-start:active, .btn-stop:active { opacity: 0.8; }
-
-        /* سجل التشغيل الاحترافي */
-        .log-area {
-            margin-top: 16px;
-            background: #0e0e10;
-            border-radius: 8px;
-            padding: 12px;
-            height: 120px;
-            overflow-y: auto;
-            font-size: 12px;
-            color: #71717a;
-            border: 1px solid #323239;
-            font-family: monospace;
-        }
-
-        .log-area .log-success { color: #53fc18; }
-        .log-area .log-wait { color: #f59e0b; }
-        .log-area .log-error { color: #ef4444; }
-
-        /* التمرير المخصص */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #323239; border-radius: 4px; }
+        @keyframes lfade{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+        .l-ok { background: rgba(255,107,26,0.06); border-left: 2px solid var(--accent2); color: var(--accent2); }
+        .l-er { background: rgba(255,59,59,0.06); border-left: 2px solid var(--danger); color: #ff5555; }
+        .l-in { background: rgba(255,184,0,0.06); border-left: 2px solid var(--accent3); color: var(--accent3); }
+        .l-wr { background: rgba(255,184,0,0.06); border-left: 2px solid var(--accent3); color: var(--accent3); }
+        .phase { display: none; }
+        .phase.active { display: block; animation: fadeIn .4s ease; }
+        @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        .spinner { width: 32px; height: 32px; border: 3px solid rgba(255,45,45,0.15); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 16px; }
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .spinner-sm { width: 14px; height: 14px; border: 2px solid transparent; border-top-color: currentColor; border-radius: 50%; animation: spin .6s linear infinite; display: inline-block; }
+        .toast-box { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+        .toast { padding: 10px 22px; border-radius: 10px; font-weight: 700; font-size: 13px; box-shadow: 0 4px 24px rgba(0,0,0,0.5); animation: toastIn .3s ease; font-family: inherit; }
+        .toast-s { background: linear-gradient(135deg, #FF2D2D, #FF6B1A); color: #fff; }
+        .toast-e { background: rgba(200,0,0,0.92); color: #fff; }
+        .toast-i { background: rgba(255,184,0,0.92); color: #000; }
+        @keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+        .section-title { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+        .section-title button { margin-right: auto; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 11px; font-family: inherit; }
+        .fire-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,45,45,0.2), rgba(255,107,26,0.3), rgba(255,45,45,0.2), transparent); margin: 20px 0; }
+        @media(max-width:560px){.card{margin:12px;padding:24px 20px;border-radius:18px}.logo-img{width:72px;height:72px}.app-name{font-size:30px}}
+        @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
     </style>
 </head>
 <body>
 
-    <iframe class="site-frame" src="https://kick.com" allow="autoplay; fullscreen" allowfullscreen></iframe>
+<canvas id="fireCanvas"></canvas>
+<div class="bg-glow g1"></div>
+<div class="bg-glow g2"></div>
+<div class="bg-glow g3"></div>
+<div class="bg-vignette"></div>
+<div class="toast-box" id="toasts"></div>
 
-    <button class="interact-btn" id="floatBtn">⚡</button>
+<div class="card" id="app">
 
-    <div class="control-panel" id="controlPanel">
-        <div class="panel-header">
-            <div class="panel-title">⚡ لوحة التفاعل</div>
-            <span class="status-badge status-offline" id="statusOff">غير متصل</span>
-            <span class="status-badge status-online" id="statusOn">متصل</span>
-        </div>
-
-        <!-- زر تسجيل الدخول يظهر فقط إذا لم يكن متصلاً -->
-        <button class="login-btn" id="loginBtn" onclick="loginWithKick()">
-            <svg width="20" height="20" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="6" fill="#000"/><path d="M7 8h4v12H7V8zm5 0h4v5h-4V8zm5 0h4v12h-4V8zm-5 7h4v5h-4v-5z" fill="#53FC18"/></svg>
-            تسجيل الدخول بحساب كيك
-        </button>
-
-        <div id="interactionControls" style="opacity: 0.5; pointer-events: none;">
-            <div class="form-group">
-                <label>اسم القناة (بدون @)</label>
-                <input type="text" id="channelInput" placeholder="مثال: xqc">
-            </div>
-
-            <div class="form-group">
-                <label>الرسائل (رسالة في كل سطر)</label>
-                <textarea id="messagesInput" placeholder="مرحبا بالجميع&#10;كيف حالكم؟&#10;بث رائع!"></textarea>
-            </div>
-
-            <div class="form-group">
-                <label>مؤقت التهدئة (بالثواني)</label>
-                <input type="number" id="cooldownInput" value="5" min="1">
-            </div>
-
-            <div class="btn-group">
-                <button class="btn-start" id="startBtn" onclick="startInteraction()">تشغيل البوت</button>
-                <button class="btn-stop" id="stopBtn" onclick="stopInteraction()">إيقاف البوت</button>
-            </div>
-        </div>
-
-        <div class="log-area" id="logArea">
-            <div>بانتظار تسجيل الدخول للبدء...</div>
-        </div>
+    <!-- تحميل -->
+    <div class="phase active" id="ph-load">
+        <div class="spinner"></div>
+        <p style="text-align:center;color:var(--muted);font-size:14px">جارٍ الاتصال بخوادم Kick...</p>
     </div>
 
-    <script>
-        // === إعدادات كيك API ===
-        const CLIENT_ID = '01KSV3JZQ4PN0N3K6DQS4MMENK';
-        const REDIRECT_URI = window.location.href; // يجب إضافة هذا الرابط في لوحة تحكم كيك للمطورين
-        let accessToken = null;
+    <!-- إدخال التوكن -->
+    <div class="phase" id="ph-token">
+        <div class="logo-wrap">
+            <img src="https://z-cdn-media.chatglm.cn/files/ab46995c-be54-4f0c-97d9-dc9965e3150b.png?auth_key=1881547846-5faaad2376f94647ae1522c3a0360a5e-0-48bb8eb6d9136f1963f04a687018a6a3" alt="RedKick" class="logo-img">
+            <div class="app-name">RedKick</div>
+            <div class="app-tagline">التحكم عن بُعد في الدردشة</div>
+        </div>
+        <div class="fire-divider"></div>
+        <div class="field">
+            <label><i class="fas fa-key" style="color:var(--accent);margin-left:4px;font-size:11px"></i> توكن الحساب</label>
+            <div class="row">
+                <input type="password" id="inToken" placeholder="Bearer Token...">
+                <button class="btn btn-fire btn-sm" id="btnVerify" onclick="verifyToken()"><i class="fas fa-shield-halved"></i> فحص</button>
+            </div>
+            <p class="hint">من DevTools → Network → أي طلب → Authorization</p>
+        </div>
+        <div id="tokenStatus" style="text-align:center;font-size:13px;min-height:20px"></div>
+    </div>
 
-        // === 1. برمجة الزر العائم ===
-        const floatBtn = document.getElementById('floatBtn');
-        const panel = document.getElementById('controlPanel');
-        let isDragging = false, startX, startY, initialLeft, initialTop, hasMoved = false;
+    <!-- لوحة التحكم -->
+    <div class="phase" id="ph-control">
+        <div class="logo-wrap" style="margin-bottom:16px">
+            <img src="https://z-cdn-media.chatglm.cn/files/ab46995c-be54-4f0c-97d9-dc9965e3150b.png?auth_key=1881547846-5faaad2376f94647ae1522c3a0360a5e-0-48bb8eb6d9136f1963f04a687018a6a3" alt="RedKick" style="width:40px;height:40px;border-radius:10px;box-shadow:0 0 20px rgba(255,45,45,0.2)">
+        </div>
+        <div class="account-bar">
+            <div class="name">
+                <span class="dot" id="statusDot"></span>
+                <span id="accName">---</span>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="logout()"><i class="fas fa-right-from-bracket"></i> خروج</button>
+        </div>
+        <div class="field">
+            <label><i class="fas fa-hashtag" style="color:var(--accent);margin-left:4px;font-size:11px"></i> اسم القناة</label>
+            <input type="text" id="inChannel" placeholder="مثال: xqc">
+            <p class="hint">الاسم من الرابط: kick.com/<span style="color:var(--accent)">الاسم</span></p>
+        </div>
+        <div class="field">
+            <label><i class="fas fa-comment-dots" style="color:var(--accent);margin-left:4px;font-size:11px"></i> الرسائل</label>
+            <textarea id="inMessages" placeholder="رسالة في كل سطر&#10;مرحبا&#10;كيف الحال&#10;شباب"></textarea>
+            <p class="hint">كل سطر = رسالة منفصلة</p>
+        </div>
+        <div class="field">
+            <label><i class="fas fa-clock" style="color:var(--accent);margin-left:4px;font-size:11px"></i> الفاصل الزمني</label>
+            <div class="row" style="align-items:center">
+                <input type="number" id="inInterval" value="3" min="1" max="120" style="max-width:100px">
+                <span style="color:var(--muted);font-size:12px">ثانية بين كل رسالة</span>
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:18px">
+            <button class="btn btn-fire btn-full" id="btnSend" onclick="startSending()"><i class="fas fa-paper-plane"></i> إرسال الرسائل</button>
+            <button class="btn btn-stop btn-full" id="btnStop" onclick="stopSending()" style="display:none"><i class="fas fa-stop"></i> إيقاف</button>
+        </div>
+        <div class="progress-wrap" id="progWrap" style="display:none">
+            <div class="progress-track"><div class="progress-fill" id="progFill"></div></div>
+            <div class="progress-info"><span id="progCount">0/0</span><span id="progTime">--</span></div>
+        </div>
+        <div>
+            <div class="section-title"><i class="fas fa-terminal"></i> سجل العمليات <button onclick="clearLog()">مسح</button></div>
+            <div class="log" id="logBox"></div>
+        </div>
+    </div>
+</div>
 
-        floatBtn.addEventListener('touchstart', (e) => {
-            isDragging = true; hasMoved = false;
-            startX = e.touches[0].clientX; startY = e.touches[0].clientY;
-            const rect = floatBtn.getBoundingClientRect();
-            initialLeft = rect.left; initialTop = rect.top;
-            floatBtn.style.right = 'auto'; floatBtn.style.bottom = 'auto';
-            floatBtn.style.left = initialLeft + 'px'; floatBtn.style.top = initialTop + 'px';
-        });
+<script>
+const API = 'https://kick.com';
+let kickToken = '';
+let xsrfToken = '';
+let isSending = false;
+let abortCtrl = null;
 
-        floatBtn.addEventListener('touchmove', (e) => {
-            if (!isDragging) return; e.preventDefault(); 
-            const currentX = e.touches[0].clientX, currentY = e.touches[0].clientY;
-            if (Math.abs(currentX - startX) > 5 || Math.abs(currentY - startY) > 5) hasMoved = true;
-            let newLeft = initialLeft + (currentX - startX), newTop = initialTop + (currentY - startY);
-            newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - floatBtn.offsetWidth));
-            newTop = Math.max(0, Math.min(newTop, window.innerHeight - floatBtn.offsetHeight));
-            floatBtn.style.left = newLeft + 'px'; floatBtn.style.top = newTop + 'px';
-        });
+const $ = id => document.getElementById(id);
 
-        floatBtn.addEventListener('touchend', () => {
-            isDragging = false;
-            if (!hasMoved) panel.classList.toggle('open');
-        });
+function showPhase(name) {
+    document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+    $('ph-' + name).classList.add('active');
+}
 
-        // === 2. نظام تسجيل الدخول الرسمي (OAuth2) ===
-        function loginWithKick() {
-            const authUrl = `https://id.kick.com/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=chat:write+chat:read+user:read`;
-            // تحويل المستخدم لموقع كيك الرسمي لتسجيل الدخول الآمن
-            window.top.location.href = authUrl;
+function toast(msg, type) {
+    const t = document.createElement('div');
+    t.className = 'toast toast-' + (type || 'i');
+    t.textContent = msg;
+    $('toasts').appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+const logCls = { ok: 'l-ok', er: 'l-er', 'in': 'l-in', wr: 'l-wr' };
+function addLog(type, msg) {
+    const box = $('logBox');
+    const d = new Date();
+    const ts = [d.getHours(), d.getMinutes(), d.getSeconds()].map(n => String(n).padStart(2, '0')).join(':');
+    const el = document.createElement('div');
+    el.className = 'log-entry ' + (logCls[type] || logCls['in']);
+    const sp = document.createElement('span');
+    sp.style.opacity = '0.4';
+    sp.textContent = '[' + ts + '] ';
+    el.appendChild(sp);
+    el.appendChild(document.createTextNode(msg));
+    box.appendChild(el);
+    box.scrollTop = box.scrollHeight;
+}
+function clearLog() { $('logBox').innerHTML = ''; }
+function escH(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+// ═══════════════════════════════════════
+//  جسيمات نارية
+// ═══════════════════════════════════════
+(function() {
+    const cv = $('fireCanvas'), ctx = cv.getContext('2d');
+    let W, H; const embers = [], MAX = 55;
+    function resize() { W = cv.width = window.innerWidth; H = cv.height = window.innerHeight; }
+    resize(); window.addEventListener('resize', resize);
+    function spawn() {
+        return { x: Math.random()*(W||800), y: (H||600)+10, vx: (Math.random()-.5)*.8, vy: -(Math.random()*1.5+.5), r: Math.random()*2.5+.5, life: Math.random()*200+100, ml: 0, hue: Math.random()*40 };
+    }
+    for (let i = 0; i < MAX; i++) { const e = spawn(); e.y = Math.random()*(H||600); e.life = Math.random()*200; e.ml = e.life; embers.push(e); }
+    function draw() {
+        ctx.clearRect(0, 0, W, H);
+        for (let i = 0; i < embers.length; i++) {
+            const e = embers[i]; e.x += e.vx; e.y += e.vy; e.vx += (Math.random()-.5)*.1; e.life--;
+            if (e.life <= 0 || e.y < -20) { embers[i] = spawn(); embers[i].ml = embers[i].life; continue; }
+            const a = Math.max(0, e.life / (e.ml || 200)), r = Math.max(.1, e.r * a);
+            const g = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, Math.max(.1, r * 4));
+            g.addColorStop(0, 'hsla(' + e.hue + ',100%,60%,' + (a * .6) + ')');
+            g.addColorStop(.5, 'hsla(' + e.hue + ',100%,50%,' + (a * .15) + ')');
+            g.addColorStop(1, 'hsla(' + e.hue + ',100%,40%,0)');
+            ctx.beginPath(); ctx.arc(e.x, e.y, Math.max(.1, r * 4), 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+            ctx.beginPath(); ctx.arc(e.x, e.y, Math.max(.1, r), 0, Math.PI * 2); ctx.fillStyle = 'hsla(' + e.hue + ',100%,70%,' + (a * .9) + ')'; ctx.fill();
         }
+        requestAnimationFrame(draw);
+    }
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) draw();
+})();
 
-        // التحقق مما إذا عدنا من كيك ومعنا رمز الدخول (Code)
-        window.onload = () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const code = urlParams.get('code');
-            if (code) {
-                addLog('تم استلام رمز التحقق من كيك، جاري المصادقة...', 'log-wait');
-                exchangeCodeForToken(code);
+// ═══════════════════════════════════════
+//  تهيئة الجلسة — جلب XSRF بصمت
+// ═══════════════════════════════════════
+async function initSession() {
+    showPhase('load');
+    try {
+        const res = await fetch(API + '/', { credentials: 'include', headers: { 'Accept': 'text/html' } });
+        if (res.ok) {
+            const html = await res.text();
+            let m = html.match(/<meta[^>]*name=["']csrf-token["'][^>]*content=["']([^"']+)["']/i);
+            if (m) xsrfToken = m[1];
+            if (!xsrfToken) { m = html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']csrf-token["']/i); if (m) xsrfToken = m[1]; }
+            if (!xsrfToken) { m = html.match(/"csrf[^"]*"\s*:\s*"([^"]+)"/i); if (m) xsrfToken = m[1]; }
+        }
+    } catch (e) {}
+    try { const cm = document.cookie.match(/XSRF-TOKEN=([^;]+)/); if (cm) xsrfToken = decodeURIComponent(cm[1]); } catch (e) {}
+    try { await fetch(API + '/sanctum/csrf-cookie', { credentials: 'include' }); const cm = document.cookie.match(/XSRF-TOKEN=([^;]+)/); if (cm) xsrfToken = decodeURIComponent(cm[1]); } catch (e) {}
+    showPhase('token');
+}
+
+// ═══════════════════════════════════════
+//  فحص التوكن — محسن
+// ═══════════════════════════════════════
+async function verifyToken() {
+    const token = $('inToken').value.trim();
+    if (!token) { toast('أدخل التوكن', 'e'); return; }
+
+    const btn = $('btnVerify');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-sm"></span>';
+
+    try {
+        const res = await fetch(API + '/api/v1/user', {
+            credentials: 'include',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
             }
-        };
+        });
 
-        // تبديل الرمز بالتوكن (ملاحظة: يتطلب وسيط سيرفر للحماية، سأشرح لك بالأسفل)
-        async function exchangeCodeForToken(code) {
-            addLog('جاري تبديل الرمز للوصول للخوادم...', 'log-wait');
-            
-            /* 
-                [تنبيه تقني هام جداً]:
-                لأسباب أمنية، كيك لا يسمح بتبديل الـ code إلى Token مباشرة من الجافاسكربت (لأنه يطلب الـ Client Secret).
-                في بيئة الإنتاج الحقيقية، يجب إرسال هذا الـ code إلى سيرفرك الخاص (Backend)، والسيرفر يتواصل مع كيك ليرجع الـ Token.
-                هنا سنقوم بمحاكاة نجاح العملية لتشغيل الواجهة، لكن لكي يعمل فعلياً على الهاتف، تحتاج لربطه بسيرفر خارجي يستقبل الطلب.
-            */
-            
-            // محاكاة نجاح الاتصال (إذا ربطت السيرفر، ستستبدل هذا بالـ Token الحقيقي القادم من السيرفر)
-            setTimeout(() => {
-                activateBotUI();
-                addLog('تم الاتصال بخوادم كيك بنجاح!', 'log-success');
-            }, 1500);
+        if (!res.ok) {
+            if (res.status === 401 || res.status === 403) throw new Error('التوكن غير صالح أو منتهي');
+            throw new Error('خطأ HTTP: ' + res.status);
         }
 
-        function activateBotUI() {
-            accessToken = "ACTIVE_TOKEN"; // التوكن الحقيقي سيأتي من السيرفر
-            document.getElementById('loginBtn').style.display = 'none';
-            document.getElementById('statusOff').style.display = 'none';
-            document.getElementById('statusOn').style.display = 'block';
-            document.getElementById('interactionControls').style.opacity = '1';
-            document.getElementById('interactionControls').style.pointerEvents = 'auto';
+        const raw = await res.text();
+        let data;
+        try { data = JSON.parse(raw); } catch (e) { throw new Error('الخادم لم يُرجع بيانات صالحة'); }
+
+        // البحث عن اسم المستخدم في كل الهياكل المحتملة
+        const username =
+            data.username ||
+            data.user?.username ||
+            data.data?.username ||
+            data.data?.user?.username ||
+            (data.slug) ||
+            (data.name) ||
+            null;
+
+        if (!username && !data.id) {
+            throw new Error('لم يتم العثور على بيانات الحساب');
         }
 
-        // === 3. منطق الإرسال الحقيقي (Kick API) ===
-        let interactionInterval = null, messageArray = [], currentMsgIndex = 0;
-        const logArea = document.getElementById('logArea');
+        kickToken = token;
+        const displayName = username || ('حساب #' + (data.id || data.user?.id || '?'));
 
-        function addLog(message, type = '') {
-            const div = document.createElement('div');
-            div.className = type;
-            const time = new Date().toLocaleTimeString();
-            div.textContent = `[${time}] ${message}`;
-            logArea.appendChild(div);
-            logArea.scrollTop = logArea.scrollHeight;
+        $('accName').textContent = displayName;
+        $('tokenStatus').innerHTML = '<span style="color:var(--accent)"><i class="fas fa-check-circle"></i> مرحباً ' + escH(displayName) + '</span>';
+        toast('تم التحقق — ' + displayName, 's');
+
+        setTimeout(() => { showPhase('control'); addLog('in', 'تم تسجيل الدخول — ' + displayName); }, 600);
+
+    } catch (e) {
+        $('tokenStatus').innerHTML = '<span style="color:var(--danger)"><i class="fas fa-xmark-circle"></i> ' + escH(e.message) + '</span>';
+        toast(e.message, 'e');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-shield-halved"></i> فحص';
+    }
+}
+
+// ═══════════════════════════════════════
+//  جلب معلومات القناة
+// ═══════════════════════════════════════
+async function fetchChannel(slug) {
+    const res = await fetch(API + '/api/v1/channels/' + slug, {
+        credentials: 'include',
+        headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) {
+        if (res.status === 404) throw new Error('القناة غير موجودة');
+        throw new Error('خطأ HTTP: ' + res.status);
+    }
+    return await res.json();
+}
+
+// ═══════════════════════════════════════
+//  تجديد XSRF بصمت
+// ═══════════════════════════════════════
+async function refreshXsrf() {
+    xsrfToken = '';
+    try {
+        const res = await fetch(API + '/', { credentials: 'include', headers: { 'Accept': 'text/html' } });
+        if (res.ok) {
+            const html = await res.text();
+            let m = html.match(/<meta[^>]*name=["']csrf-token["'][^>]*content=["']([^"']+)["']/i);
+            if (m) { xsrfToken = m[1]; return; }
+            m = html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']csrf-token["']/i);
+            if (m) { xsrfToken = m[1]; return; }
+            m = html.match(/"csrf[^"]*"\s*:\s*"([^"]+)"/i);
+            if (m) { xsrfToken = m[1]; return; }
+        }
+    } catch (e) {}
+    try { const cm = document.cookie.match(/XSRF-TOKEN=([^;]+)/); if (cm) { xsrfToken = decodeURIComponent(cm[1]); return; } } catch (e) {}
+    try { await fetch(API + '/sanctum/csrf-cookie', { credentials: 'include' }); const cm = document.cookie.match(/XSRF-TOKEN=([^;]+)/); if (cm) { xsrfToken = decodeURIComponent(cm[1]); return; } } catch (e) {}
+}
+
+// ═══════════════════════════════════════
+//  إرسال رسالة واحدة
+// ═══════════════════════════════════════
+async function sendMessage(chatroomId, content, retryCount) {
+    retryCount = retryCount || 0;
+
+    const headers = {
+        'Authorization': 'Bearer ' + kickToken,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    };
+
+    // إضافة XSRF إذا وجد تلقائياً
+    if (xsrfToken) {
+        headers['X-XSRF-TOKEN'] = xsrfToken;
+    }
+
+    const res = await fetch(API + '/api/v1/chat-messages', {
+        method: 'POST',
+        credentials: 'include',
+        headers: headers,
+        body: JSON.stringify({
+            content: content,
+            chatroom_id: parseInt(chatroomId)
+        })
+    });
+
+    if (!res.ok) {
+        let detail = '';
+        try { detail = await res.text(); } catch (e) {}
+
+        if (res.status === 419 && retryCount === 0) {
+            await refreshXsrf();
+            return sendMessage(chatroomId, content, 1);
         }
 
-        async function startInteraction() {
-            const channel = document.getElementById('channelInput').value.trim().toLowerCase();
-            const messages = document.getElementById('messagesInput').value.trim();
-            const cooldown = parseInt(document.getElementById('cooldownInput').value);
+        if (res.status === 429) throw new Error('حظر مؤقت — أبطئ الإرسال');
+        if (res.status === 403) throw new Error('لا صلاحية للكتابة هنا');
+        if (res.status === 401) throw new Error('التوكن منتهي — أعد الدخول');
+        if (res.status === 419) throw new Error('فشل رمز الحماية');
 
-            if (!channel) { addLog('خطأ: يجب كتابة اسم القناة!', 'log-error'); return; }
-            if (!messages) { addLog('خطأ: يجب كتابة رسالة واحدة على الأقل!', 'log-error'); return; }
+        throw new Error('فشل (' + res.status + ')');
+    }
+    return true;
+}
 
-            messageArray = messages.split('\n').filter(msg => msg.trim() !== '');
-            currentMsgIndex = 0;
+// ═══════════════════════════════════════
+//  بدء الإرسال
+// ═══════════════════════════════════════
+async function startSending() {
+    const slug = $('inChannel').value.trim();
+    const raw = $('inMessages').value.trim();
+    const interval = Math.max(1, parseInt($('inInterval').value) || 3);
 
-            addLog(`جلب بيانات القناة: ${channel}...`, 'log-wait');
+    if (!slug) { toast('أدخل اسم القناة', 'e'); return; }
+    if (!raw) { toast('أدخل رسالة واحدة على الأقل', 'e'); return; }
 
-            // إرسال حقيقي عبر Kick API
+    const msgs = raw.split('\n').map(l => l.trim()).filter(Boolean);
+    if (!msgs.length) { toast('لا توجد رسائل', 'e'); return; }
+
+    isSending = true;
+    abortCtrl = new AbortController();
+
+    $('btnSend').style.display = 'none';
+    $('btnStop').style.display = '';
+    $('progWrap').style.display = '';
+    $('statusDot').classList.add('dot-sending');
+
+    addLog('in', 'بدء الإرسال — ' + msgs.length + ' رسالة إلى "' + slug + '" (فاصل: ' + interval + 'ث)');
+
+    try {
+        addLog('in', 'جارٍ جلب بيانات القناة...');
+        const ch = await fetchChannel(slug);
+
+        let cid = ch.chatroom_id;
+        if (!cid && ch.chatroom) { cid = typeof ch.chatroom === 'object' ? ch.chatroom.id : ch.chatroom; }
+        if (!cid) throw new Error('لم يتم العثور على معرف الدردشة');
+
+        addLog('ok', 'القناة: ' + (ch.name || slug) + ' — chatroom_id: ' + cid);
+
+        let sent = 0;
+        const total = msgs.length;
+
+        for (let i = 0; i < total; i++) {
+            if (!isSending) { addLog('wr', 'تم الإيقاف بواسطة المستخدم'); break; }
+
             try {
-                // 1. جلب الـ Channel ID المطلوب للإرسال
-                const channelRes = await fetch(`https://api.kick.com/api/v1/channels/${channel}`, {
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                });
-                const channelData = await channelRes.json();
-                const chatroomId = channelData.data.chatroom_id;
+                await sendMessage(cid, msgs[i]);
+                sent++;
+                addLog('ok', '[' + sent + '/' + total + '] ' + msgs[i].substring(0, 60));
+            } catch (e) {
+                addLog('er', '[' + (i + 1) + '/' + total + '] ' + e.message);
+                if (e.message.indexOf('حظر') >= 0 || e.message.indexOf('صلاحية') >= 0 || e.message.indexOf('منتهي') >= 0) {
+                    addLog('er', 'خطأ حرج — تم الإيقاف'); break;
+                }
+            }
 
-                addLog(`بدء التفاعل في شات ${channel} (ID: ${chatroomId})`, 'log-success');
-                document.getElementById('startBtn').style.display = 'none';
-                document.getElementById('stopBtn').style.display = 'block';
+            const pct = ((i + 1) / total) * 100;
+            $('progFill').style.width = pct + '%';
+            $('progCount').textContent = (i + 1) + ' / ' + total;
+            const rem = (total - i - 1) * interval;
+            const mm = Math.floor(rem / 60), ss = rem % 60;
+            $('progTime').textContent = mm > 0 ? '~' + mm + 'د ' + ss + 'ث' : '~' + ss + ' ثانية';
 
-                // 2. إرسال أول رسالة
-                await sendKickMessage(chatroomId, messageArray[currentMsgIndex]);
-                currentMsgIndex++;
-
-                // 3. ضبط مؤقت التهدئة (Cooldown)
-                interactionInterval = setInterval(async () => {
-                    if (currentMsgIndex >= messageArray.length) currentMsgIndex = 0;
-                    await sendKickMessage(chatroomId, messageArray[currentMsgIndex]);
-                    currentMsgIndex++;
-                }, cooldown * 1000);
-
-            } catch (error) {
-                addLog('فشل الاتصال بالقناة. تأكد من اسم القناة وصلاحيات الـ Token.', 'log-error');
-                console.error(error);
+            if (i < total - 1 && isSending) {
+                await delay(interval * 1000, abortCtrl.signal);
             }
         }
 
-        // الدالة التي تتواصل مباشرة مع سيرفرات كيك لكتابة الرسالة
-        async function sendKickMessage(chatroomId, message) {
-            addLog(`إرسال: "${message}"`, 'log-success');
-            try {
-                await fetch('https://api.kick.com/api/v2/chat/send', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: message,
-                        channel_id: chatroomId
-                    })
-                });
-            } catch (error) {
-                addLog('خطأ في إرسال الرسالة للسيرفر.', 'log-error');
-            }
-        }
+        if (isSending) { addLog('ok', 'اكتمل — ' + sent + ' من ' + total); toast('تم إرسال ' + sent + ' رسالة', 's'); }
 
-        function stopInteraction() {
-            clearInterval(interactionInterval);
-            interactionInterval = null;
-            document.getElementById('startBtn').style.display = 'block';
-            document.getElementById('stopBtn').style.display = 'none';
-            addLog('تم إيقاف البوت.', 'log-wait');
-        }
-    </script>
+    } catch (e) {
+        let msg = e.message;
+        if (e instanceof TypeError || e.message.indexOf('Failed to fetch') >= 0) msg = 'خطأ اتصال — تأكد من الإنترنت';
+        addLog('er', msg);
+        toast('خطأ: ' + msg, 'e');
+    } finally {
+        isSending = false; abortCtrl = null;
+        $('btnSend').style.display = ''; $('btnStop').style.display = 'none';
+        $('statusDot').classList.remove('dot-sending');
+    }
+}
+
+function stopSending() { isSending = false; if (abortCtrl) abortCtrl.abort(); toast('جارٍ الإيقاف...', 'i'); }
+
+function delay(ms, signal) {
+    return new Promise(function(resolve, reject) {
+        if (signal && signal.aborted) { reject(new Error('aborted')); return; }
+        var t = setTimeout(resolve, ms);
+        if (signal) signal.addEventListener('abort', function() { clearTimeout(t); reject(new Error('aborted')); }, { once: true });
+    });
+}
+
+function logout() {
+    if (isSending) stopSending();
+    kickToken = '';
+    $('inToken').value = ''; $('tokenStatus').innerHTML = '';
+    $('inChannel').value = ''; $('inMessages').value = ''; $('inInterval').value = '3';
+    $('progFill').style.width = '0'; $('progWrap').style.display = 'none';
+    clearLog(); showPhase('token'); toast('تم تسجيل الخروج', 'i');
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && document.activeElement.id === 'inToken' && !e.shiftKey) { e.preventDefault(); verifyToken(); }
+});
+
+initSession();
+</script>
 </body>
 </html>
