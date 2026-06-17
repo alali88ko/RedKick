@@ -92,7 +92,6 @@
         @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
         @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
-        /* بطاقة الحساب */
         .acc-card {
             display:flex; align-items:center; gap:12px;
             padding:12px 14px; background:rgba(255,45,45,0.04); border:1px solid var(--border);
@@ -197,7 +196,7 @@
         <div class="field">
             <label><i class="fas fa-comment-dots" style="color:var(--accent);margin-left:4px;font-size:11px"></i> الرسائل</label>
             <textarea id="inMessages" placeholder="رسالة في كل سطر&#10;مرحبا&#10;كيف الحال&#10;شباب"></textarea>
-            <p class="hint">كل سطر = رسالة منفصلة</p>
+            <p class="hint">كل سطر = رسالة منفصلة — تُرسل بالترتيب</p>
         </div>
         <div class="field">
             <label><i class="fas fa-repeat" style="color:var(--accent);margin-left:4px;font-size:11px"></i> عدد التكرار</label>
@@ -227,20 +226,24 @@
 
 <script>
 /* ═══════════════════════════════════════════════════════════
-   RedKick — نظام الحسابات المتعددة
+   RedKick — نظام محسّن بالكامل
    ═══════════════════════════════════════════════════════════ */
 
 var KICK_BASE = 'https://kick.com';
 var $ = function(id) { return document.getElementById(id); };
 
 // ═══════════════════════════════════════
-//  البروكسي
+//  البروكسي — مع دعم POST
 // ═══════════════════════════════════════
 var PROXIES = [
-    { name:'allorigins', build:function(u){return 'https://api.allorigins.win/raw?url='+encodeURIComponent(u);} },
-    { name:'corsproxy', build:function(u){return 'https://corsproxy.io/?'+encodeURIComponent(u);} },
-    { name:'cors.sh', build:function(u){return 'https://cors.sh/'+u;} },
-    { name:'مباشر', build:function(u){return u;} }
+    // allorigins: ممتاز لـ GET لكن لا يدعم POST
+    { name:'allorigins', build:function(u){return 'https://api.allorigins.win/raw?url='+encodeURIComponent(u);}, canPost:false },
+    // بروكسيات تدعم POST:
+    { name:'corsproxy.org', build:function(u){return 'https://corsproxy.org/?'+encodeURIComponent(u);}, canPost:true },
+    { name:'thingproxy', build:function(u){return 'https://thingproxy.freeboard.io/fetch/'+u;}, canPost:true },
+    { name:'cors.sh', build:function(u){return 'https://cors.sh/'+u;}, canPost:true },
+    // مباشر: يعمل فقط على kick.com
+    { name:'direct', build:function(u){return u;}, canPost:true }
 ];
 var activeProxy = 0;
 var xsrfToken = '';
@@ -251,11 +254,9 @@ function detectMode() {
     if (isDirectMode) activeProxy = PROXIES.length - 1;
 }
 
-function proxyUrl(url, idx) {
-    return PROXIES[(idx !== undefined) ? idx : activeProxy].build(url);
-}
-
-// طلب مع timeout — يستخدم البروكسي المحفوظ أولاً ثم يجرب البقية
+// ═══════════════════════════════════════
+//  طلب مع timeout — يتخطى البروكسيات غير المناسبة
+// ═══════════════════════════════════════
 async function proxiedFetch(kickPath, options) {
     options = options || {};
     var method = options.method || 'GET';
@@ -265,14 +266,17 @@ async function proxiedFetch(kickPath, options) {
     var skipAuth = options.skipAuth || false;
     var token = options.token || '';
     var preferredProxy = options.preferredProxy;
+    var isPost = (method !== 'GET');
 
-    var defHeaders = { 'Accept':'application/json', 'Content-Type':'application/json', 'Origin':KICK_BASE };
+    var defHeaders = { 'Accept':'application/json' };
+    if (isPost) defHeaders['Content-Type'] = 'application/json';
+    defHeaders['Origin'] = KICK_BASE;
     if (!skipAuth && token) defHeaders['Authorization'] = 'Bearer ' + token;
     if (xsrfToken) defHeaders['X-XSRF-TOKEN'] = xsrfToken;
     for (var k in headers) defHeaders[k] = headers[k];
 
     var fetchOpts = { method:method, headers:defHeaders, credentials:isDirectMode?'include':'omit' };
-    if (body && method !== 'GET') fetchOpts.body = JSON.stringify(body);
+    if (body && isPost) fetchOpts.body = JSON.stringify(body);
 
     var fullUrl = KICK_BASE + kickPath;
     var lastError = null;
@@ -280,10 +284,14 @@ async function proxiedFetch(kickPath, options) {
     // ترتيب البروكسيات: المحفوظ أولاً، ثم البقية
     var order = [];
     if (preferredProxy !== undefined && preferredProxy >= 0) order.push(preferredProxy);
-    for (var i = 0; i < PROXIES.length; i++) { if (order.indexOf(i) === -1) order.push(i); }
+    for (var i = 0; i < PROXIES.length; i++) {
+        if (order.indexOf(i) === -1) order.push(i);
+    }
 
     for (var pi = 0; pi < order.length; pi++) {
         var p = order[pi];
+        // ✅ تخطي البروكسيات التي لا تدعم POST عند إرسال POST
+        if (isPost && !PROXIES[p].canPost) continue;
         var url = PROXIES[p].build(fullUrl);
         var opts = Object.assign({}, fetchOpts);
         opts.credentials = (isDirectMode && p === PROXIES.length-1) ? 'include' : 'omit';
@@ -299,12 +307,16 @@ async function proxiedFetch(kickPath, options) {
 }
 
 // ═══════════════════════════════════════
-//  XSRF
+//  XSRF — محسّن
 // ═══════════════════════════════════════
 async function fetchXsrf() {
     xsrfToken = '';
     try {
-        var pr = await proxiedFetch('/', { skipAuth:true, timeout:5000 });
+        // محاولة جلب csrf-cookie أولاً
+        try { await proxiedFetch('/sanctum/csrf-cookie', {skipAuth:true, timeout:3000}); } catch(e){}
+
+        // جلب الصفحة الرئيسية لاستخراج التوكن
+        var pr = await proxiedFetch('/', {skipAuth:true, timeout:5000});
         if (pr.res.ok) {
             var html = await pr.res.text(); var m;
             m = html.match(/<meta[^>]*name=["']csrf-token["'][^>]*content=["']([^"']+)["']/i);
@@ -332,7 +344,7 @@ function createAccount(token, username) {
         id:accIdCounter, token:token, username:username,
         channel:'', messages:'', interval:5, repeat:1, isInfinite:false,
         isSending:false, abortCtrl:null, sent:0, chatroomId:null,
-        workingProxy: -1  // يحفظ البروكسي الذي عمل لهذا الحساب
+        workingProxy:-1, workingSendProxy:-1
     };
 }
 function findAccount(id) { for(var i=0;i<accounts.length;i++){if(accounts[i].id===id)return accounts[i];} return null; }
@@ -456,8 +468,11 @@ async function verifyAndAdd() {
 
     try {
         var pr = null;
-        try { pr = await proxiedFetch('/api/v1/user', {token:token}); } catch(e){}
-        if (!pr || !pr.res.ok) { try { pr = await proxiedFetch('/api/v2/user', {token:token}); } catch(e){} }
+        // تجربة عدة نقاط لجلب بيانات المستخدم
+        var endpoints = ['/api/v1/user', '/api/v2/user'];
+        for (var ei = 0; ei < endpoints.length && (!pr || !pr.res.ok); ei++) {
+            try { pr = await proxiedFetch(endpoints[ei], {token:token, timeout:8000}); } catch(e) { continue; }
+        }
         if (!pr) throw new Error('فشل الاتصال — تحقق من الإنترنت');
         if (!pr.res.ok) {
             if (pr.res.status===401||pr.res.status===403) throw new Error('التوكن غير صالح أو منتهي');
@@ -466,15 +481,16 @@ async function verifyAndAdd() {
         var raw = await pr.res.text(); var data;
         try { data = JSON.parse(raw); } catch(e) { throw new Error('الخادم لم يُرجع بيانات صالحة'); }
 
-        var username = data.username || data.user?.username || data.data?.username || data.data?.user?.username || data.slug || data.name || null;
-        if (!username && !data.id && !data.data?.id) throw new Error('لم يتم العثور على بيانات الحساب');
-        var displayName = username || ('حساب #'+(data.id||data.user?.id||data.data?.id||'?'));
+        var username = data.username || (data.user && data.user.username) || (data.data && data.data.username) || (data.data && data.data.user && data.data.user.username) || data.slug || data.name || null;
+        if (!username && !data.id && !(data.data && data.data.id)) throw new Error('لم يتم العثور على بيانات الحساب');
+        var displayName = username || ('حساب #'+(data.id||(data.user&&data.user.id)||(data.data&&data.data.id)||'?'));
 
         for (var i=0;i<accounts.length;i++) {
             if (accounts[i].token===token) throw new Error('هذا التوكن مضاف مسبقاً باسم '+accounts[i].username);
         }
 
         var acc = createAccount(token, displayName);
+        acc.workingProxy = pr.proxyUsed;
         accounts.push(acc);
         $('tokenStatus').innerHTML = '<span style="color:var(--success)"><i class="fas fa-check-circle"></i> تمت الإضافة — '+escH(displayName)+'</span>';
         toast('تم إضافة '+displayName,'s');
@@ -489,47 +505,63 @@ async function verifyAndAdd() {
 }
 
 // ═══════════════════════════════════════
-//  جلب معلومات القناة — نظام محسّن
+//  جلب معلومات القناة — نظام محسّن جداً
 // ═══════════════════════════════════════
 async function fetchChannel(slug, acc) {
     slug = slug.trim().toLowerCase().replace(/^\/+|\/+$|\s+/g, '');
     if (!slug) throw new Error('اسم القناة فارغ');
-    if (!acc) acc = { workingProxy: -1 };
+    if (!acc) acc = { workingProxy:-1 };
 
-    // المحاولة 1: v2
+    var errors = [];
+
+    // المحاولة 1: v2 channels
     try {
-        var r1 = await proxiedFetch('/api/v2/channels/'+slug, {skipAuth:true, timeout:8000, preferredProxy:acc.workingProxy});
+        var r1 = await proxiedFetch('/api/v2/channels/'+slug, {skipAuth:true, timeout:5000, preferredProxy:acc.workingProxy});
         if (r1.res.ok) {
             acc.workingProxy = r1.proxyUsed;
-            var data = await r1.res.json();
-            if (data && (data.data || data.id || data.chatroom || data.chatroom_id || data.slug)) return data;
+            var data = await r1.res.json().catch(function(){return null;});
+            if (data) {
+                // التحقق من وجود بيانات صالحة
+                var dd = data.data || data;
+                if (dd.id || dd.chatroom_id || dd.chatroom || dd.slug || (dd.chatroom && dd.chatroom.id)) return data;
+            }
         }
-    } catch(e){}
+    } catch(e) { errors.push('v2: '+e.message); }
 
-    // المحاولة 2: v1
+    // المحاولة 2: v1 channels
     try {
-        var r2 = await proxiedFetch('/api/v1/channels/'+slug, {skipAuth:true, timeout:8000, preferredProxy:acc.workingProxy});
+        var r2 = await proxiedFetch('/api/v1/channels/'+slug, {skipAuth:true, timeout:5000, preferredProxy:acc.workingProxy});
         if (r2.res.ok) {
             acc.workingProxy = r2.proxyUsed;
-            var data2 = await r2.res.json();
-            if (data2 && (data2.data || data2.id || data2.chatroom || data2.chatroom_id || data2.slug)) return data2;
+            var data2 = await r2.res.json().catch(function(){return null;});
+            if (data2) {
+                var dd2 = data2.data || data2;
+                if (dd2.id || dd2.chatroom_id || dd2.chatroom || dd2.slug) return data2;
+            }
         }
-    } catch(e){}
+    } catch(e) { errors.push('v1: '+e.message); }
 
     // المحاولة 3: بحث
     try {
-        var r3 = await proxiedFetch('/api/search?q='+encodeURIComponent(slug), {skipAuth:true, timeout:8000, preferredProxy:acc.workingProxy});
+        var r3 = await proxiedFetch('/api/search?q='+encodeURIComponent(slug), {skipAuth:true, timeout:5000, preferredProxy:acc.workingProxy});
         if (r3.res.ok) {
             acc.workingProxy = r3.proxyUsed;
-            var searchData = await r3.res.json();
-            if (searchData.data) {
-                for (var i=0;i<searchData.data.length;i++) {
-                    var item = searchData.data[i];
-                    if (item.slug===slug || item.username===slug) return item;
+            var searchData = await r3.res.json().catch(function(){return null;});
+            if (searchData) {
+                var items = searchData.data || searchData;
+                if (Array.isArray(items)) {
+                    for (var i=0;i<items.length;i++) {
+                        var item = items[i];
+                        if (item.slug===slug || item.username===slug) return item;
+                        // تطابق جزئي
+                        if (item.slug && item.slug.indexOf(slug)===0) return item;
+                    }
+                    // إذا وجدنا نتائج، نأخذ الأولى
+                    if (items.length > 0 && items[0].slug) return items[0];
                 }
             }
         }
-    } catch(e){}
+    } catch(e) { errors.push('search: '+e.message); }
 
     throw new Error('القناة "'+slug+'" غير موجودة أو فشل الاتصال');
 }
@@ -537,30 +569,41 @@ async function fetchChannel(slug, acc) {
 function extractChatroomId(ch) {
     if (!ch) return null;
     var data = ch.data || ch;
-    if (data.chatroom_id) return data.chatroom_id;
+    // مستويات متعددة للبحث عن chatroom_id
+    if (data.chatroom_id) return String(data.chatroom_id);
     if (data.chatroom) {
         if (typeof data.chatroom === 'object') {
-            if (data.chatroom.id) return data.chatroom.id;
-            if (data.chatroom.chatroom_id) return data.chatroom.chatroom_id;
+            if (data.chatroom.id) return String(data.chatroom.id);
+            if (data.chatroom.chatroom_id) return String(data.chatroom.chatroom_id);
         }
-        return data.chatroom;
+        return String(data.chatroom);
     }
-    if (data.chatroomId) return data.chatroomId;
-    if (data.channel && data.channel.chatroom_id) return data.channel.chatroom_id;
-    if (data.channel && data.channel.chatroom && data.channel.chatroom.id) return data.channel.chatroom.id;
+    if (data.chatroomId) return String(data.chatroomId);
+    if (data.channel) {
+        if (data.channel.chatroom_id) return String(data.channel.chatroom_id);
+        if (data.channel.chatroom && data.channel.chatroom.id) return String(data.channel.chatroom.id);
+    }
+    // محاولة استخراج من حقول أخرى
+    if (data.id && data.slug) return null; // لدينا بيانات القناة لكن بدون chatroom_id
     return null;
 }
 
 async function fetchChatroomId(slug, acc) {
     slug = slug.trim().toLowerCase();
+    // المحاولة 1: نقطة chatroom مخصصة
     try {
-        var r1 = await proxiedFetch('/api/v2/channels/'+slug+'/chatroom', {skipAuth:true, timeout:8000, preferredProxy:acc.workingProxy});
-        if (r1.res.ok) { acc.workingProxy=r1.proxyUsed; var d=await r1.res.json(); var dd=d.data||d; if(dd.id)return dd.id; if(dd.chatroom_id)return dd.chatroom_id; }
+        var r1 = await proxiedFetch('/api/v2/channels/'+slug+'/chatroom', {skipAuth:true, timeout:5000, preferredProxy:acc.workingProxy});
+        if (r1.res.ok) {
+            acc.workingProxy=r1.proxyUsed;
+            var d = await r1.res.json().catch(function(){return null;});
+            if (d) {
+                var dd = d.data || d;
+                if (dd.id) return String(dd.id);
+                if (dd.chatroom_id) return String(dd.chatroom_id);
+            }
+        }
     } catch(e){}
-    try {
-        var r2 = await proxiedFetch('/api/v1/'+slug+'/chatroom', {skipAuth:true, timeout:8000, preferredProxy:acc.workingProxy});
-        if (r2.res.ok) { acc.workingProxy=r2.proxyUsed; var d2=await r2.res.json(); if(d2.id)return d2.id; if(d2.chatroom_id)return d2.chatroom_id; }
-    } catch(e){}
+    // المحاولة 2: عبر بيانات القناة الكاملة
     try {
         var chData = await fetchChannel(slug, acc);
         var cid = extractChatroomId(chData);
@@ -570,51 +613,70 @@ async function fetchChatroomId(slug, acc) {
 }
 
 // ═══════════════════════════════════════
-//  إرسال رسالة واحدة
+//  إرسال رسالة واحدة — محسّن بالكامل
 // ═══════════════════════════════════════
-async function sendMessage(chatroomId, content, token, retryInfo) {
-    retryInfo = retryInfo || { attempt:0, refreshedXsrf:false, proxyPref:-1 };
+async function sendMessage(chatroomId, content, token, preferredProxy) {
+    // ✅ كل استدعاء له كائن إعادة محاولة خاص به
+    var lastErr = null;
+    var proxyPref = preferredProxy;
 
-    // الطريقة 1: v2
-    if (retryInfo.attempt === 0) {
-        try {
-            var r2 = await proxiedFetch('/api/v2/messages/send/'+chatroomId, {
-                method:'POST', token:token, timeout:10000, preferredProxy:retryInfo.proxyPref,
-                body: {content:content, type:'message'}
-            });
-            var v2Res = r2.res;
-            if (v2Res.ok) { retryInfo.proxyPref = r2.proxyUsed; return true; }
-            if (v2Res.status===419 && !retryInfo.refreshedXsrf) { await refreshXsrf(); retryInfo.refreshedXsrf=true; retryInfo.attempt=1; return sendMessage(chatroomId,content,token,retryInfo); }
-            if (v2Res.status===429) throw new Error('حظر مؤقت');
-            if (v2Res.status===403) throw new Error('لا صلاحية');
-            if (v2Res.status===401) throw new Error('توكن منتهي');
-        } catch(e) {
-            if (e.message.indexOf('حظر')>=0||e.message.indexOf('صلاحية')>=0||e.message.indexOf('منتهي')>=0) throw e;
+    // ═══ الطريقة 1: v2 ═══
+    try {
+        var r2 = await proxiedFetch('/api/v2/messages/send/'+chatroomId, {
+            method:'POST', token:token, timeout:10000, preferredProxy:proxyPref,
+            body: {content:content, type:'message'}
+        });
+        if (r2.res.ok) { return { success:true, proxyUsed:r2.proxyUsed }; }
+        // خطأ 419: XSRF — نحاول مرة واحدة فقط
+        if (r2.res.status === 419) {
+            await refreshXsrf();
+            try {
+                var r2b = await proxiedFetch('/api/v2/messages/send/'+chatroomId, {
+                    method:'POST', token:token, timeout:10000, preferredProxy:r2.proxyUsed,
+                    body: {content:content, type:'message'}
+                });
+                if (r2b.res.ok) { return { success:true, proxyUsed:r2b.proxyUsed }; }
+            } catch(e2b) {}
         }
+        if (r2.res.status===429) throw new Error('حظر مؤقت');
+        if (r2.res.status===403) throw new Error('لا صلاحية');
+        if (r2.res.status===401) throw new Error('توكن منتهي');
+        proxyPref = r2.proxyUsed;
+    } catch(e) {
+        if (e.message.indexOf('حظر')>=0||e.message.indexOf('صلاحية')>=0||e.message.indexOf('منتهي')>=0) throw e;
+        lastErr = e;
     }
 
-    // الطريقة 2: v1
+    // ═══ الطريقة 2: v1 ═══
     try {
         var r1 = await proxiedFetch('/api/v1/chat-messages', {
-            method:'POST', token:token, timeout:10000, preferredProxy:retryInfo.proxyPref,
+            method:'POST', token:token, timeout:10000, preferredProxy:proxyPref,
             body: {content:content, chatroom_id:parseInt(chatroomId)}
         });
-        var v1Res = r1.res;
-        if (v1Res.ok) { retryInfo.proxyPref = r1.proxyUsed; return true; }
-        if (v1Res.status===419 && !retryInfo.refreshedXsrf) { await refreshXsrf(); retryInfo.refreshedXsrf=true; return sendMessage(chatroomId,content,token,retryInfo); }
-        if (v1Res.status===429) throw new Error('حظر مؤقت');
-        if (v1Res.status===403) throw new Error('لا صلاحية');
-        if (v1Res.status===401) throw new Error('توكن منتهي');
-        if (v1Res.status===419) throw new Error('فشل XSRF');
-        throw new Error('فشل ('+v1Res.status+')');
+        if (r1.res.ok) { return { success:true, proxyUsed:r1.proxyUsed }; }
+        if (r1.res.status === 419) {
+            await refreshXsrf();
+            try {
+                var r1b = await proxiedFetch('/api/v1/chat-messages', {
+                    method:'POST', token:token, timeout:10000, preferredProxy:r1.proxyUsed,
+                    body: {content:content, chatroom_id:parseInt(chatroomId)}
+                });
+                if (r1b.res.ok) { return { success:true, proxyUsed:r1b.proxyUsed }; }
+            } catch(e1b) {}
+        }
+        if (r1.res.status===429) throw new Error('حظر مؤقت');
+        if (r1.res.status===403) throw new Error('لا صلاحية');
+        if (r1.res.status===401) throw new Error('توكن منتهي');
+        throw new Error('فشل الإرسال ('+r1.res.status+')');
     } catch(e) {
+        if (e.message.indexOf('حظر')>=0||e.message.indexOf('صلاحية')>=0||e.message.indexOf('منتهي')>=0) throw e;
         if (e instanceof TypeError || e.message.indexOf('Failed to fetch')>=0 || e.message==='timeout') throw new Error('خطأ اتصال');
         throw e;
     }
 }
 
 // ═══════════════════════════════════════
-//  خيار التكرار اللانهائي — يقرأ من الحقل مباشرة
+//  خيار التكرار اللانهائي
 // ═══════════════════════════════════════
 function toggleInfinite() {
     var inp = $('inRepeat');
@@ -652,61 +714,89 @@ async function startSending() {
     var msgs = raw.split('\n').map(function(l){return l.trim();}).filter(Boolean);
     if (!msgs.length) { toast('لا توجد رسائل','e'); return; }
 
-    // ✅ تحديث فوري للواجهة — بدون انتظار
+    // ✅ تحديث فوري للواجهة
     acc.isSending = true; acc.abortCtrl = new AbortController(); acc.sent = 0;
     updateSendBtns(acc); $('progWrap').style.display='';
+    $('progFill').style.width='0%'; $('progFill').style.background=''; $('progFill').style.backgroundSize=''; $('progFill').style.animation='';
     renderAccountList();
 
-    // ✅ تشغيل الإرسال في الخلفية — لا يوقف أي شيء
+    // ✅ تشغيل الإرسال في الخلفية
     runBotLoop(acc, slug, msgs, interval, infinite, repeatCount);
 }
 
+// ═══════════════════════════════════════
+//  حلقة البوت — ترتيب صارم + إعادة محاولة
+// ═══════════════════════════════════════
+var MAX_SEND_RETRIES = 3; // عدد محاولات إعادة إرسال نفس الرسالة
+var RETRY_DELAY = 2000;   // ثانيتين بين محاولات الإعادة
+
 async function runBotLoop(acc, slug, msgs, interval, infinite, repeatCount) {
+    var cid = null;
     try {
-        // جلب القناة
-        var ch = await fetchChannel(slug, acc);
-        var cid = extractChatroomId(ch);
-        if (!cid) cid = await fetchChatroomId(slug, acc);
+        // جلب chatroomId — مع عدة محاولات
+        for (var fetchAttempt = 0; fetchAttempt < 2 && !cid; fetchAttempt++) {
+            try {
+                var ch = await fetchChannel(slug, acc);
+                cid = extractChatroomId(ch);
+                if (!cid) cid = await fetchChatroomId(slug, acc);
+            } catch(e) {
+                if (fetchAttempt === 0) {
+                    // نحاول مرة أخرى بعد تحديث XSRF
+                    await refreshXsrf();
+                } else {
+                    throw e;
+                }
+            }
+        }
         if (!cid) throw new Error('لم يتم العثور على معرف الدردشة');
 
         acc.chatroomId = cid;
-        var sendRetry = { attempt:0, refreshedXsrf:false, proxyPref:acc.workingProxy };
 
-        // ✅ إرسال بسيط ومرتب: رسالة ← انتظر ← رسالة ← انتظر ...
+        // ✅ حلقة الإرسال: ترتيب صارم
+        // رسالة 1 ← انتظر ← رسالة 2 ← انتظر ← ... ← رسالة N ← انتظر ← (دورة جديدة)
         var roundNum = 0;
-        var globalIndex = 0; // رقم الرسالة الإجمالي
 
         while (acc.isSending) {
-            // هل انتهت الدورات؟
             if (!infinite && roundNum >= repeatCount) break;
 
-            // الدوران على الرسائل بالترتيب: أول رسالة ثم ثانية ثم ...
             for (var i = 0; i < msgs.length; i++) {
                 if (!acc.isSending) break;
 
-                // أرسل الرسالة
-                try {
-                    await sendMessage(cid, msgs[i], acc.token, sendRetry);
-                    if (sendRetry.proxyPref >= 0) acc.workingProxy = sendRetry.proxyPref;
-                    acc.sent++;
-                    sendRetry.attempt = 0; // إعادة محاولة لكل رسالة
-                } catch(e) {
-                    if (e.message.indexOf('حظر')>=0 || e.message.indexOf('صلاحية')>=0 || e.message.indexOf('منتهي')>=0) { acc.isSending = false; break; }
-                    // فشل عادي — نكمل للرسالة التالية
-                }
+                var msgSent = false;
+                var failCount = 0;
 
-                globalIndex++;
+                // ✅ إعادة محاولة نفس الرسالة حتى تنجح أو نصل للحد الأقصى
+                while (!msgSent && failCount < MAX_SEND_RETRIES && acc.isSending) {
+                    try {
+                        var result = await sendMessage(cid, msgs[i], acc.token, acc.workingSendProxy);
+                        if (result.proxyUsed >= 0) acc.workingSendProxy = result.proxyUsed;
+                        acc.sent++;
+                        msgSent = true;
+                    } catch(e) {
+                        failCount++;
+                        // أخطاء حرجة — إيقاف فوري
+                        if (e.message.indexOf('حظر')>=0 || e.message.indexOf('صلاحية')>=0 || e.message.indexOf('منتهي')>=0) {
+                            if (activeAccountId === acc.id) toast('('+acc.username+') '+e.message,'e');
+                            acc.isSending = false;
+                            break;
+                        }
+                        // خطأ عادي — ننتظر قليلاً ثم نعيد المحاولة
+                        if (failCount < MAX_SEND_RETRIES && acc.isSending) {
+                            try { await delay(RETRY_DELAY, acc.abortCtrl.signal); } catch(aborted) { acc.isSending=false; break; }
+                        }
+                    }
+                }
 
                 // تحديث التقدم
                 if (activeAccountId === acc.id) updateProgress(acc, msgs.length, roundNum, repeatCount, infinite, interval);
 
-                // ✅ انتظر الفاصل الزمني بعد كل رسالة (ما عدا الأخيرة إذا كانت آخر دورة)
+                // ✅ انتظار الفاصل الزمني بعد كل رسالة
+                // لا ننتظر بعد الرسالة الأخيرة في آخر دورة
                 if (acc.isSending) {
-                    // حساب هل نحتاج انتظار
-                    var isLastInRound = (i === msgs.length - 1);
+                    var isLastMsg = (i === msgs.length - 1);
                     var isLastRound = (!infinite && roundNum >= repeatCount - 1);
-                    if (!(isLastInRound && isLastRound)) {
-                        await delay(interval * 1000, acc.abortCtrl.signal);
+                    if (!(isLastMsg && isLastRound)) {
+                        try { await delay(interval * 1000, acc.abortCtrl.signal); } catch(aborted) { break; }
                     }
                 }
             }
@@ -716,7 +806,7 @@ async function runBotLoop(acc, slug, msgs, interval, infinite, repeatCount) {
 
     } catch(e) {
         var msg = e.message;
-        if (e instanceof TypeError||msg.indexOf('Failed to fetch')>=0||msg==='timeout') msg='خطأ اتصال';
+        if (e instanceof TypeError||msg.indexOf('Failed to fetch')>=0||msg==='timeout') msg='خطأ اتصال — تحقق من الإنترنت';
         if (activeAccountId === acc.id) toast('('+acc.username+') '+msg,'e');
     } finally {
         acc.isSending = false; acc.abortCtrl = null;
@@ -733,14 +823,15 @@ function updateProgress(acc, msgsLen, roundNum, repeatCount, infinite, interval)
         $('progFill').style.width='100%';
         $('progFill').style.background='linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3),var(--accent))';
         $('progFill').style.backgroundSize='200% 100%'; $('progFill').style.animation='shimmer 2s linear infinite';
-        $('progCount').textContent='الدورة '+roundNum+' | '+acc.sent+' رسالة';
+        $('progCount').textContent='الدورة '+(roundNum+1)+' | '+acc.sent+' رسالة';
         $('progTime').textContent=msgsLen+' رسالة/دورة';
     } else {
         var totalMsgs=repeatCount*msgsLen;
-        $('progFill').style.width=Math.min(100,(acc.sent/totalMsgs)*100)+'%';
+        var pct = Math.min(100, (acc.sent/totalMsgs)*100);
+        $('progFill').style.width=pct+'%';
         $('progFill').style.background=''; $('progFill').style.backgroundSize=''; $('progFill').style.animation='';
         $('progCount').textContent=acc.sent+' / '+totalMsgs+' (دورة '+Math.min(roundNum+1,repeatCount)+'/'+repeatCount+')';
-        var rem=(totalMsgs-acc.sent)*interval, mm=Math.floor(rem/60), ss=rem%60;
+        var rem=Math.max(0,(totalMsgs-acc.sent)*interval), mm=Math.floor(rem/60), ss=rem%60;
         $('progTime').textContent=mm>0?'~'+mm+'د '+ss+'ث':'~'+ss+' ثانية';
     }
 }
@@ -749,7 +840,6 @@ function stopSending() {
     if (!activeAccountId) return;
     var acc = findAccount(activeAccountId);
     if (!acc) return;
-    // ✅ استجابة فورية — أوقف فوراً
     acc.isSending = false;
     if (acc.abortCtrl) acc.abortCtrl.abort();
     updateSendBtns(acc);
@@ -793,7 +883,7 @@ function delay(ms, signal) {
 })();
 
 // ═══════════════════════════════════════
-//  تهيئة الجلسة — بدون تعليق
+//  تهيئة الجلسة — سريع بدون تعليق
 // ═══════════════════════════════════════
 async function initSession() {
     showPhase('load');
