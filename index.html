@@ -663,43 +663,63 @@ async function startSending() {
 
 async function runBotLoop(acc, slug, msgs, interval, infinite, repeatCount) {
     try {
-        // جلب القناة باستخدام البروكسي المحفوظ لهذا الحساب
+        // جلب القناة
         var ch = await fetchChannel(slug, acc);
         var cid = extractChatroomId(ch);
         if (!cid) cid = await fetchChatroomId(slug, acc);
         if (!cid) throw new Error('لم يتم العثور على معرف الدردشة');
 
         acc.chatroomId = cid;
-        var failCount=0, MAX_FAILS=3, msgIndex=0, roundNum=0, totalInRound=msgs.length;
         var sendRetry = { attempt:0, refreshedXsrf:false, proxyPref:acc.workingProxy };
 
+        // ✅ إرسال بسيط ومرتب: رسالة ← انتظر ← رسالة ← انتظر ...
+        var roundNum = 0;
+        var globalIndex = 0; // رقم الرسالة الإجمالي
+
         while (acc.isSending) {
+            // هل انتهت الدورات؟
             if (!infinite && roundNum >= repeatCount) break;
-            var currentMsg = msgs[msgIndex % msgs.length];
-            try {
-                await sendMessage(cid, currentMsg, acc.token, sendRetry);
-                if (sendRetry.proxyPref >= 0) acc.workingProxy = sendRetry.proxyPref;
-                acc.sent++; failCount=0;
-            } catch(e) {
-                failCount++;
-                if (e.message.indexOf('حظر')>=0||e.message.indexOf('صلاحية')>=0||e.message.indexOf('منتهي')>=0) break;
-                if (failCount>=MAX_FAILS) break;
+
+            // الدوران على الرسائل بالترتيب: أول رسالة ثم ثانية ثم ...
+            for (var i = 0; i < msgs.length; i++) {
+                if (!acc.isSending) break;
+
+                // أرسل الرسالة
+                try {
+                    await sendMessage(cid, msgs[i], acc.token, sendRetry);
+                    if (sendRetry.proxyPref >= 0) acc.workingProxy = sendRetry.proxyPref;
+                    acc.sent++;
+                    sendRetry.attempt = 0; // إعادة محاولة لكل رسالة
+                } catch(e) {
+                    if (e.message.indexOf('حظر')>=0 || e.message.indexOf('صلاحية')>=0 || e.message.indexOf('منتهي')>=0) { acc.isSending = false; break; }
+                    // فشل عادي — نكمل للرسالة التالية
+                }
+
+                globalIndex++;
+
+                // تحديث التقدم
+                if (activeAccountId === acc.id) updateProgress(acc, msgs.length, roundNum, repeatCount, infinite, interval);
+
+                // ✅ انتظر الفاصل الزمني بعد كل رسالة (ما عدا الأخيرة إذا كانت آخر دورة)
+                if (acc.isSending) {
+                    // حساب هل نحتاج انتظار
+                    var isLastInRound = (i === msgs.length - 1);
+                    var isLastRound = (!infinite && roundNum >= repeatCount - 1);
+                    if (!(isLastInRound && isLastRound)) {
+                        await delay(interval * 1000, acc.abortCtrl.signal);
+                    }
+                }
             }
-            msgIndex++;
-            if (msgIndex % totalInRound === 0) roundNum++;
 
-            // تحديث التقدم فقط إذا كان هذا الحساب مفتوحاً
-            if (activeAccountId === acc.id) updateProgress(acc, msgs.length, roundNum, repeatCount, infinite, interval);
-
-            if (acc.isSending) await delay(interval*1000, acc.abortCtrl.signal);
+            roundNum++;
         }
 
     } catch(e) {
         var msg = e.message;
-        if (e instanceof TypeError||msg.indexOf('Failed to fetch')>=0) msg='خطأ اتصال';
-        if (activeAccountId === acc.id) toast('('+acc.username+') خطأ: '+msg,'e');
+        if (e instanceof TypeError||msg.indexOf('Failed to fetch')>=0||msg==='timeout') msg='خطأ اتصال';
+        if (activeAccountId === acc.id) toast('('+acc.username+') '+msg,'e');
     } finally {
-        acc.isSending=false; acc.abortCtrl=null;
+        acc.isSending = false; acc.abortCtrl = null;
         if (activeAccountId === acc.id) {
             updateSendBtns(acc);
             $('progFill').style.background=''; $('progFill').style.backgroundSize=''; $('progFill').style.animation='';
@@ -795,4 +815,3 @@ initSession();
 </script>
 </body>
 </html>
-
