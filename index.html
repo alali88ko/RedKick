@@ -8,117 +8,123 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         :root {
-            --bg: #080404;
-            --fg: #f0e6e6;
-            --muted: #6b4a4a;
-            --accent: #FF2D2D;
-            --accent2: #FF6B1A;
-            --accent3: #FFB800;
-            --card: rgba(18,8,8,0.95);
-            --border: rgba(255,45,45,0.12);
-            --danger: #ff3b3b;
-            --success: #00c853;
+            --bg: #080404; --fg: #f0e6e6; --muted: #6b4a4a;
+            --accent: #FF2D2D; --accent2: #FF6B1A; --accent3: #FFB800;
+            --card: rgba(18,8,8,0.95); --border: rgba(255,45,45,0.12);
+            --danger: #ff3b3b; --success: #00c853;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin:0; padding:0; box-sizing:border-box; }
         body {
-            background: var(--bg); color: var(--fg); font-family: 'Tajawal', sans-serif;
-            min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden;
+            background:var(--bg); color:var(--fg); font-family:'Tajawal',sans-serif;
+            min-height:100vh; display:flex; align-items:center; justify-content:center; overflow-x:hidden;
         }
-        #fireCanvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-        .bg-vignette { position: fixed; inset: 0; background: radial-gradient(ellipse at center, transparent 30%, rgba(8,4,4,0.7) 70%, rgba(8,4,4,0.95) 100%); pointer-events: none; z-index: 1; }
-        .bg-glow { position: fixed; pointer-events: none; z-index: 0; border-radius: 50%; filter: blur(120px); }
-        .bg-glow.g1 { width: 500px; height: 500px; top: -150px; left: -100px; background: rgba(255,45,45,0.06); animation: gd1 14s ease-in-out infinite; }
-        .bg-glow.g2 { width: 400px; height: 400px; bottom: -100px; right: -80px; background: rgba(255,107,26,0.05); animation: gd2 18s ease-in-out infinite; }
-        .bg-glow.g3 { width: 300px; height: 300px; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(255,184,0,0.03); animation: gd3 10s ease-in-out infinite; }
+        #fireCanvas { position:fixed; inset:0; z-index:0; pointer-events:none; }
+        .bg-vignette { position:fixed; inset:0; background:radial-gradient(ellipse at center,transparent 30%,rgba(8,4,4,0.7) 70%,rgba(8,4,4,0.95) 100%); pointer-events:none; z-index:1; }
+        .bg-glow { position:fixed; pointer-events:none; z-index:0; border-radius:50%; filter:blur(120px); }
+        .bg-glow.g1 { width:500px;height:500px;top:-150px;left:-100px;background:rgba(255,45,45,0.06);animation:gd1 14s ease-in-out infinite; }
+        .bg-glow.g2 { width:400px;height:400px;bottom:-100px;right:-80px;background:rgba(255,107,26,0.05);animation:gd2 18s ease-in-out infinite; }
+        .bg-glow.g3 { width:300px;height:300px;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(255,184,0,0.03);animation:gd3 10s ease-in-out infinite; }
         @keyframes gd1{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,20px)}}
         @keyframes gd2{0%,100%{transform:translate(0,0)}50%{transform:translate(-20px,-30px)}}
         @keyframes gd3{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.15)}}
-
         .card {
-            background: var(--card); border: 1px solid var(--border); border-radius: 24px;
-            padding: 36px 32px; width: 100%; max-width: 480px; position: relative; z-index: 10;
-            box-shadow: 0 0 80px rgba(255,45,45,0.04), 0 0 160px rgba(255,45,45,0.02), inset 0 1px 0 rgba(255,255,255,0.02);
+            background:var(--card); border:1px solid var(--border); border-radius:24px;
+            padding:36px 32px; width:100%; max-width:480px; position:relative; z-index:10;
+            box-shadow:0 0 80px rgba(255,45,45,0.04),0 0 160px rgba(255,45,45,0.02),inset 0 1px 0 rgba(255,255,255,0.02);
         }
-        .logo-wrap { text-align: center; margin-bottom: 32px; }
+        .logo-wrap { text-align:center; margin-bottom:32px; }
         .logo-img {
-            width: 96px; height: 96px; border-radius: 22px; object-fit: cover; display: inline-block;
-            box-shadow: 0 0 40px rgba(255,45,45,0.25), 0 0 80px rgba(255,45,45,0.1), 0 4px 20px rgba(0,0,0,0.5);
-            animation: logoPulse 3s ease-in-out infinite;
+            width:96px; height:96px; border-radius:22px; object-fit:cover; display:inline-block;
+            box-shadow:0 0 40px rgba(255,45,45,0.25),0 0 80px rgba(255,45,45,0.1),0 4px 20px rgba(0,0,0,0.5);
+            animation:logoPulse 3s ease-in-out infinite;
         }
         @keyframes logoPulse {
-            0%,100% { box-shadow: 0 0 40px rgba(255,45,45,0.25), 0 0 80px rgba(255,45,45,0.1), 0 4px 20px rgba(0,0,0,0.5); }
-            50% { box-shadow: 0 0 60px rgba(255,45,45,0.35), 0 0 120px rgba(255,45,45,0.15), 0 4px 20px rgba(0,0,0,0.5); }
+            0%,100%{box-shadow:0 0 40px rgba(255,45,45,0.25),0 0 80px rgba(255,45,45,0.1),0 4px 20px rgba(0,0,0,0.5)}
+            50%{box-shadow:0 0 60px rgba(255,45,45,0.35),0 0 120px rgba(255,45,45,0.15),0 4px 20px rgba(0,0,0,0.5)}
         }
         .app-name {
-            font-size: 38px; font-weight: 900; letter-spacing: -1px; margin-top: 16px;
-            background: linear-gradient(135deg, #FF2D2D 0%, #FF6B1A 50%, #FFB800 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            font-size:38px; font-weight:900; letter-spacing:-1px; margin-top:16px;
+            background:linear-gradient(135deg,#FF2D2D 0%,#FF6B1A 50%,#FFB800 100%);
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
         }
-        .app-tagline { font-size: 13px; color: var(--muted); margin-top: 4px; }
-        label { display: block; font-size: 13px; font-weight: 700; color: var(--fg); margin-bottom: 6px; }
-        .hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
-        input, textarea, select {
-            width: 100%; padding: 12px 14px; background: rgba(255,255,255,0.025);
-            border: 1px solid rgba(255,45,45,0.1); border-radius: 12px; color: var(--fg);
-            font-size: 14px; font-family: inherit; outline: none; transition: border .25s, box-shadow .25s;
+        .app-tagline { font-size:13px; color:var(--muted); margin-top:4px; }
+        label { display:block; font-size:13px; font-weight:700; color:var(--fg); margin-bottom:6px; }
+        .hint { font-size:11px; color:var(--muted); margin-top:4px; }
+        input,textarea,select {
+            width:100%; padding:12px 14px; background:rgba(255,255,255,0.025);
+            border:1px solid rgba(255,45,45,0.1); border-radius:12px; color:var(--fg);
+            font-size:14px; font-family:inherit; outline:none; transition:border .25s,box-shadow .25s;
         }
-        input:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,45,45,0.08), 0 0 24px rgba(255,45,45,0.06); }
-        input::placeholder, textarea::placeholder { color: #4a3030; }
-        textarea { resize: vertical; min-height: 100px; line-height: 1.8; }
-        select option { background: #1a0a0a; color: var(--fg); }
-        .row { display: flex; gap: 8px; }
-        .row input { flex: 1; }
+        input:focus,textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(255,45,45,0.08),0 0 24px rgba(255,45,45,0.06); }
+        input::placeholder,textarea::placeholder { color:#4a3030; }
+        textarea { resize:vertical; min-height:100px; line-height:1.8; }
+        .row { display:flex; gap:8px; }
+        .row input { flex:1; }
         .btn {
-            padding: 12px 24px; border-radius: 12px; border: none; cursor: pointer;
-            font-weight: 700; font-size: 14px; font-family: inherit; transition: all .2s;
-            display: inline-flex; align-items: center; gap: 8px;
+            padding:12px 24px; border-radius:12px; border:none; cursor:pointer;
+            font-weight:700; font-size:14px; font-family:inherit; transition:all .2s;
+            display:inline-flex; align-items:center; gap:8px;
         }
-        .btn:active:not(:disabled) { transform: scale(.97); }
-        .btn:disabled { opacity: .35; cursor: not-allowed; transform: none; }
-        .btn-fire { background: linear-gradient(135deg, #FF2D2D, #FF6B1A); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
-        .btn-fire:hover:not(:disabled) { background: linear-gradient(135deg, #ff4040, #ff8030); box-shadow: 0 0 30px rgba(255,45,45,0.3), 0 0 60px rgba(255,107,26,0.15); transform: translateY(-1px); }
-        .btn-stop { background: linear-gradient(135deg, #cc0000, #990000); color: #fff; }
-        .btn-stop:hover { box-shadow: 0 0 24px rgba(204,0,0,0.3); }
-        .btn-ghost { background: rgba(255,255,255,0.03); color: var(--fg); border: 1px solid var(--border); }
-        .btn-ghost:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,45,45,0.25); }
-        .btn-sm { padding: 10px 16px; font-size: 13px; }
-        .btn-full { width: 100%; justify-content: center; }
-        .field { margin-bottom: 18px; }
-        .account-bar {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 14px; background: rgba(255,45,45,0.04); border: 1px solid var(--border);
-            border-radius: 12px; margin-bottom: 18px;
-        }
-        .account-bar .name { font-weight: 700; color: var(--accent); font-size: 15px; display: flex; align-items: center; gap: 8px; }
-        .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
-        .dot-sending { animation: blink 1s infinite; }
+        .btn:active:not(:disabled) { transform:scale(.97); }
+        .btn:disabled { opacity:.35; cursor:not-allowed; }
+        .btn-fire { background:linear-gradient(135deg,#FF2D2D,#FF6B1A); color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.3); }
+        .btn-fire:hover:not(:disabled) { background:linear-gradient(135deg,#ff4040,#ff8030); box-shadow:0 0 30px rgba(255,45,45,0.3); transform:translateY(-1px); }
+        .btn-stop { background:linear-gradient(135deg,#cc0000,#990000); color:#fff; }
+        .btn-ghost { background:rgba(255,255,255,0.03); color:var(--fg); border:1px solid var(--border); }
+        .btn-ghost:hover { background:rgba(255,255,255,0.06); border-color:rgba(255,45,45,0.25); }
+        .btn-sm { padding:10px 16px; font-size:13px; }
+        .btn-xs { padding:6px 12px; font-size:12px; border-radius:8px; }
+        .btn-full { width:100%; justify-content:center; }
+        .field { margin-bottom:18px; }
+        .fire-divider { height:1px; background:linear-gradient(90deg,transparent,rgba(255,45,45,0.2),rgba(255,107,26,0.3),rgba(255,45,45,0.2),transparent); margin:20px 0; }
+        .phase { display:none; }
+        .phase.active { display:block; animation:fadeIn .4s ease; }
+        @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        .spinner { width:32px; height:32px; border:3px solid rgba(255,45,45,0.15); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; margin:0 auto 16px; }
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .spinner-sm { width:14px; height:14px; border:2px solid transparent; border-top-color:currentColor; border-radius:50%; animation:spin .6s linear infinite; display:inline-block; }
+        .toast-box { position:fixed; top:16px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; gap:6px; align-items:center; }
+        .toast { padding:10px 22px; border-radius:10px; font-weight:700; font-size:13px; box-shadow:0 4px 24px rgba(0,0,0,0.5); animation:toastIn .3s ease; font-family:inherit; max-width:90vw; }
+        .toast-s { background:linear-gradient(135deg,#FF2D2D,#FF6B1A); color:#fff; }
+        .toast-e { background:rgba(200,0,0,0.92); color:#fff; }
+        .toast-i { background:rgba(255,184,0,0.92); color:#000; }
+        @keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
         @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
         @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-        .progress-wrap { margin-bottom: 18px; }
-        .progress-track { height: 4px; background: rgba(255,255,255,0.04); border-radius: 2px; overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3)); border-radius: 2px; transition: width .3s; width: 0; }
-        .progress-info { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 4px; }
-        .phase { display: none; }
-        .phase.active { display: block; animation: fadeIn .4s ease; }
-        @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-        .spinner { width: 32px; height: 32px; border: 3px solid rgba(255,45,45,0.15); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 16px; }
-        @keyframes spin{to{transform:rotate(360deg)}}
-        .spinner-sm { width: 14px; height: 14px; border: 2px solid transparent; border-top-color: currentColor; border-radius: 50%; animation: spin .6s linear infinite; display: inline-block; }
-        .toast-box { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 6px; align-items: center; }
-        .toast { padding: 10px 22px; border-radius: 10px; font-weight: 700; font-size: 13px; box-shadow: 0 4px 24px rgba(0,0,0,0.5); animation: toastIn .3s ease; font-family: inherit; max-width: 90vw; }
-        .toast-s { background: linear-gradient(135deg, #FF2D2D, #FF6B1A); color: #fff; }
-        .toast-e { background: rgba(200,0,0,0.92); color: #fff; }
-        .toast-i { background: rgba(255,184,0,0.92); color: #000; }
-        @keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
-        .log-section { display: none !important; }
-        .fire-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,45,45,0.2), rgba(255,107,26,0.3), rgba(255,45,45,0.2), transparent); margin: 20px 0; }
-        .proxy-bar { display: none !important; }
-        .mode-badge {
-            display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px;
-            border-radius: 20px; font-size: 10px; font-weight: 700;
+
+        /* بطاقة الحساب */
+        .acc-card {
+            display:flex; align-items:center; gap:12px;
+            padding:12px 14px; background:rgba(255,45,45,0.04); border:1px solid var(--border);
+            border-radius:14px; margin-bottom:10px; transition:border-color .2s,background .2s;
         }
-        .mode-direct { background: rgba(0,200,80,0.12); color: var(--success); border: 1px solid rgba(0,200,80,0.2); }
-        .mode-proxy { background: rgba(255,184,0,0.12); color: var(--accent3); border: 1px solid rgba(255,184,0,0.2); }
+        .acc-card:hover { border-color:rgba(255,45,45,0.25); background:rgba(255,45,45,0.06); }
+        .acc-card .acc-avatar {
+            width:38px; height:38px; border-radius:10px;
+            background:linear-gradient(135deg,rgba(255,45,45,0.15),rgba(255,107,26,0.1));
+            display:flex; align-items:center; justify-content:center;
+            font-weight:900; font-size:16px; color:var(--accent); flex-shrink:0;
+        }
+        .acc-card .acc-info { flex:1; min-width:0; }
+        .acc-card .acc-name { font-weight:700; font-size:14px; color:var(--fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .acc-card .acc-status { font-size:10px; color:var(--muted); margin-top:2px; display:flex; align-items:center; gap:4px; }
+        .acc-card .acc-status .dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+        .acc-card .acc-status .dot.idle { background:var(--muted); }
+        .acc-card .acc-status .dot.sending { background:var(--accent); box-shadow:0 0 6px var(--accent); animation:blink 1s infinite; }
+        .acc-card .acc-status .dot.done { background:var(--success); box-shadow:0 0 6px var(--success); }
+        .acc-card .acc-actions { display:flex; gap:6px; flex-shrink:0; }
+        .acc-list { max-height:320px; overflow-y:auto; margin-bottom:16px; }
+        .acc-list::-webkit-scrollbar { width:4px; }
+        .acc-list::-webkit-scrollbar-thumb { background:rgba(255,45,45,0.15); border-radius:2px; }
+        .acc-empty { text-align:center; padding:30px 10px; color:var(--muted); font-size:13px; }
+
+        .progress-wrap { margin-bottom:18px; }
+        .progress-track { height:4px; background:rgba(255,255,255,0.04); border-radius:2px; overflow:hidden; }
+        .progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3)); border-radius:2px; transition:width .3s; width:0; }
+        .progress-info { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:4px; }
+        .back-row { display:flex; align-items:center; gap:8px; margin-bottom:18px; }
+        .back-row .back-label { font-weight:700; font-size:15px; color:var(--accent); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
         @media(max-width:560px){.card{margin:12px;padding:24px 20px;border-radius:18px}.logo-img{width:72px;height:72px}.app-name{font-size:30px}}
         @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
     </style>
@@ -137,52 +143,51 @@
     <!-- تحميل -->
     <div class="phase active" id="ph-load">
         <div class="spinner"></div>
-        <p style="text-align:center;color:var(--muted);font-size:14px">جارٍ الاتصال بخوادم Kick...</p>
+        <p style="text-align:center;color:var(--muted);font-size:14px">جارٍ الاتصال...</p>
     </div>
 
-    <!-- إدخال التوكن -->
-    <div class="phase" id="ph-token">
+    <!-- إضافة توكن -->
+    <div class="phase" id="ph-addtoken">
         <div class="logo-wrap">
             <img src="https://z-cdn-media.chatglm.cn/files/ab46995c-be54-4f0c-97d9-dc9965e3150b.png?auth_key=1881547846-5faaad2376f94647ae1522c3a0360a5e-0-48bb8eb6d9136f1963f04a687018a6a3" alt="RedKick" class="logo-img">
             <div class="app-name">RedKick</div>
             <div class="app-tagline">التحكم عن بُعد في الدردشة</div>
         </div>
         <div class="fire-divider"></div>
-        <div class="proxy-bar" id="proxyBarToken">
-            <span class="dot-proxy wait" id="proxyDotToken"></span>
-            <span id="proxyLabelToken">جارٍ فحص الاتصال...</span>
-            <select id="proxySelect" style="margin-right:auto" onchange="switchProxy()">
-                <option value="0">cors.sh</option>
-                <option value="1">بدون بروكسي (مباشر)</option>
-            </select>
-        </div>
         <div class="field">
             <label><i class="fas fa-key" style="color:var(--accent);margin-left:4px;font-size:11px"></i> توكن الحساب</label>
             <div class="row">
                 <input type="password" id="inToken" placeholder="Bearer Token...">
-                <button class="btn btn-fire btn-sm" id="btnVerify" onclick="verifyToken()"><i class="fas fa-shield-halved"></i> فحص</button>
+                <button class="btn btn-fire btn-sm" id="btnVerify" onclick="verifyAndAdd()"><i class="fas fa-plus"></i> إضافة</button>
             </div>
             <p class="hint">من DevTools &rarr; Network &rarr; أي طلب &rarr; Authorization</p>
         </div>
         <div id="tokenStatus" style="text-align:center;font-size:13px;min-height:20px"></div>
+        <div id="backToAccountsFromAdd" style="display:none;margin-top:14px">
+            <button class="btn btn-ghost btn-full" onclick="showPhase('accounts')"><i class="fas fa-arrow-right"></i> العودة للحسابات</button>
+        </div>
     </div>
 
-    <!-- لوحة التحكم -->
-    <div class="phase" id="ph-control">
-        <div class="logo-wrap" style="margin-bottom:16px">
-            <img src="https://z-cdn-media.chatglm.cn/files/ab46995c-be54-4f0c-97d9-dc9965e3150b.png?auth_key=1881547846-5faaad2376f94647ae1522c3a0360a5e-0-48bb8eb6d9136f1963f04a687018a6a3" alt="RedKick" style="width:40px;height:40px;border-radius:10px;box-shadow:0 0 20px rgba(255,45,45,0.2)">
-        </div>
-        <div class="account-bar">
-            <div class="name">
-                <span class="dot" id="statusDot"></span>
-                <span id="accName">---</span>
-                <span class="mode-badge" id="modeBadge"></span>
+    <!-- قائمة الحسابات -->
+    <div class="phase" id="ph-accounts">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+            <img src="https://z-cdn-media.chatglm.cn/files/ab46995c-be54-4f0c-97d9-dc9965e3150b.png?auth_key=1881547846-5faaad2376f94647ae1522c3a0360a5e-0-48bb8eb6d9136f1963f04a687018a6a3" alt="RedKick" style="width:36px;height:36px;border-radius:9px;box-shadow:0 0 16px rgba(255,45,45,0.2)">
+            <div>
+                <div style="font-weight:900;font-size:20px;background:linear-gradient(135deg,#FF2D2D,#FF6B1A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">RedKick</div>
+                <div style="font-size:11px;color:var(--muted)">الحسابات</div>
             </div>
-            <button class="btn btn-ghost btn-sm" onclick="logout()"><i class="fas fa-right-from-bracket"></i> خروج</button>
         </div>
-        <div class="proxy-bar" id="proxyBarCtrl">
-            <span class="dot-proxy" id="proxyDotCtrl"></span>
-            <span id="proxyLabelCtrl">---</span>
+        <div class="acc-list" id="accList"></div>
+        <div style="display:flex;gap:8px">
+            <button class="btn btn-fire btn-full" onclick="goAddToken()"><i class="fas fa-plus"></i> إضافة حساب</button>
+        </div>
+    </div>
+
+    <!-- لوحة التحكم لحساب محدد -->
+    <div class="phase" id="ph-control">
+        <div class="back-row">
+            <button class="btn btn-ghost btn-xs" onclick="backToAccounts()"><i class="fas fa-arrow-right"></i></button>
+            <span class="back-label" id="ctrlAccName">---</span>
         </div>
         <div class="field">
             <label><i class="fas fa-hashtag" style="color:var(--accent);margin-left:4px;font-size:11px"></i> اسم القناة</label>
@@ -210,848 +215,582 @@
             </div>
         </div>
         <div style="display:flex;gap:8px;margin-bottom:18px">
-            <button class="btn btn-fire btn-full" id="btnSend" onclick="startSending()"><i class="fas fa-paper-plane"></i> إرسال الرسائل</button>
+            <button class="btn btn-fire btn-full" id="btnSend" onclick="startSending()"><i class="fas fa-paper-plane"></i> إرسال</button>
             <button class="btn btn-stop btn-full" id="btnStop" onclick="stopSending()" style="display:none"><i class="fas fa-stop"></i> إيقاف</button>
         </div>
         <div class="progress-wrap" id="progWrap" style="display:none">
             <div class="progress-track"><div class="progress-fill" id="progFill"></div></div>
             <div class="progress-info"><span id="progCount">0/0</span><span id="progTime">--</span></div>
         </div>
-        <div class="log-section">
-            <div class="log" id="logBox" style="display:none"></div>
-        </div>
     </div>
 </div>
 
 <script>
 /* ═══════════════════════════════════════════════════════════
-   RedKick — إعادة بناء كاملة مع دعم CORS Proxy
-   جميع نقاط API محدثة وفقاً لأحدث هيكل Kick
+   RedKick — نظام الحسابات المتعددة
    ═══════════════════════════════════════════════════════════ */
 
-// ═══════════════════════════════════════
-//  الإعدادات العامة
-// ═══════════════════════════════════════
-const KICK_BASE = 'https://kick.com';
+var KICK_BASE = 'https://kick.com';
+var $ = function(id) { return document.getElementById(id); };
 
-// قائمة البروكسيات مع طريقة بناء الرابط
-const PROXIES = [
-    {
-        name: 'cors.sh',
-        build: function(url) { return 'https://cors.sh/' + url; }
-    },
-    {
-        name: 'مباشر',
-        build: function(url) { return url; }
-    }
+// ═══════════════════════════════════════
+//  البروكسي
+// ═══════════════════════════════════════
+var PROXIES = [
+    { name:'allorigins', build:function(u){return 'https://api.allorigins.win/raw?url='+encodeURIComponent(u);} },
+    { name:'corsproxy', build:function(u){return 'https://corsproxy.io/?'+encodeURIComponent(u);} },
+    { name:'cors.sh', build:function(u){return 'https://cors.sh/'+u;} },
+    { name:'مباشر', build:function(u){return u;} }
 ];
+var activeProxy = 0;
+var xsrfToken = '';
+var isDirectMode = false;
 
-let activeProxy = 0;     // فهرس البروكسي النشط
-let kickToken = '';       // Bearer token
-let xsrfToken = '';       // رمز XSRF
-let isSending = false;    // هل يتم الإرسال حالياً
-let abortCtrl = null;     // للإلغاء
-let proxyOk = false;      // هل البروكسيعمل؟
-let isDirectMode = false;  // هل نعمل مباشرة على كيك؟
-
-const $ = function(id) { return document.getElementById(id); };
-
-// ═══════════════════════════════════════
-//  كشف وضع التشغيل
-// ═══════════════════════════════════════
 function detectMode() {
-    try {
-        isDirectMode = window.location.hostname === 'kick.com' || window.location.hostname.endsWith('.kick.com');
-    } catch(e) {
-        isDirectMode = false;
-    }
-
-    if (isDirectMode) {
-        // إذا كنا على كيك مباشرة، استخدم الوضع المباشر
-        activeProxy = PROXIES.length - 1; // "مباشر"
-    }
+    try { isDirectMode = window.location.hostname === 'kick.com' || window.location.hostname.endsWith('.kick.com'); } catch(e) { isDirectMode=false; }
+    if (isDirectMode) activeProxy = PROXIES.length - 1;
 }
 
-// ═══════════════════════════════════════
-//  بناء رابط API عبر البروكسي
-// ═══════════════════════════════════════
-function apiUrl(path) {
-    var fullUrl = KICK_BASE + path;
-    return PROXIES[activeProxy].build(fullUrl);
+function proxyUrl(url, idx) {
+    return PROXIES[(idx !== undefined) ? idx : activeProxy].build(url);
 }
 
-// ═══════════════════════════════════════
-//  طلب API مركزي مع إعادة المحاولة
-// ═══════════════════════════════════════
-async function kickFetch(path, options) {
+// طلب مع timeout — يستخدم البروكسي المحفوظ أولاً ثم يجرب البقية
+async function proxiedFetch(kickPath, options) {
     options = options || {};
     var method = options.method || 'GET';
     var body = options.body || null;
-    var extraHeaders = options.headers || {};
+    var headers = options.headers || {};
+    var timeout = options.timeout || 6000;
     var skipAuth = options.skipAuth || false;
-    var retryProxy = options.retryProxy !== false; // إعادة المحاولة مع بروكسي آخر
+    var token = options.token || '';
+    var preferredProxy = options.preferredProxy;
 
-    var headers = {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Origin': KICK_BASE
-    };
+    var defHeaders = { 'Accept':'application/json', 'Content-Type':'application/json', 'Origin':KICK_BASE };
+    if (!skipAuth && token) defHeaders['Authorization'] = 'Bearer ' + token;
+    if (xsrfToken) defHeaders['X-XSRF-TOKEN'] = xsrfToken;
+    for (var k in headers) defHeaders[k] = headers[k];
 
-    // إضافة Authorization
-    if (!skipAuth && kickToken) {
-        headers['Authorization'] = 'Bearer ' + kickToken;
+    var fetchOpts = { method:method, headers:defHeaders, credentials:isDirectMode?'include':'omit' };
+    if (body && method !== 'GET') fetchOpts.body = JSON.stringify(body);
+
+    var fullUrl = KICK_BASE + kickPath;
+    var lastError = null;
+
+    // ترتيب البروكسيات: المحفوظ أولاً، ثم البقية
+    var order = [];
+    if (preferredProxy !== undefined && preferredProxy >= 0) order.push(preferredProxy);
+    for (var i = 0; i < PROXIES.length; i++) { if (order.indexOf(i) === -1) order.push(i); }
+
+    for (var pi = 0; pi < order.length; pi++) {
+        var p = order[pi];
+        var url = PROXIES[p].build(fullUrl);
+        var opts = Object.assign({}, fetchOpts);
+        opts.credentials = (isDirectMode && p === PROXIES.length-1) ? 'include' : 'omit';
+        try {
+            var res = await Promise.race([
+                fetch(url, opts),
+                new Promise(function(_, reject) { setTimeout(function(){ reject(new Error('timeout')); }, timeout); })
+            ]);
+            return { res: res, proxyUsed: p };
+        } catch(e) { lastError = e; continue; }
     }
-
-    // إضافة XSRF
-    if (xsrfToken) {
-        headers['X-XSRF-TOKEN'] = xsrfToken;
-    }
-
-    // دمج headers إضافية
-    for (var key in extraHeaders) {
-        headers[key] = extraHeaders[key];
-    }
-
-    var fetchOptions = {
-        method: method,
-        headers: headers,
-        credentials: isDirectMode ? 'include' : 'omit'
-    };
-
-    if (body && method !== 'GET') {
-        fetchOptions.body = JSON.stringify(body);
-    }
-
-    var url = apiUrl(path);
-
-    try {
-        var response = await fetch(url, fetchOptions);
-        return response;
-    } catch (e) {
-        // إذا فشل الطلب، جرب بروكسي آخر
-        if (retryProxy && activeProxy < PROXIES.length - 1) {
-            var oldProxy = activeProxy;
-            activeProxy++;
-            addLog('wr', 'فشل البروكسي (' + PROXIES[oldProxy].name + ')، جارٍ تجربة (' + PROXIES[activeProxy].name + ')...');
-            updateProxyUI();
-            try {
-                var retryUrl = apiUrl(path);
-                var retryResponse = await fetch(retryUrl, fetchOptions);
-                return retryResponse;
-            } catch (e2) {
-                // أعده للبروكسي الأصلي
-                activeProxy = oldProxy;
-                updateProxyUI();
-                throw e2;
-            }
-        }
-        throw e;
-    }
+    throw lastError || new Error('فشل الاتصال');
 }
 
 // ═══════════════════════════════════════
-//  تبديل البروكسي يدوياً
-// ═══════════════════════════════════════
-function switchProxy() {
-    var sel = $('proxySelect');
-    activeProxy = parseInt(sel.value);
-    updateProxyUI();
-    addLog('in', 'تم تبديل البروكسي إلى: ' + PROXIES[activeProxy].name);
-    // أعد فحص الاتصال
-    testProxyConnection();
-}
-
-function updateProxyUI() {
-    var dotToken = $('proxyDotToken');
-    var dotCtrl = $('proxyDotCtrl');
-    var labelToken = $('proxyLabelToken');
-    var labelCtrl = $('proxyLabelCtrl');
-    var badge = $('modeBadge');
-
-    var proxyName = PROXIES[activeProxy].name;
-    isDirectMode = activeProxy === PROXIES.length - 1;
-
-    if (isDirectMode) {
-        if (badge) { badge.className = 'mode-badge mode-direct'; badge.innerHTML = '<i class="fas fa-link"></i> مباشر'; }
-        if (dotToken) { dotToken.className = 'dot-proxy ok'; }
-        if (dotCtrl) { dotCtrl.className = 'dot-proxy ok'; }
-        if (labelToken) labelToken.textContent = 'وضع مباشر (على كيك)';
-        if (labelCtrl) labelCtrl.textContent = 'وضع مباشر (على كيك)';
-    } else {
-        if (badge) { badge.className = 'mode-badge mode-proxy'; badge.innerHTML = '<i class="fas fa-shield"></i> ' + proxyName; }
-        if (dotToken) { dotToken.className = 'dot-proxy ' + (proxyOk ? 'ok' : 'fail'); }
-        if (dotCtrl) { dotCtrl.className = 'dot-proxy ' + (proxyOk ? 'ok' : 'fail'); }
-        if (labelToken) labelToken.textContent = proxyOk ? 'بروكسي: ' + proxyName + ' — متصل' : 'بروكسي: ' + proxyName + ' — غير متصل';
-        if (labelCtrl) labelCtrl.textContent = proxyOk ? 'بروكسي: ' + proxyName + ' — متصل' : 'بروكسي: ' + proxyName + ' — غير متصل';
-    }
-}
-
-// ═══════════════════════════════════════
-//  فحص اتصال البروكسي
-// ═══════════════════════════════════════
-async function testProxyConnection() {
-    var dotToken = $('proxyDotToken');
-    if (dotToken) dotToken.className = 'dot-proxy wait';
-    var labelToken = $('proxyLabelToken');
-    if (labelToken) labelToken.textContent = 'جارٍ فحص الاتصال...';
-
-    try {
-        var res = await kickFetch('/api/v1/categories', { skipAuth: true, retryProxy: false });
-        if (res.ok) {
-            proxyOk = true;
-        } else {
-            // حتى لو رجع 401 أو 403، البروكسي يعمل
-            proxyOk = res.status < 500;
-        }
-    } catch (e) {
-        proxyOk = false;
-    }
-
-    updateProxyUI();
-    return proxyOk;
-}
-
-// ═══════════════════════════════════════
-//  عرض المراحل
-// ═══════════════════════════════════════
-function showPhase(name) {
-    document.querySelectorAll('.phase').forEach(function(p) { p.classList.remove('active'); });
-    $('ph-' + name).classList.add('active');
-}
-
-// ═══════════════════════════════════════
-//  إشعارات Toast
-// ═══════════════════════════════════════
-function toast(msg, type) {
-    var t = document.createElement('div');
-    t.className = 'toast toast-' + (type || 'i');
-    t.textContent = msg;
-    $('toasts').appendChild(t);
-    setTimeout(function() { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(function() { t.remove(); }, 300); }, 3000);
-}
-
-// ═══════════════════════════════════════
-//  سجل العمليات
-// ═══════════════════════════════════════
-var logCls = { ok: 'l-ok', er: 'l-er', 'in': 'l-in', wr: 'l-wr' };
-
-function addLog(type, msg) {
-    var box = $('logBox');
-    var d = new Date();
-    var ts = [d.getHours(), d.getMinutes(), d.getSeconds()].map(function(n) { return String(n).padStart(2, '0'); }).join(':');
-    var el = document.createElement('div');
-    el.className = 'log-entry ' + (logCls[type] || logCls['in']);
-    var sp = document.createElement('span');
-    sp.style.opacity = '0.4';
-    sp.textContent = '[' + ts + '] ';
-    el.appendChild(sp);
-    el.appendChild(document.createTextNode(msg));
-    box.appendChild(el);
-    box.scrollTop = box.scrollHeight;
-}
-
-function clearLog() { $('logBox').innerHTML = ''; }
-
-function escH(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-
-// ═══════════════════════════════════════
-//  جسيمات نارية
-// ═══════════════════════════════════════
-(function() {
-    var cv = $('fireCanvas'), ctx = cv.getContext('2d');
-    var W, H; var embers = [], MAX = 55;
-    function resize() { W = cv.width = window.innerWidth; H = cv.height = window.innerHeight; }
-    resize(); window.addEventListener('resize', resize);
-    function spawn() {
-        return { x: Math.random()*(W||800), y: (H||600)+10, vx: (Math.random()-.5)*.8, vy: -(Math.random()*1.5+.5), r: Math.random()*2.5+.5, life: Math.random()*200+100, ml: 0, hue: Math.random()*40 };
-    }
-    for (var i = 0; i < MAX; i++) { var e = spawn(); e.y = Math.random()*(H||600); e.life = Math.random()*200; e.ml = e.life; embers.push(e); }
-    function draw() {
-        ctx.clearRect(0, 0, W, H);
-        for (var i = 0; i < embers.length; i++) {
-            var e = embers[i]; e.x += e.vx; e.y += e.vy; e.vx += (Math.random()-.5)*.1; e.life--;
-            if (e.life <= 0 || e.y < -20) { embers[i] = spawn(); embers[i].ml = embers[i].life; continue; }
-            var a = Math.max(0, e.life / (e.ml || 200)), r = Math.max(.1, e.r * a);
-            var g = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, Math.max(.1, r * 4));
-            g.addColorStop(0, 'hsla(' + e.hue + ',100%,60%,' + (a * .6) + ')');
-            g.addColorStop(.5, 'hsla(' + e.hue + ',100%,50%,' + (a * .15) + ')');
-            g.addColorStop(1, 'hsla(' + e.hue + ',100%,40%,0)');
-            ctx.beginPath(); ctx.arc(e.x, e.y, Math.max(.1, r * 4), 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
-            ctx.beginPath(); ctx.arc(e.x, e.y, Math.max(.1, r), 0, Math.PI * 2); ctx.fillStyle = 'hsla(' + e.hue + ',100%,70%,' + (a * .9) + ')'; ctx.fill();
-        }
-        requestAnimationFrame(draw);
-    }
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) draw();
-})();
-
-// ═══════════════════════════════════════
-//  جلب رمز XSRF
+//  XSRF
 // ═══════════════════════════════════════
 async function fetchXsrf() {
     xsrfToken = '';
-
-    // الطريقة 1: من صفحة كيك الرئيسية (عبر البروكسي)
     try {
-        var url = apiUrl('/');
-        var res = await fetch(url, {
-            headers: { 'Accept': 'text/html', 'Origin': KICK_BASE }
-        });
-        if (res.ok) {
-            var html = await res.text();
-            // البحث في meta tags
-            var m;
+        var pr = await proxiedFetch('/', { skipAuth:true, timeout:5000 });
+        if (pr.res.ok) {
+            var html = await pr.res.text(); var m;
             m = html.match(/<meta[^>]*name=["']csrf-token["'][^>]*content=["']([^"']+)["']/i);
-            if (m) { xsrfToken = m[1]; return; }
+            if (m) { xsrfToken=m[1]; return; }
             m = html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']csrf-token["']/i);
-            if (m) { xsrfToken = m[1]; return; }
-            // البحث في JSON
+            if (m) { xsrfToken=m[1]; return; }
             m = html.match(/"csrf[^"]*"\s*:\s*"([^"]+)"/i);
-            if (m) { xsrfToken = m[1]; return; }
-            // البحث عن token في أي سكريبت
-            m = html.match(/xsrf[^"]*["']\s*:\s*["']([^"']+)["']/i);
-            if (m) { xsrfToken = m[1]; return; }
+            if (m) { xsrfToken=m[1]; return; }
         }
-    } catch(e) {}
-
-    // الطريقة 2: من sanctum/csrf-cookie
-    try {
-        var csrfUrl = apiUrl('/sanctum/csrf-cookie');
-        await fetch(csrfUrl, {
-            credentials: isDirectMode ? 'include' : 'omit',
-            headers: { 'Accept': 'application/json', 'Origin': KICK_BASE }
-        });
-        if (isDirectMode) {
-            var cm = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
-            if (cm) { xsrfToken = decodeURIComponent(cm[1]); return; }
-        }
-    } catch(e) {}
-
-    // الطريقة 3: من توكن المستخدم (بعض الإصدارات تستخدم التوكن نفسه)
-    // سنحاول بدون XSRF أولاً، ونعالج خطأ 419 لاحقاً
+    } catch(e){}
 }
 
+async function refreshXsrf() { xsrfToken=''; await fetchXsrf(); }
+
 // ═══════════════════════════════════════
-//  تجديد XSRF بصمت
+//  نظام الحسابات
 // ═══════════════════════════════════════
-async function refreshXsrf() {
-    xsrfToken = '';
-    await fetchXsrf();
-    if (xsrfToken) {
-        addLog('in', 'تم تجديد XSRF بنجاح');
+var accounts = [];
+var activeAccountId = null;
+var accIdCounter = 0;
+
+function createAccount(token, username) {
+    accIdCounter++;
+    return {
+        id:accIdCounter, token:token, username:username,
+        channel:'', messages:'', interval:5, repeat:1, isInfinite:false,
+        isSending:false, abortCtrl:null, sent:0, chatroomId:null,
+        workingProxy: -1  // يحفظ البروكسي الذي عمل لهذا الحساب
+    };
+}
+function findAccount(id) { for(var i=0;i<accounts.length;i++){if(accounts[i].id===id)return accounts[i];} return null; }
+
+function removeAccount(id) {
+    var acc = findAccount(id);
+    if (acc && acc.isSending) { acc.isSending=false; if(acc.abortCtrl)acc.abortCtrl.abort(); }
+    accounts = accounts.filter(function(a){return a.id!==id;});
+    if (activeAccountId === id) activeAccountId = null;
+    renderAccountList();
+    toast('تم حذف الحساب','i');
+}
+
+function renderAccountList() {
+    var box = $('accList');
+    if (accounts.length === 0) {
+        box.innerHTML = '<div class="acc-empty"><i class="fas fa-user-slash" style="font-size:24px;display:block;margin-bottom:8px;color:var(--border)"></i>لا توجد حسابات مضافة<br><span style="font-size:11px">اضغط "إضافة حساب" للبدء</span></div>';
+        return;
+    }
+    var html = '';
+    for (var i = 0; i < accounts.length; i++) {
+        var a = accounts[i];
+        var initial = a.username.charAt(0).toUpperCase();
+        var statusText = a.isSending ? 'يرسل...' : (a.sent > 0 ? 'أرسل '+a.sent : 'جاهز');
+        var dotClass = a.isSending ? 'sending' : (a.sent > 0 ? 'done' : 'idle');
+        html += '<div class="acc-card">';
+        html += '<div class="acc-avatar">'+escH(initial)+'</div>';
+        html += '<div class="acc-info"><div class="acc-name">'+escH(a.username)+'</div>';
+        html += '<div class="acc-status"><span class="dot '+dotClass+'"></span> '+statusText;
+        if (a.channel) html += ' &rarr; '+escH(a.channel);
+        html += '</div></div>';
+        html += '<div class="acc-actions">';
+        html += '<button class="btn btn-fire btn-xs" onclick="openAccount('+a.id+')" title="إعدادات"><i class="fas fa-gear"></i></button>';
+        html += '<button class="btn btn-ghost btn-xs" onclick="removeAccount('+a.id+')" title="حذف"><i class="fas fa-trash"></i></button>';
+        html += '</div></div>';
+    }
+    box.innerHTML = html;
+}
+
+function openAccount(id) {
+    var acc = findAccount(id);
+    if (!acc) return;
+    saveCurrentSettings();
+    activeAccountId = id;
+    $('ctrlAccName').textContent = acc.username;
+    $('inChannel').value = acc.channel || '';
+    $('inMessages').value = acc.messages || '';
+    $('inInterval').value = acc.interval || 5;
+    $('inRepeat').value = acc.isInfinite ? 0 : (acc.repeat || 1);
+    $('inRepeat').disabled = acc.isInfinite;
+    updateInfiniteBtn(acc.isInfinite);
+    updateSendBtns(acc);
+    showPhase('control');
+}
+
+function updateInfiniteBtn(inf) {
+    var btn = $('btnInfinite');
+    if (inf) {
+        btn.style.background='linear-gradient(135deg,#FF2D2D,#FF6B1A)'; btn.style.color='#fff'; btn.style.borderColor='transparent';
+        $('repeatHint').textContent='التكرار لا نهائي — اضغط إيقاف للتوقف';
     } else {
-        addLog('wr', 'لم يتم العثور على XSRF — سيتم المحاولة بدونه');
+        btn.style.background=''; btn.style.color=''; btn.style.borderColor='';
+        $('repeatHint').textContent='0 = تكرار لا نهائي | كل دورة ترسل كل الأسطر';
     }
 }
 
-// ═══════════════════════════════════════
-//  تهيئة الجلسة
-// ═══════════════════════════════════════
-async function initSession() {
-    showPhase('load');
+function updateSendBtns(acc) {
+    $('btnSend').style.display = acc.isSending ? 'none' : '';
+    $('btnStop').style.display = acc.isSending ? '' : 'none';
+    $('progWrap').style.display = acc.isSending ? '' : 'none';
+}
 
-    // كشف وضع التشغيل
-    detectMode();
+function backToAccounts() {
+    saveCurrentSettings();
+    renderAccountList();
+    showPhase('accounts');
+}
 
-    // فحص البروكسي
-    await testProxyConnection();
+function goAddToken() {
+    $('inToken').value=''; $('tokenStatus').innerHTML='';
+    $('backToAccountsFromAdd').style.display = accounts.length > 0 ? '' : 'none';
+    showPhase('addtoken');
+}
 
-    // جلب XSRF
-    if (!isDirectMode) {
-        addLog('in', 'جارٍ جلب رمز الحماية XSRF...');
-        await fetchXsrf();
-        if (xsrfToken) {
-            addLog('ok', 'تم الحصول على XSRF');
-        } else {
-            addLog('wr', 'لم يتم الحصول على XSRF — قد تحتاجه لبعض العمليات');
-        }
-    } else {
-        // في الوضع المباشر، جلب XSRF من الكوكيز
-        try {
-            var cm = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
-            if (cm) xsrfToken = decodeURIComponent(cm[1]);
-        } catch(e) {}
-    }
-
-    showPhase('token');
+function saveCurrentSettings() {
+    if (!activeAccountId) return;
+    var acc = findAccount(activeAccountId);
+    if (!acc) return;
+    acc.channel = $('inChannel').value.trim();
+    acc.messages = $('inMessages').value;
+    acc.interval = Math.max(1, parseInt($('inInterval').value) || 5);
+    var rv = parseInt($('inRepeat').value);
+    acc.isInfinite = (rv === 0) || $('inRepeat').disabled;
+    acc.repeat = acc.isInfinite ? 0 : Math.max(1, rv || 1);
 }
 
 // ═══════════════════════════════════════
-//  فحص التوكن
+//  دوال مساعدة
 // ═══════════════════════════════════════
-async function verifyToken() {
+function showPhase(name) {
+    document.querySelectorAll('.phase').forEach(function(p){p.classList.remove('active');});
+    $('ph-'+name).classList.add('active');
+}
+function toast(msg,type) {
+    var t=document.createElement('div'); t.className='toast toast-'+(type||'i'); t.textContent=msg;
+    $('toasts').appendChild(t);
+    setTimeout(function(){t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(function(){t.remove();},300);},3000);
+}
+function escH(s) { var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+// ═══════════════════════════════════════
+//  التحقق من التوكن وإضافة حساب
+// ═══════════════════════════════════════
+async function verifyAndAdd() {
     var token = $('inToken').value.trim();
-    if (!token) { toast('أدخل التوكن', 'e'); return; }
-
-    // إزالة "Bearer " إذا كان موجوداً
-    if (token.toLowerCase().startsWith('bearer ')) {
-        token = token.substring(7).trim();
-    }
+    if (!token) { toast('أدخل التوكن','e'); return; }
+    if (token.toLowerCase().startsWith('bearer ')) token = token.substring(7).trim();
 
     var btn = $('btnVerify');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-sm"></span>';
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-sm"></span>';
 
     try {
-        // تجربة api/v1/user أولاً
-        var res = null;
-        var errorMsg = '';
-
-        try {
-            res = await kickFetch('/api/v1/user', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-        } catch(e) {
-            errorMsg = e.message;
+        var pr = null;
+        try { pr = await proxiedFetch('/api/v1/user', {token:token}); } catch(e){}
+        if (!pr || !pr.res.ok) { try { pr = await proxiedFetch('/api/v2/user', {token:token}); } catch(e){} }
+        if (!pr) throw new Error('فشل الاتصال — تحقق من الإنترنت');
+        if (!pr.res.ok) {
+            if (pr.res.status===401||pr.res.status===403) throw new Error('التوكن غير صالح أو منتهي');
+            throw new Error('خطأ HTTP: '+pr.res.status);
         }
-
-        // إذا فشل، جرب v2
-        if (!res || !res.ok) {
-            try {
-                res = await kickFetch('/api/v2/user', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-            } catch(e) {}
-        }
-
-        if (!res) {
-            throw new Error('فشل الاتصال — تحقق من البروكسي والإنترنت');
-        }
-
-        if (!res.ok) {
-            if (res.status === 401 || res.status === 403) {
-                var errBody = '';
-                try { errBody = await res.text(); } catch(e) {}
-                throw new Error('التوكن غير صالح أو منتهي' + (res.status === 403 ? ' (403)' : ''));
-            }
-            throw new Error('خطأ HTTP: ' + res.status);
-        }
-
-        var raw = await res.text();
-        var data;
+        var raw = await pr.res.text(); var data;
         try { data = JSON.parse(raw); } catch(e) { throw new Error('الخادم لم يُرجع بيانات صالحة'); }
 
-        // البحث عن اسم المستخدم في كل الهياكل المحتملة
-        var username =
-            data.username ||
-            data.user?.username ||
-            data.data?.username ||
-            data.data?.user?.username ||
-            data.slug ||
-            data.name ||
-            null;
+        var username = data.username || data.user?.username || data.data?.username || data.data?.user?.username || data.slug || data.name || null;
+        if (!username && !data.id && !data.data?.id) throw new Error('لم يتم العثور على بيانات الحساب');
+        var displayName = username || ('حساب #'+(data.id||data.user?.id||data.data?.id||'?'));
 
-        if (!username && !data.id && !data.data?.id) {
-            throw new Error('لم يتم العثور على بيانات الحساب — تأكد من صحة التوكن');
+        for (var i=0;i<accounts.length;i++) {
+            if (accounts[i].token===token) throw new Error('هذا التوكن مضاف مسبقاً باسم '+accounts[i].username);
         }
 
-        kickToken = token;
-        var displayName = username || ('حساب #' + (data.id || data.user?.id || data.data?.id || '?'));
+        var acc = createAccount(token, displayName);
+        accounts.push(acc);
+        $('tokenStatus').innerHTML = '<span style="color:var(--success)"><i class="fas fa-check-circle"></i> تمت الإضافة — '+escH(displayName)+'</span>';
+        toast('تم إضافة '+displayName,'s');
+        setTimeout(function(){ renderAccountList(); showPhase('accounts'); }, 800);
 
-        $('accName').textContent = displayName;
-        $('tokenStatus').innerHTML = '<span style="color:var(--success)"><i class="fas fa-check-circle"></i> مرحباً ' + escH(displayName) + '</span>';
-        toast('تم التحقق — ' + displayName, 's');
-
-        setTimeout(function() {
-            showPhase('control');
-            addLog('ok', 'تم تسجيل الدخول — ' + displayName);
-            updateProxyUI();
-        }, 600);
-
-    } catch (e) {
-        $('tokenStatus').innerHTML = '<span style="color:var(--danger)"><i class="fas fa-xmark-circle"></i> ' + escH(e.message) + '</span>';
-        toast(e.message, 'e');
-        addLog('er', 'فشل التحقق: ' + e.message);
+    } catch(e) {
+        $('tokenStatus').innerHTML = '<span style="color:var(--danger)"><i class="fas fa-xmark-circle"></i> '+escH(e.message)+'</span>';
+        toast(e.message,'e');
     } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-shield-halved"></i> فحص';
+        btn.disabled=false; btn.innerHTML='<i class="fas fa-plus"></i> إضافة';
     }
 }
 
 // ═══════════════════════════════════════
-//  جلب معلومات القناة — مع تجربة عدة نقاط
+//  جلب معلومات القناة — نظام محسّن
 // ═══════════════════════════════════════
-async function fetchChannel(slug) {
-    var endpoints = [
-        '/api/v2/channels/' + slug,
-        '/api/v1/channels/' + slug
-    ];
+async function fetchChannel(slug, acc) {
+    slug = slug.trim().toLowerCase().replace(/^\/+|\/+$|\s+/g, '');
+    if (!slug) throw new Error('اسم القناة فارغ');
+    if (!acc) acc = { workingProxy: -1 };
 
-    for (var i = 0; i < endpoints.length; i++) {
-        try {
-            var res = await kickFetch(endpoints[i], { skipAuth: true });
-            if (res.ok) {
-                var data = await res.json();
-                addLog('in', 'تم جلب بيانات القناة من ' + endpoints[i]);
-                return data;
-            }
-        } catch(e) {
-            addLog('wr', 'فشل ' + endpoints[i] + ': ' + e.message);
+    // المحاولة 1: v2
+    try {
+        var r1 = await proxiedFetch('/api/v2/channels/'+slug, {skipAuth:true, timeout:8000, preferredProxy:acc.workingProxy});
+        if (r1.res.ok) {
+            acc.workingProxy = r1.proxyUsed;
+            var data = await r1.res.json();
+            if (data && (data.data || data.id || data.chatroom || data.chatroom_id || data.slug)) return data;
         }
-    }
+    } catch(e){}
 
-    throw new Error('القناة غير موجودة أو فشل الاتصال');
+    // المحاولة 2: v1
+    try {
+        var r2 = await proxiedFetch('/api/v1/channels/'+slug, {skipAuth:true, timeout:8000, preferredProxy:acc.workingProxy});
+        if (r2.res.ok) {
+            acc.workingProxy = r2.proxyUsed;
+            var data2 = await r2.res.json();
+            if (data2 && (data2.data || data2.id || data2.chatroom || data2.chatroom_id || data2.slug)) return data2;
+        }
+    } catch(e){}
+
+    // المحاولة 3: بحث
+    try {
+        var r3 = await proxiedFetch('/api/search?q='+encodeURIComponent(slug), {skipAuth:true, timeout:8000, preferredProxy:acc.workingProxy});
+        if (r3.res.ok) {
+            acc.workingProxy = r3.proxyUsed;
+            var searchData = await r3.res.json();
+            if (searchData.data) {
+                for (var i=0;i<searchData.data.length;i++) {
+                    var item = searchData.data[i];
+                    if (item.slug===slug || item.username===slug) return item;
+                }
+            }
+        }
+    } catch(e){}
+
+    throw new Error('القناة "'+slug+'" غير موجودة أو فشل الاتصال');
 }
 
-// ═══════════════════════════════════════
-//  استخراج chatroom_id من بيانات القناة
-// ═══════════════════════════════════════
 function extractChatroomId(ch) {
-    // هيكل v1: { chatroom_id: 123 } أو { chatroom: { id: 123 } }
-    // هيكل v2: { data: { chatroom: { id: 123 } } }
+    if (!ch) return null;
     var data = ch.data || ch;
-
     if (data.chatroom_id) return data.chatroom_id;
     if (data.chatroom) {
-        if (typeof data.chatroom === 'object') return data.chatroom.id;
+        if (typeof data.chatroom === 'object') {
+            if (data.chatroom.id) return data.chatroom.id;
+            if (data.chatroom.chatroom_id) return data.chatroom.chatroom_id;
+        }
         return data.chatroom;
     }
+    if (data.chatroomId) return data.chatroomId;
+    if (data.channel && data.channel.chatroom_id) return data.channel.chatroom_id;
+    if (data.channel && data.channel.chatroom && data.channel.chatroom.id) return data.channel.chatroom.id;
+    return null;
+}
 
-    // محاولة إضافية من chatroom endpoint
+async function fetchChatroomId(slug, acc) {
+    slug = slug.trim().toLowerCase();
+    try {
+        var r1 = await proxiedFetch('/api/v2/channels/'+slug+'/chatroom', {skipAuth:true, timeout:8000, preferredProxy:acc.workingProxy});
+        if (r1.res.ok) { acc.workingProxy=r1.proxyUsed; var d=await r1.res.json(); var dd=d.data||d; if(dd.id)return dd.id; if(dd.chatroom_id)return dd.chatroom_id; }
+    } catch(e){}
+    try {
+        var r2 = await proxiedFetch('/api/v1/'+slug+'/chatroom', {skipAuth:true, timeout:8000, preferredProxy:acc.workingProxy});
+        if (r2.res.ok) { acc.workingProxy=r2.proxyUsed; var d2=await r2.res.json(); if(d2.id)return d2.id; if(d2.chatroom_id)return d2.chatroom_id; }
+    } catch(e){}
+    try {
+        var chData = await fetchChannel(slug, acc);
+        var cid = extractChatroomId(chData);
+        if (cid) return cid;
+    } catch(e){}
     return null;
 }
 
 // ═══════════════════════════════════════
-//  جلب chatroom_id إضافي
+//  إرسال رسالة واحدة
 // ═══════════════════════════════════════
-async function fetchChatroomId(slug) {
-    try {
-        var res = await kickFetch('/api/v2/channels/' + slug + '/chatroom', { skipAuth: true });
-        if (res.ok) {
-            var data = await res.json();
-            var d = data.data || data;
-            return d.id || d.chatroom_id || null;
-        }
-    } catch(e) {}
+async function sendMessage(chatroomId, content, token, retryInfo) {
+    retryInfo = retryInfo || { attempt:0, refreshedXsrf:false, proxyPref:-1 };
 
-    try {
-        var res2 = await kickFetch('/api/v1/' + slug + '/chatroom', { skipAuth: true });
-        if (res2.ok) {
-            var data2 = await res2.json();
-            return data2.id || data2.chatroom_id || null;
-        }
-    } catch(e) {}
-
-    return null;
-}
-
-// ═══════════════════════════════════════
-//  إرسال رسالة واحدة — مع تجربة عدة نقاط
-// ═══════════════════════════════════════
-async function sendMessage(chatroomId, content, retryInfo) {
-    retryInfo = retryInfo || { attempt: 0, refreshedXsrf: false };
-
-    var headers = {
-        'Authorization': 'Bearer ' + kickToken
-    };
-
-    if (xsrfToken) {
-        headers['X-XSRF-TOKEN'] = xsrfToken;
-    }
-
-    // الطريقة 1: POST api/v2/messages/send/{chatroomId}
+    // الطريقة 1: v2
     if (retryInfo.attempt === 0) {
         try {
-            var v2Url = apiUrl('/api/v2/messages/send/' + chatroomId);
-            var v2Res = await fetch(v2Url, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'Origin': KICK_BASE,
-                    'Authorization': 'Bearer ' + kickToken,
-                    'X-XSRF-TOKEN': xsrfToken || ''
-                },
-                credentials: isDirectMode ? 'include' : 'omit',
-                body: JSON.stringify({ content: content, type: 'message' })
+            var r2 = await proxiedFetch('/api/v2/messages/send/'+chatroomId, {
+                method:'POST', token:token, timeout:10000, preferredProxy:retryInfo.proxyPref,
+                body: {content:content, type:'message'}
             });
-
-            if (v2Res.ok) {
-                return true;
-            }
-
-            // خطأ 419 = XSRF منتهي
-            if (v2Res.status === 419 && !retryInfo.refreshedXsrf) {
-                await refreshXsrf();
-                retryInfo.refreshedXsrf = true;
-                retryInfo.attempt = 1;
-                return sendMessage(chatroomId, content, retryInfo);
-            }
-
-            // خطأ حرج
-            if (v2Res.status === 429) throw new Error('حظر مؤقت — أبطئ الإرسال');
-            if (v2Res.status === 403) throw new Error('لا صلاحية للكتابة هنا');
-            if (v2Res.status === 401) throw new Error('التوكن منتهي — أعد الدخول');
-
-            // إذا فشل v2، جرب v1
-            addLog('wr', 'v2/messages/send فشل (' + v2Res.status + ')، جارٍ تجربة v1...');
+            var v2Res = r2.res;
+            if (v2Res.ok) { retryInfo.proxyPref = r2.proxyUsed; return true; }
+            if (v2Res.status===419 && !retryInfo.refreshedXsrf) { await refreshXsrf(); retryInfo.refreshedXsrf=true; retryInfo.attempt=1; return sendMessage(chatroomId,content,token,retryInfo); }
+            if (v2Res.status===429) throw new Error('حظر مؤقت');
+            if (v2Res.status===403) throw new Error('لا صلاحية');
+            if (v2Res.status===401) throw new Error('توكن منتهي');
         } catch(e) {
-            if (e.message.indexOf('حظر') >= 0 || e.message.indexOf('صلاحية') >= 0 || e.message.indexOf('منتهي') >= 0) {
-                throw e;
-            }
-            addLog('wr', 'v2 فشل: ' + e.message + '، جارٍ تجربة v1...');
+            if (e.message.indexOf('حظر')>=0||e.message.indexOf('صلاحية')>=0||e.message.indexOf('منتهي')>=0) throw e;
         }
     }
 
-    // الطريقة 2: POST api/v1/chat-messages
+    // الطريقة 2: v1
     try {
-        var v1Url = apiUrl('/api/v1/chat-messages');
-        var v1Res = await fetch(v1Url, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'Origin': KICK_BASE,
-                'Authorization': 'Bearer ' + kickToken,
-                'X-XSRF-TOKEN': xsrfToken || ''
-            },
-            credentials: isDirectMode ? 'include' : 'omit',
-            body: JSON.stringify({
-                content: content,
-                chatroom_id: parseInt(chatroomId)
-            })
+        var r1 = await proxiedFetch('/api/v1/chat-messages', {
+            method:'POST', token:token, timeout:10000, preferredProxy:retryInfo.proxyPref,
+            body: {content:content, chatroom_id:parseInt(chatroomId)}
         });
-
-        if (v1Res.ok) {
-            return true;
-        }
-
-        // خطأ 419 = XSRF منتهي
-        if (v1Res.status === 419 && !retryInfo.refreshedXsrf) {
-            await refreshXsrf();
-            retryInfo.refreshedXsrf = true;
-            return sendMessage(chatroomId, content, retryInfo);
-        }
-
-        if (v1Res.status === 429) throw new Error('حظر مؤقت — أبطئ الإرسال');
-        if (v1Res.status === 403) throw new Error('لا صلاحية للكتابة هنا');
-        if (v1Res.status === 401) throw new Error('التوكن منتهي — أعد الدخول');
-        if (v1Res.status === 419) throw new Error('فشل رمز الحماية XSRF');
-
-        var errDetail = '';
-        try { errDetail = await v1Res.text(); } catch(e) {}
-        throw new Error('فشل (' + v1Res.status + ')' + (errDetail ? ' — ' + errDetail.substring(0, 100) : ''));
+        var v1Res = r1.res;
+        if (v1Res.ok) { retryInfo.proxyPref = r1.proxyUsed; return true; }
+        if (v1Res.status===419 && !retryInfo.refreshedXsrf) { await refreshXsrf(); retryInfo.refreshedXsrf=true; return sendMessage(chatroomId,content,token,retryInfo); }
+        if (v1Res.status===429) throw new Error('حظر مؤقت');
+        if (v1Res.status===403) throw new Error('لا صلاحية');
+        if (v1Res.status===401) throw new Error('توكن منتهي');
+        if (v1Res.status===419) throw new Error('فشل XSRF');
+        throw new Error('فشل ('+v1Res.status+')');
     } catch(e) {
-        if (e.message.indexOf('حظر') >= 0 || e.message.indexOf('صلاحية') >= 0 || e.message.indexOf('منتهي') >= 0) {
-            throw e;
-        }
-        // خطأ شبكة
-        if (e instanceof TypeError || e.message.indexOf('Failed to fetch') >= 0) {
-            throw new Error('خطأ اتصال — تأكد من الإنترنت والبروكسي');
-        }
+        if (e instanceof TypeError || e.message.indexOf('Failed to fetch')>=0 || e.message==='timeout') throw new Error('خطأ اتصال');
         throw e;
     }
 }
 
 // ═══════════════════════════════════════
-//  خيار التكرار اللامتناهي
+//  خيار التكرار اللانهائي — يقرأ من الحقل مباشرة
 // ═══════════════════════════════════════
-var isInfinite = false;
-
 function toggleInfinite() {
-    isInfinite = !isInfinite;
-    var btn = $('btnInfinite');
     var inp = $('inRepeat');
-    if (isInfinite) {
-        inp.value = '0';
-        inp.disabled = true;
-        btn.style.background = 'linear-gradient(135deg, #FF2D2D, #FF6B1A)';
-        btn.style.color = '#fff';
-        btn.style.borderColor = 'transparent';
-        $('repeatHint').textContent = 'التكرار لا نهائي — اضغط إيقاف للتوقف';
+    var wasInf = inp.disabled;
+    if (wasInf) {
+        inp.value = '1'; inp.disabled = false;
     } else {
-        inp.value = '1';
-        inp.disabled = false;
-        btn.style.background = '';
-        btn.style.color = '';
-        btn.style.borderColor = '';
-        $('repeatHint').textContent = '0 = تكرار لا نهائي | كل دورة ترسل كل الأسطر';
+        inp.value = '0'; inp.disabled = true;
     }
+    updateInfiniteBtn(!wasInf);
 }
 
 function onRepeatChange() {
     var val = parseInt($('inRepeat').value);
-    isInfinite = (val === 0);
-    var btn = $('btnInfinite');
-    if (isInfinite) {
-        btn.style.background = 'linear-gradient(135deg, #FF2D2D, #FF6B1A)';
-        btn.style.color = '#fff';
-        btn.style.borderColor = 'transparent';
-        $('repeatHint').textContent = 'التكرار لا نهائي — اضغط إيقاف للتوقف';
-    } else {
-        btn.style.background = '';
-        btn.style.color = '';
-        btn.style.borderColor = '';
-        $('repeatHint').textContent = '0 = تكرار لا نهائي | كل دورة ترسل كل الأسطر';
-    }
+    updateInfiniteBtn(val === 0);
 }
 
 // ═══════════════════════════════════════
-//  بدء الإرسال — نظام التكرار والدورات
+//  بدء الإرسال — استجابة فورية + استقلال تام لكل بوت
 // ═══════════════════════════════════════
 async function startSending() {
-    var slug = $('inChannel').value.trim();
-    var raw = $('inMessages').value.trim();
-    var interval = Math.max(1, parseInt($('inInterval').value) || 5);
-    var repeatVal = parseInt($('inRepeat').value) || 0;
-    var infinite = isInfinite || repeatVal === 0;
-    var repeatCount = infinite ? 999999 : Math.max(1, repeatVal);
+    if (!activeAccountId) return;
+    saveCurrentSettings();
+    var acc = findAccount(activeAccountId);
+    if (!acc || acc.isSending) return;
 
-    if (!slug) { toast('أدخل اسم القناة', 'e'); return; }
-    if (!raw) { toast('أدخل رسالة واحدة على الأقل', 'e'); return; }
+    var slug = acc.channel;
+    var raw = acc.messages.trim();
+    var interval = acc.interval;
+    var infinite = acc.isInfinite;
+    var repeatCount = infinite ? 999999 : Math.max(1, acc.repeat);
 
-    var msgs = raw.split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
-    if (!msgs.length) { toast('لا توجد رسائل', 'e'); return; }
+    if (!slug) { toast('أدخل اسم القناة','e'); return; }
+    if (!raw) { toast('أدخل رسالة واحدة على الأقل','e'); return; }
+    var msgs = raw.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+    if (!msgs.length) { toast('لا توجد رسائل','e'); return; }
 
-    isSending = true;
-    abortCtrl = new AbortController();
+    // ✅ تحديث فوري للواجهة — بدون انتظار
+    acc.isSending = true; acc.abortCtrl = new AbortController(); acc.sent = 0;
+    updateSendBtns(acc); $('progWrap').style.display='';
+    renderAccountList();
 
-    $('btnSend').style.display = 'none';
-    $('btnStop').style.display = '';
-    $('progWrap').style.display = '';
-    $('statusDot').classList.add('dot-sending');
+    // ✅ تشغيل الإرسال في الخلفية — لا يوقف أي شيء
+    runBotLoop(acc, slug, msgs, interval, infinite, repeatCount);
+}
 
-    var modeText = infinite ? 'لا نهائي' : repeatCount + ' دورة';
-    addLog('in', 'بدء الإرسال — ' + msgs.length + ' رسالة × ' + modeText + ' → "' + slug + '" (فاصل: ' + interval + 'ث)');
-
+async function runBotLoop(acc, slug, msgs, interval, infinite, repeatCount) {
     try {
-        // جلب بيانات القناة
-        var ch = await fetchChannel(slug);
-
+        // جلب القناة باستخدام البروكسي المحفوظ لهذا الحساب
+        var ch = await fetchChannel(slug, acc);
         var cid = extractChatroomId(ch);
-        if (!cid) {
-            cid = await fetchChatroomId(slug);
-        }
-        if (!cid) {
-            throw new Error('لم يتم العثور على معرف الدردشة — تأكد من اسم القناة');
-        }
+        if (!cid) cid = await fetchChatroomId(slug, acc);
+        if (!cid) throw new Error('لم يتم العثور على معرف الدردشة');
 
-        var channelName = ch.name || ch.data?.name || ch.data?.user?.username || slug;
-        addLog('ok', 'القناة: ' + channelName + ' — chatroom_id: ' + cid);
+        acc.chatroomId = cid;
+        var failCount=0, MAX_FAILS=3, msgIndex=0, roundNum=0, totalInRound=msgs.length;
+        var sendRetry = { attempt:0, refreshedXsrf:false, proxyPref:acc.workingProxy };
 
-        var sent = 0;
-        var failCount = 0;
-        var MAX_FAILS = 3;
-        var msgIndex = 0;       // مؤشر الرسالة الحالية داخل القائمة
-        var roundNum = 0;       // رقم الدورة الحالية
-        var totalInRound = msgs.length; // عدد الرسائل في كل دورة
-
-        // حلقة الإرسال: تدور على الرسائل وتكررها
-        while (isSending) {
-            // تحقق من عدد الدورات
+        while (acc.isSending) {
             if (!infinite && roundNum >= repeatCount) break;
-
             var currentMsg = msgs[msgIndex % msgs.length];
-
             try {
-                await sendMessage(cid, currentMsg);
-                sent++;
-                failCount = 0;
-                addLog('ok', '[' + sent + '] ' + currentMsg.substring(0, 60));
-            } catch (e) {
+                await sendMessage(cid, currentMsg, acc.token, sendRetry);
+                if (sendRetry.proxyPref >= 0) acc.workingProxy = sendRetry.proxyPref;
+                acc.sent++; failCount=0;
+            } catch(e) {
                 failCount++;
-                addLog('er', '[' + (sent + 1) + '] ' + e.message);
-
-                if (e.message.indexOf('حظر') >= 0 || e.message.indexOf('صلاحية') >= 0 || e.message.indexOf('منتهي') >= 0) {
-                    addLog('er', 'خطأ حرج — تم الإيقاف');
-                    break;
-                }
-
-                if (failCount >= MAX_FAILS) {
-                    addLog('er', 'فشل ' + MAX_FAILS + ' مرات متتالية — تم الإيقاف');
-                    break;
-                }
+                if (e.message.indexOf('حظر')>=0||e.message.indexOf('صلاحية')>=0||e.message.indexOf('منتهي')>=0) break;
+                if (failCount>=MAX_FAILS) break;
             }
-
-            // تحديث شريط التقدم
             msgIndex++;
-            if (msgIndex % totalInRound === 0) {
-                roundNum++;
-            }
+            if (msgIndex % totalInRound === 0) roundNum++;
 
-            if (infinite) {
-                $('progFill').style.width = '100%';
-                $('progFill').style.background = 'linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3), var(--accent))';
-                $('progFill').style.backgroundSize = '200% 100%';
-                $('progFill').style.animation = 'shimmer 2s linear infinite';
-                $('progCount').textContent = 'الدورة ' + roundNum + ' | ' + sent + ' رسالة';
-                $('progTime').textContent = msgs.length + ' رسالة/دورة';
-            } else {
-                var totalMsgs = repeatCount * totalInRound;
-                var pct = Math.min(100, (sent / totalMsgs) * 100);
-                $('progFill').style.width = pct + '%';
-                $('progFill').style.background = '';
-                $('progFill').style.backgroundSize = '';
-                $('progFill').style.animation = '';
-                $('progCount').textContent = sent + ' / ' + totalMsgs + ' (دورة ' + Math.min(roundNum + 1, repeatCount) + '/' + repeatCount + ')';
-                var remaining = (totalMsgs - sent) * interval;
-                var mm = Math.floor(remaining / 60), ss = remaining % 60;
-                $('progTime').textContent = mm > 0 ? '~' + mm + 'د ' + ss + 'ث' : '~' + ss + ' ثانية';
-            }
+            // تحديث التقدم فقط إذا كان هذا الحساب مفتوحاً
+            if (activeAccountId === acc.id) updateProgress(acc, msgs.length, roundNum, repeatCount, infinite, interval);
 
-            // انتظر الفاصل الزمني
-            if (isSending) {
-                await delay(interval * 1000, abortCtrl.signal);
-            }
+            if (acc.isSending) await delay(interval*1000, acc.abortCtrl.signal);
         }
 
-        if (!isSending) {
-            toast('تم الإيقاف — ' + sent + ' رسالة أُرسلت', 'i');
-        } else if (sent > 0) {
-            toast('اكتمل — ' + sent + ' رسالة', 's');
-        }
-
-    } catch (e) {
+    } catch(e) {
         var msg = e.message;
-        if (e instanceof TypeError || e.message.indexOf('Failed to fetch') >= 0) {
-            msg = 'خطأ اتصال — تأكد من الإنترنت والبروكسي';
-        }
-        toast('خطأ: ' + msg, 'e');
+        if (e instanceof TypeError||msg.indexOf('Failed to fetch')>=0) msg='خطأ اتصال';
+        if (activeAccountId === acc.id) toast('('+acc.username+') خطأ: '+msg,'e');
     } finally {
-        isSending = false; abortCtrl = null;
-        $('btnSend').style.display = ''; $('btnStop').style.display = 'none';
-        $('statusDot').classList.remove('dot-sending');
-        // إعادة شريط التقدم لحالته الطبيعية
-        $('progFill').style.background = '';
-        $('progFill').style.backgroundSize = '';
-        $('progFill').style.animation = '';
+        acc.isSending=false; acc.abortCtrl=null;
+        if (activeAccountId === acc.id) {
+            updateSendBtns(acc);
+            $('progFill').style.background=''; $('progFill').style.backgroundSize=''; $('progFill').style.animation='';
+        }
+        renderAccountList();
+    }
+}
+
+function updateProgress(acc, msgsLen, roundNum, repeatCount, infinite, interval) {
+    if (infinite) {
+        $('progFill').style.width='100%';
+        $('progFill').style.background='linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3),var(--accent))';
+        $('progFill').style.backgroundSize='200% 100%'; $('progFill').style.animation='shimmer 2s linear infinite';
+        $('progCount').textContent='الدورة '+roundNum+' | '+acc.sent+' رسالة';
+        $('progTime').textContent=msgsLen+' رسالة/دورة';
+    } else {
+        var totalMsgs=repeatCount*msgsLen;
+        $('progFill').style.width=Math.min(100,(acc.sent/totalMsgs)*100)+'%';
+        $('progFill').style.background=''; $('progFill').style.backgroundSize=''; $('progFill').style.animation='';
+        $('progCount').textContent=acc.sent+' / '+totalMsgs+' (دورة '+Math.min(roundNum+1,repeatCount)+'/'+repeatCount+')';
+        var rem=(totalMsgs-acc.sent)*interval, mm=Math.floor(rem/60), ss=rem%60;
+        $('progTime').textContent=mm>0?'~'+mm+'د '+ss+'ث':'~'+ss+' ثانية';
     }
 }
 
 function stopSending() {
-    isSending = false;
-    if (abortCtrl) abortCtrl.abort();
-    toast('جارٍ الإيقاف...', 'i');
+    if (!activeAccountId) return;
+    var acc = findAccount(activeAccountId);
+    if (!acc) return;
+    // ✅ استجابة فورية — أوقف فوراً
+    acc.isSending = false;
+    if (acc.abortCtrl) acc.abortCtrl.abort();
+    updateSendBtns(acc);
+    renderAccountList();
 }
 
 function delay(ms, signal) {
     return new Promise(function(resolve, reject) {
         if (signal && signal.aborted) { reject(new Error('aborted')); return; }
         var t = setTimeout(resolve, ms);
-        if (signal) signal.addEventListener('abort', function() { clearTimeout(t); reject(new Error('aborted')); }, { once: true });
+        if (signal) signal.addEventListener('abort', function(){clearTimeout(t);reject(new Error('aborted'));},{once:true});
     });
 }
 
-function logout() {
-    if (isSending) stopSending();
-    kickToken = ''; xsrfToken = '';
-    isInfinite = false;
-    $('inToken').value = ''; $('tokenStatus').innerHTML = '';
-    $('inChannel').value = ''; $('inMessages').value = ''; $('inInterval').value = '5';
-    $('inRepeat').value = '1'; $('inRepeat').disabled = false;
-    $('btnInfinite').style.background = ''; $('btnInfinite').style.color = ''; $('btnInfinite').style.borderColor = '';
-    $('repeatHint').textContent = '0 = تكرار لا نهائي | كل دورة ترسل كل الأسطر';
-    $('progFill').style.width = '0'; $('progFill').style.background = ''; $('progFill').style.backgroundSize = ''; $('progFill').style.animation = '';
-    $('progWrap').style.display = 'none';
-    clearLog(); showPhase('token'); toast('تم تسجيل الخروج', 'i');
+// ═══════════════════════════════════════
+//  جسيمات نارية
+// ═══════════════════════════════════════
+(function() {
+    var cv=$('fireCanvas'),ctx=cv.getContext('2d');
+    var W,H; var embers=[],MAX=55;
+    function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
+    resize(); window.addEventListener('resize',resize);
+    function spawn(){return{x:Math.random()*(W||800),y:(H||600)+10,vx:(Math.random()-.5)*.8,vy:-(Math.random()*1.5+.5),r:Math.random()*2.5+.5,life:Math.random()*200+100,ml:0,hue:Math.random()*40};}
+    for(var i=0;i<MAX;i++){var e=spawn();e.y=Math.random()*(H||600);e.life=Math.random()*200;e.ml=e.life;embers.push(e);}
+    function draw(){
+        ctx.clearRect(0,0,W,H);
+        for(var i=0;i<embers.length;i++){
+            var e=embers[i];e.x+=e.vx;e.y+=e.vy;e.vx+=(Math.random()-.5)*.1;e.life--;
+            if(e.life<=0||e.y<-20){embers[i]=spawn();embers[i].ml=embers[i].life;continue;}
+            var a=Math.max(0,e.life/(e.ml||200)),r=Math.max(.1,e.r*a);
+            var g=ctx.createRadialGradient(e.x,e.y,0,e.x,e.y,Math.max(.1,r*4));
+            g.addColorStop(0,'hsla('+e.hue+',100%,60%,'+(a*.6)+')');
+            g.addColorStop(.5,'hsla('+e.hue+',100%,50%,'+(a*.15)+')');
+            g.addColorStop(1,'hsla('+e.hue+',100%,40%,0)');
+            ctx.beginPath();ctx.arc(e.x,e.y,Math.max(.1,r*4),0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+            ctx.beginPath();ctx.arc(e.x,e.y,Math.max(.1,r),0,Math.PI*2);ctx.fillStyle='hsla('+e.hue+',100%,70%,'+(a*.9)+')';ctx.fill();
+        }
+        requestAnimationFrame(draw);
+    }
+    if(!window.matchMedia('(prefers-reduced-motion:reduce)').matches)draw();
+})();
+
+// ═══════════════════════════════════════
+//  تهيئة الجلسة — بدون تعليق
+// ═══════════════════════════════════════
+async function initSession() {
+    showPhase('load');
+    detectMode();
+
+    // جلب XSRF في الخلفية — حد أقصى 3 ثواني
+    try { await Promise.race([fetchXsrf(), new Promise(function(r){setTimeout(r,3000);})]); } catch(e){}
+
+    // انتقل فوراً
+    if (accounts.length === 0) showPhase('addtoken');
+    else { renderAccountList(); showPhase('accounts'); }
 }
 
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && document.activeElement.id === 'inToken' && !e.shiftKey) { e.preventDefault(); verifyToken(); }
+    if (e.key==='Enter' && document.activeElement.id==='inToken' && !e.shiftKey) { e.preventDefault(); verifyAndAdd(); }
 });
 
-// ═══════════════════════════════════════
-//  بدء التشغيل
-// ═══════════════════════════════════════
 initSession();
 </script>
 </body>
