@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -328,6 +327,88 @@
         }
         .hint-box i { color:var(--accent3); font-size:13px; flex-shrink:0; margin-top:1px; }
         .hint-box b { color:#ffd966; }
+
+        /* ═══ بطاقة القناة ═══ */
+        .channels-list { display:flex; flex-direction:column; gap:6px; max-height:none; }
+        .channel-card {
+            display:flex; align-items:center; gap:8px;
+            padding:9px 11px;
+            background:rgba(255,255,255,0.025);
+            border:1px solid rgba(255,45,45,0.15); border-radius:10px;
+            transition:all .2s;
+        }
+        .channel-card:hover { border-color:rgba(255,45,45,0.35); background:rgba(255,45,45,0.05); }
+        .channel-card.on { border-color:rgba(0,200,83,0.5); background:rgba(0,200,83,0.06); }
+        .channel-card.off { border-color:rgba(255,59,59,0.4); background:rgba(255,59,59,0.05); }
+        .channel-card.sending { border-color:var(--accent); background:rgba(255,45,45,0.1); box-shadow:0 0 12px rgba(255,45,45,0.2); }
+        .channel-card.warning { border-color:var(--accent3); background:rgba(255,184,0,0.08); }
+
+        .channel-status {
+            display:flex; align-items:center; gap:5px;
+            font-size:10px; font-weight:900;
+            padding:3px 8px; border-radius:6px;
+            flex-shrink:0; min-width:48px; justify-content:center;
+        }
+        .channel-status.on { background:rgba(0,200,83,0.15); color:#7dffb0; border:1px solid rgba(0,200,83,0.4); }
+        .channel-status.off { background:rgba(255,59,59,0.15); color:#ff8a8a; border:1px solid rgba(255,59,59,0.4); }
+        .channel-status.connecting { background:rgba(255,184,0,0.15); color:#ffd966; border:1px solid rgba(255,184,0,0.4); }
+        .channel-status.sending { background:rgba(255,45,45,0.15); color:var(--accent); border:1px solid var(--accent); animation:pulseGlow 1.5s infinite; }
+        .channel-status.idle { background:rgba(255,255,255,0.04); color:var(--muted); border:1px solid var(--border); }
+
+        .channel-name {
+            flex:1; font-size:13px; font-weight:700; color:var(--fg);
+            white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+        }
+        .channel-meta {
+            font-size:10px; color:var(--muted); margin-top:2px;
+            display:flex; gap:8px; flex-wrap:wrap;
+        }
+        .channel-meta .meta-item { display:inline-flex; align-items:center; gap:3px; }
+        .channel-meta .meta-item i { font-size:9px; }
+        .channel-actions { display:flex; gap:4px; flex-shrink:0; align-items:center; }
+        .channel-actions button { padding:6px 9px; font-size:11px; border-radius:7px; }
+
+        /* ✅ زر التشغيل/الإطفاء لكل قناة */
+        .channel-toggle {
+            position:relative; width:34px; height:18px; flex-shrink:0;
+            border-radius:10px; cursor:pointer; transition:all .25s;
+            border:1px solid transparent;
+        }
+        .channel-toggle.on {
+            background:linear-gradient(135deg,#FF2D2D,#FF6B1A);
+            border-color:var(--accent);
+            box-shadow:0 0 10px rgba(255,45,45,0.5), inset 0 1px 0 rgba(255,255,255,0.15);
+            animation:channelOnPulse 2s ease-in-out infinite;
+        }
+        @keyframes channelOnPulse{
+            0%,100%{box-shadow:0 0 8px rgba(255,45,45,0.4), inset 0 1px 0 rgba(255,255,255,0.15)}
+            50%{box-shadow:0 0 14px rgba(255,45,45,0.7), inset 0 1px 0 rgba(255,255,255,0.15)}
+        }
+        .channel-toggle.off {
+            background:rgba(255,255,255,0.05);
+            border-color:rgba(255,255,255,0.1);
+            opacity:0.5;
+        }
+        .channel-toggle::after {
+            content:''; position:absolute; top:2px; left:2px;
+            width:12px; height:12px; border-radius:50%; background:#fff;
+            transition:all .25s cubic-bezier(.4,0,.2,1);
+            box-shadow:0 1px 3px rgba(0,0,0,0.4);
+        }
+        .channel-toggle.on::after { left:18px; }
+        html[dir="rtl"] .channel-toggle::after { left:auto; right:2px; }
+        html[dir="rtl"] .channel-toggle.on::after { right:18px; left:auto; }
+
+        /* قناة معطّلة */
+        .channel-card.disabled {
+            opacity:0.45;
+            background:rgba(255,255,255,0.015) !important;
+            border-color:rgba(255,255,255,0.08) !important;
+            box-shadow:none !important;
+            filter:grayscale(0.4);
+        }
+        .channel-card.disabled:hover { opacity:0.65; }
+        .channel-card.disabled .channel-name { color:var(--muted); text-decoration:line-through; text-decoration-color:rgba(255,59,59,0.4); }
     </style>
 </head>
 <body>
@@ -348,51 +429,25 @@
             <div class="modal-icon"><i class="fas fa-sliders"></i></div>
             <div class="modal-title" id="modalTitle">إعدادات البوت</div>
         </div>
-        <p class="modal-desc">أضف الستريمرز والرسائل واضبط الإعدادات. كل شيء يُحفظ تلقائياً.</p>
+        <p class="modal-desc">أضف القنوات واضبط إعدادات كل قناة على حدة — رسائل وتأخير وتكرار منفصل لكل قناة.</p>
 
         <div class="modal-divider"></div>
 
+        <!-- زر إضافة قناة -->
         <div class="modal-field">
-            <label><i class="fas fa-user"></i> اسم الستريمر</label>
+            <label><i class="fas fa-hashtag"></i> إضافة قناة</label>
             <div class="row">
-                <input type="text" id="mStreamName" placeholder="مثال: xqc" onkeydown="if(event.key==='Enter'){event.preventDefault();mAddStreamer();}">
-                <button class="btn btn-fire btn-sm" onclick="mAddStreamer()"><i class="fas fa-plus"></i></button>
+                <input type="text" id="mChannelInput" placeholder="مثال: xqc" onkeydown="if(event.key==='Enter'){event.preventDefault();mAddChannel();}">
+                <button class="btn btn-fire btn-sm" onclick="mAddChannel()"><i class="fas fa-plus"></i></button>
             </div>
-            <p class="hint">يمكنك إضافة عدة ستريمرز — سيُرسل لهم جميعاً</p>
-            <div class="chip-list" id="mStreamerChips"></div>
+            <p class="hint">كل قناة لها إعداداتها الخاصة (رسائل، تأخير، تكرار)</p>
         </div>
 
-        <div class="modal-field">
-            <label><i class="fas fa-comment-dots"></i> الرسائل</label>
-            <textarea id="mMessages" placeholder="رسالة في كل سطر&#10;مرحبا&#10;كيف الحال&#10;شباب"></textarea>
-            <p class="hint">كل سطر = رسالة منفصلة</p>
-        </div>
-
-        <div class="inputs-grid">
-            <div class="modal-field field-mini">
-                <label><i class="fas fa-repeat"></i> التكرار</label>
-                <input type="number" id="mRepeat" value="1" min="0">
-                <span class="unit">0 = لا نهائي</span>
-            </div>
-            <div class="modal-field field-mini">
-                <label><i class="fas fa-clock"></i> التأخير (ث)</label>
-                <input type="number" id="mInterval" value="5" min="1" max="120">
-                <span class="unit">بين كل رسالة</span>
-            </div>
-        </div>
+        <!-- قائمة القنوات -->
+        <div class="channels-list" id="mChannelsList"></div>
 
         <div class="modal-divider"></div>
 
-        <div class="toggle-row">
-            <div class="toggle-label">
-                <div class="tlicon"><i class="fas fa-infinity"></i></div>
-                <div>
-                    <span>تكرار لا نهائي</span>
-                    <span class="toggle-hint">لا يتوقف — يتعافى تلقائياً</span>
-                </div>
-            </div>
-            <div class="toggle" id="tgInfinite" onclick="mToggle('tgInfinite','isInfinite')"></div>
-        </div>
         <div class="toggle-row">
             <div class="toggle-label">
                 <div class="tlicon"><i class="fas fa-shield-halved"></i></div>
@@ -417,6 +472,57 @@
         <div class="modal-actions">
             <button class="btn btn-fire" onclick="saveSettings()"><i class="fas fa-check"></i> حفظ والعودة</button>
             <button class="btn btn-ghost" onclick="closeSettings()"><i class="fas fa-xmark"></i> إلغاء</button>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة إعدادات قناة محددة -->
+<div class="modal-overlay" id="channelModal" onclick="if(event.target===this)closeChannelSettings()">
+    <div class="modal">
+        <div class="modal-x" onclick="closeChannelSettings()" title="إغلاق"><i class="fas fa-xmark"></i></div>
+        <div class="modal-head">
+            <div class="modal-icon"><i class="fas fa-tv"></i></div>
+            <div class="modal-title" id="channelModalTitle">إعدادات القناة</div>
+        </div>
+        <p class="modal-desc">إعدادات خاصة بهذه القناة — منفصلة تماماً عن باقي القنوات.</p>
+
+        <div class="modal-divider"></div>
+
+        <div class="modal-field">
+            <label><i class="fas fa-comment-dots"></i> الرسائل</label>
+            <textarea id="cMessages" placeholder="رسالة في كل سطر&#10;مرحبا&#10;كيف الحال&#10;شباب"></textarea>
+            <p class="hint">كل سطر = رسالة منفصلة تُرسل بالترتيب</p>
+        </div>
+
+        <div class="inputs-grid">
+            <div class="modal-field field-mini">
+                <label><i class="fas fa-repeat"></i> التكرار</label>
+                <input type="number" id="cRepeat" value="1" min="0">
+                <span class="unit">0 = لا نهائي</span>
+            </div>
+            <div class="modal-field field-mini">
+                <label><i class="fas fa-clock"></i> التأخير (ث)</label>
+                <input type="number" id="cInterval" value="5" min="1" max="120">
+                <span class="unit">بين كل رسالة</span>
+            </div>
+        </div>
+
+        <div class="modal-divider"></div>
+
+        <div class="toggle-row">
+            <div class="toggle-label">
+                <div class="tlicon"><i class="fas fa-infinity"></i></div>
+                <div>
+                    <span>تكرار لا نهائي</span>
+                    <span class="toggle-hint">لا يتوقف — يتعافى تلقائياً</span>
+                </div>
+            </div>
+            <div class="toggle" id="tgChannelInfinite" onclick="cToggleInfinite()"></div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn btn-fire" onclick="saveChannelSettings()"><i class="fas fa-check"></i> حفظ</button>
+            <button class="btn btn-ghost" onclick="closeChannelSettings()"><i class="fas fa-xmark"></i> إلغاء</button>
         </div>
     </div>
 </div>
@@ -734,25 +840,45 @@ function makeBot(token, username) {
         id: accIdCounter,
         token: token,
         username: username,
-        streamers: [],          // قائمة الستريمرز
-        messages: '',           // الرسائل
-        interval: 5,            // التأخير بالثواني
-        repeat: 1,              // عدد التكرار
-        isInfinite: false,      // تكرار لا نهائي
-        autoRecover: true,      // التعافي التلقائي
-        parallel: true,         // الإرسال المتوازي
+        channels: [],           // مصفوفة قنوات، كل قناة لها إعداداتها الخاصة
+        autoRecover: true,      // التعافي التلقائي (للبوت ككل)
+        parallel: true,         // الإرسال المتوازي بين القنوات
         // حالة التشغيل (لا تُحفظ)
         isSending: false,
         sent: 0,
-        channelStates: {},
         workingProxy: -1,
         workingSendProxy: -1
+    };
+}
+
+// إنشاء قناة جديدة بالإعدادات الافتراضية
+function makeChannel(slug) {
+    return {
+        slug: slug,
+        messages: '',           // الرسائل (كل سطر = رسالة)
+        interval: 5,            // التأخير بالثواني
+        repeat: 1,              // عدد التكرار
+        isInfinite: false,      // تكرار لا نهائي
+        enabled: true,          // ✅ مفعّلة افتراضياً (زر التشغيل/الإطفاء)
+        // حالة التشغيل (لا تُحفظ)
+        status: 'idle',         // idle | connecting | on | off | sending | failed
+        sent: 0,
+        error: '',
+        retries: 0
     };
 }
 
 function findBot(id) {
     for (var i = 0; i < accounts.length; i++) {
         if (accounts[i].id === id) return accounts[i];
+    }
+    return null;
+}
+
+function findChannel(bot, slug) {
+    if (!bot || !bot.channels) return null;
+    for (var i = 0; i < bot.channels.length; i++) {
+        if (bot.channels[i].slug === slug) return bot.channels[i];
     }
     return null;
 }
@@ -765,9 +891,17 @@ function persist() {
             bots: accounts.map(function(b) {
                 return {
                     id: b.id, token: b.token, username: b.username,
-                    streamers: b.streamers, messages: b.messages,
-                    interval: b.interval, repeat: b.repeat,
-                    isInfinite: b.isInfinite, autoRecover: b.autoRecover,
+                    channels: b.channels.map(function(ch) {
+                        return {
+                            slug: ch.slug,
+                            messages: ch.messages,
+                            interval: ch.interval,
+                            repeat: ch.repeat,
+                            isInfinite: ch.isInfinite,
+                            enabled: ch.enabled !== false // ✅ حفظ حالة التفعيل
+                        };
+                    }),
+                    autoRecover: b.autoRecover,
                     parallel: b.parallel,
                     selected: !!selectedBots[b.id]
                 };
@@ -789,13 +923,41 @@ function loadFromStorage() {
         accIdCounter = data.counter || 0;
         for (var i = 0; i < data.bots.length; i++) {
             var b = data.bots[i];
+            // توافق مع النسخة القديمة: streamers → channels
+            var channels = [];
+            if (b.channels) {
+                for (var c = 0; c < b.channels.length; c++) {
+                    var ch = b.channels[c];
+                    channels.push({
+                        slug: ch.slug,
+                        messages: ch.messages || '',
+                        interval: ch.interval || 5,
+                        repeat: ch.repeat || 1,
+                        isInfinite: !!ch.isInfinite,
+                        enabled: ch.enabled !== false, // ✅ تحميل حالة التفعيل
+                        status: 'idle', sent: 0, error: '', retries: 0
+                    });
+                }
+            } else if (b.streamers) {
+                // ترحيل البيانات القديمة
+                for (var s = 0; s < b.streamers.length; s++) {
+                    channels.push({
+                        slug: b.streamers[s],
+                        messages: b.messages || '',
+                        interval: b.interval || 5,
+                        repeat: b.repeat || 1,
+                        isInfinite: !!b.isInfinite,
+                        enabled: true,
+                        status: 'idle', sent: 0, error: '', retries: 0
+                    });
+                }
+            }
             var bot = {
                 id: b.id, token: b.token, username: b.username,
-                streamers: b.streamers || [], messages: b.messages || '',
-                interval: b.interval || 5, repeat: b.repeat || 1,
-                isInfinite: !!b.isInfinite, autoRecover: b.autoRecover !== false,
+                channels: channels,
+                autoRecover: b.autoRecover !== false,
                 parallel: b.parallel !== false,
-                isSending: false, sent: 0, channelStates: {},
+                isSending: false, sent: 0,
                 workingProxy: -1, workingSendProxy: -1
             };
             if (b.selected) selectedBots[b.id] = true;
@@ -915,8 +1077,8 @@ function renderBotList() {
             statusText = 'جاهز';
             dotClass = 'idle';
         }
-        var sCount = b.streamers.length;
-        var streamerInfo = sCount > 0 ? (sCount + ' ستريمر') : 'لا يوجد ستريمر';
+        var sCount = b.channels.length;
+        var streamerInfo = sCount > 0 ? (sCount + ' قناة') : 'لا قنوات';
 
         html += '<div class="bot-card' + (isSelected ? ' selected' : '') + '">';
         // مربع التحديد
@@ -967,7 +1129,16 @@ function updateBulkUI() {
         if (selectedBots[id]) {
             count++;
             var b = findBot(parseInt(id));
-            if (b && !b.isSending && b.streamers.length > 0 && b.messages.trim()) readyCount++;
+            // بوت جاهز = لديه قناة واحدة على الأقل لها رسائل
+            if (b && !b.isSending) {
+                var hasReady = false;
+                for (var c = 0; c < b.channels.length; c++) {
+                    if (b.channels[c].messages && b.channels[c].messages.trim()) {
+                        hasReady = true; break;
+                    }
+                }
+                if (hasReady) readyCount++;
+            }
         }
     }
     $('selectionInfo').innerHTML = 'المحدد: <span class="count">' + count + '</span> بوت' + (readyCount > 0 ? ' ('+readyCount+' جاهز)' : '');
@@ -995,21 +1166,17 @@ function removeBot(id) {
 }
 
 // ═══════════════════════════════════════
-//  النافذة المنبثقة للإعدادات
+//  النافذة المنبثقة لإعدادات البوت
 // ═══════════════════════════════════════
 function openSettings(id) {
     var b = findBot(id);
     if (!b) return;
     activeModalBotId = id;
     $('modalTitle').textContent = 'إعدادات: ' + b.username;
-    $('mStreamName').value = '';
-    $('mMessages').value = b.messages || '';
-    $('mRepeat').value = b.isInfinite ? 0 : (b.repeat || 1);
-    $('mInterval').value = b.interval || 5;
-    setToggle('tgInfinite', b.isInfinite);
+    $('mChannelInput').value = '';
     setToggle('tgAutoRecover', b.autoRecover);
     setToggle('tgParallel', b.parallel);
-    renderStreamerChips(b);
+    renderChannelsList(b);
     $('settingsModal').classList.add('open');
 }
 
@@ -1029,88 +1196,178 @@ function mToggle(toggleId, fieldName) {
     if (!b) return;
     b[fieldName] = !b[fieldName];
     setToggle(toggleId, b[fieldName]);
-    if (fieldName === 'isInfinite') {
-        $('mRepeat').disabled = b.isInfinite;
-        if (b.isInfinite) $('mRepeat').value = 0;
-        else if ($('mRepeat').value == 0) $('mRepeat').value = 1;
-    }
-    persist(); // حفظ فوري عند التبديل
+    persist();
 }
 
-function mAddStreamer() {
+function mAddChannel() {
     if (activeModalBotId === null) return;
     var b = findBot(activeModalBotId);
     if (!b) return;
-    var inp = $('mStreamName');
+    var inp = $('mChannelInput');
     var slug = inp.value.trim().toLowerCase().replace(/^\/+|\/+$/g, '').replace(/\s+/g, '');
-    if (!slug) { toast('أدخل اسم الستريمر', 'e'); return; }
-    if (b.streamers.indexOf(slug) >= 0) { toast('مضاف مسبقاً', 'i'); return; }
-    b.streamers.push(slug);
+    if (!slug) { toast('أدخل اسم القناة', 'e'); return; }
+    if (findChannel(b, slug)) { toast('القناة مضافة مسبقاً', 'i'); return; }
+    b.channels.push(makeChannel(slug));
     inp.value = '';
     inp.focus();
-    renderStreamerChips(b);
-    persist(); // حفظ فوري
+    renderChannelsList(b);
+    persist();
 }
 
-function mRemoveStreamer(slug) {
+function mRemoveChannel(slug) {
     if (activeModalBotId === null) return;
     var b = findBot(activeModalBotId);
     if (!b) return;
-    b.streamers = b.streamers.filter(function(s){ return s !== slug; });
-    renderStreamerChips(b);
-    persist(); // حفظ فوري
+    b.channels = b.channels.filter(function(c){ return c.slug !== slug; });
+    renderChannelsList(b);
+    persist();
 }
 
-function renderStreamerChips(b) {
-    var box = $('mStreamerChips');
-    if (!b.streamers || b.streamers.length === 0) {
-        box.innerHTML = '';
+function renderChannelsList(b) {
+    var box = $('mChannelsList');
+    if (!b.channels || b.channels.length === 0) {
+        box.innerHTML = '<div style="text-align:center;padding:14px;color:var(--muted);font-size:11px"><i class="fas fa-tv" style="font-size:20px;display:block;margin-bottom:6px;color:var(--border)"></i>لا توجد قنوات — أضف قناة للبدء</div>';
         return;
     }
     var html = '';
-    for (var i = 0; i < b.streamers.length; i++) {
-        var slug = b.streamers[i];
-        var st = b.channelStates && b.channelStates[slug];
-        var cls = 'chip';
-        if (st) {
-            if (st.sending && st.error) cls += ' warning';
-            else if (st.sending) cls += ' sending';
-            else if (st.failed) cls += ' failed';
-            else if (st.done) cls += ' done';
+    for (var i = 0; i < b.channels.length; i++) {
+        var ch = b.channels[i];
+        var status = ch.status || 'idle';
+        var isEnabled = ch.enabled !== false;
+        // ✅ إذا كانت القناة معطّلة، تظهر بحالة "معطّلة"
+        var cardCls = 'channel-card';
+        if (!isEnabled) {
+            cardCls += ' disabled';
+        } else {
+            cardCls += ' ' + status;
         }
-        var cnt = (st && st.sent > 0) ? '<span class="chip-count">' + st.sent + '</span>' : '';
-        var safeSlug = slug.replace(/'/g, "\\'");
-        var x = '<span class="chip-x" onclick="mRemoveStreamer(\'' + safeSlug + '\')"><i class="fas fa-xmark"></i></span>';
-        html += '<div class="'+cls+'"><span class="chip-dot"></span><span>'+escH(slug)+'</span>'+cnt+x+'</div>';
+        var statusText, statusCls;
+        if (!isEnabled) {
+            // ✅ القناة معطّلة يدوياً — تظهر OFF
+            statusText = 'OFF'; statusCls = 'off';
+        } else if (status === 'on') { statusText = 'ON'; statusCls = 'on'; }
+        else if (status === 'off') { statusText = 'OFF'; statusCls = 'off'; }
+        else if (status === 'sending') { statusText = '<i class="fas fa-circle-notch fa-spin"></i>'; statusCls = 'sending'; }
+        else if (status === 'connecting') { statusText = '...'; statusCls = 'connecting'; }
+        else if (status === 'warning') { statusText = '!'; statusCls = 'connecting'; }
+        else { statusText = '--'; statusCls = 'idle'; }
+
+        var msgCount = ch.messages ? ch.messages.split('\n').filter(function(l){return l.trim();}).length : 0;
+        var repeatText = ch.isInfinite ? '∞' : (ch.repeat || 1);
+        var sentText = ch.sent > 0 ? ' • أرسل ' + ch.sent : '';
+
+        var safeSlug = ch.slug.replace(/'/g, "\\'");
+        html += '<div class="' + cardCls + '">';
+        html += '<div class="channel-status ' + statusCls + '">' + statusText + '</div>';
+        html += '<div style="flex:1;min-width:0">';
+        html += '<div class="channel-name">' + escH(ch.slug) + '</div>';
+        html += '<div class="channel-meta">';
+        html += '<span class="meta-item"><i class="fas fa-comment"></i>' + msgCount + ' رسالة</span>';
+        html += '<span class="meta-item"><i class="fas fa-clock"></i>' + (ch.interval || 5) + 'ث</span>';
+        html += '<span class="meta-item"><i class="fas fa-repeat"></i>' + repeatText + '</span>';
+        if (sentText) html += '<span class="meta-item" style="color:#7dffb0">' + sentText + '</span>';
+        html += '</div></div>';
+        // ✅ زر التشغيل/الإطفاء
+        var toggleCls = 'channel-toggle ' + (isEnabled ? 'on' : 'off');
+        html += '<div class="' + toggleCls + '" onclick="toggleChannel(\'' + safeSlug + '\')" title="' + (isEnabled ? 'إطفاء' : 'تشغيل') + '"></div>';
+        html += '<div class="channel-actions">';
+        html += '<button class="btn btn-fire" onclick="openChannelSettings(\'' + safeSlug + '\')" title="إعدادات القناة"><i class="fas fa-gear"></i></button>';
+        html += '<button class="btn btn-ghost" onclick="mRemoveChannel(\'' + safeSlug + '\')" title="حذف"><i class="fas fa-trash"></i></button>';
+        html += '</div>';
+        html += '</div>';
     }
     box.innerHTML = html;
 }
 
-// حفظ الإعدادات (يُستدعى عند الضغط على "حفظ والعودة")
+// ✅ تشغيل/إطفاء قناة محددة
+function toggleChannel(slug) {
+    if (activeModalBotId === null) return;
+    var b = findBot(activeModalBotId);
+    if (!b) return;
+    var ch = findChannel(b, slug);
+    if (!ch) return;
+    ch.enabled = !ch.enabled;
+    // إذا تم إطفاء القناة أثناء الإرسال، أوقف الإرسال لها فقط
+    if (!ch.enabled && b.isSending) {
+        ch.status = 'idle';
+        ch.error = '';
+        // ملاحظة: حلقة الإرسال ستكتشف هذا وتتوقف تلقائياً
+    }
+    persist();
+    renderChannelsList(b);
+    renderBotList();
+    toast(ch.enabled ? 'تم تشغيل القناة: ' + slug : 'تم إطفاء القناة: ' + slug, 'i');
+}
+
+// حفظ إعدادات البوت (فقط التبديلات على مستوى البوت)
 function saveSettings() {
     if (activeModalBotId === null) return;
     var b = findBot(activeModalBotId);
     if (!b) return;
-
-    b.messages = $('mMessages').value;
-    b.interval = Math.max(1, parseInt($('mInterval').value) || 5);
-    var rv = parseInt($('mRepeat').value);
-    b.isInfinite = (rv === 0) || $('mRepeat').disabled;
-    b.repeat = b.isInfinite ? 0 : Math.max(1, rv || 1);
-
-    // التحقق
-    if (b.streamers.length === 0) {
-        toast('أضف ستريمر واحد على الأقل', 'e');
+    if (b.channels.length === 0) {
+        toast('أضف قناة واحدة على الأقل', 'e');
         return;
     }
-    if (!b.messages.trim()) {
-        toast('أدخل رسالة واحدة على الأقل', 'e');
-        return;
-    }
-
     persist();
     toast('تم حفظ الإعدادات', 's');
     closeSettings();
+    renderBotList();
+}
+
+// ═══════════════════════════════════════
+//  نافذة إعدادات قناة محددة
+// ═══════════════════════════════════════
+var activeChannelSlug = null;
+
+function openChannelSettings(slug) {
+    if (activeModalBotId === null) return;
+    var b = findBot(activeModalBotId);
+    if (!b) return;
+    var ch = findChannel(b, slug);
+    if (!ch) return;
+    activeChannelSlug = slug;
+    $('channelModalTitle').textContent = 'قناة: ' + slug;
+    $('cMessages').value = ch.messages || '';
+    $('cRepeat').value = ch.isInfinite ? 0 : (ch.repeat || 1);
+    $('cRepeat').disabled = ch.isInfinite; // ✅ ضبط حالة disabled
+    $('cInterval').value = ch.interval || 5;
+    setToggle('tgChannelInfinite', ch.isInfinite);
+    $('channelModal').classList.add('open');
+}
+
+function closeChannelSettings() {
+    $('channelModal').classList.remove('open');
+    activeChannelSlug = null;
+}
+
+function cToggleInfinite() {
+    if (activeModalBotId === null || !activeChannelSlug) return;
+    var b = findBot(activeModalBotId);
+    var ch = findChannel(b, activeChannelSlug);
+    if (!ch) return;
+    ch.isInfinite = !ch.isInfinite;
+    setToggle('tgChannelInfinite', ch.isInfinite);
+    $('cRepeat').disabled = ch.isInfinite;
+    if (ch.isInfinite) $('cRepeat').value = 0;
+    else if ($('cRepeat').value == 0) $('cRepeat').value = 1;
+    persist();
+}
+
+function saveChannelSettings() {
+    if (activeModalBotId === null || !activeChannelSlug) return;
+    var b = findBot(activeModalBotId);
+    var ch = findChannel(b, activeChannelSlug);
+    if (!ch) return;
+    ch.messages = $('cMessages').value;
+    ch.interval = Math.max(1, parseInt($('cInterval').value) || 5);
+    // ✅ الاعتماد على حالة الـ toggle بشكل أساسي
+    ch.isInfinite = $('tgChannelInfinite').classList.contains('on');
+    var rv = parseInt($('cRepeat').value) || 1;
+    ch.repeat = ch.isInfinite ? 0 : Math.max(1, rv);
+    persist();
+    toast('تم حفظ إعدادات القناة', 's');
+    closeChannelSettings();
+    renderChannelsList(b);
     renderBotList();
 }
 
@@ -1123,12 +1380,17 @@ async function startSelectedBots() {
         if (selectedBots[id]) {
             var b = findBot(parseInt(id));
             if (b && !b.isSending) {
-                if (b.streamers.length === 0) {
-                    toast('('+b.username+') لا يوجد ستريمر — تم التخطي', 'e');
+                // التحقق من وجود قنوات صالحة (لها رسائل)
+                var validChannels = 0;
+                for (var c = 0; c < b.channels.length; c++) {
+                    if (b.channels[c].messages && b.channels[c].messages.trim()) validChannels++;
+                }
+                if (b.channels.length === 0) {
+                    toast('('+b.username+') لا توجد قنوات — تم التخطي', 'e');
                     continue;
                 }
-                if (!b.messages || !b.messages.trim()) {
-                    toast('('+b.username+') لا توجد رسائل — تم التخطي', 'e');
+                if (validChannels === 0) {
+                    toast('('+b.username+') لا توجد رسائل في أي قناة — تم التخطي', 'e');
                     continue;
                 }
                 toStart.push(b);
@@ -1177,34 +1439,41 @@ function delay(ms, signal) {
 }
 
 async function startBotLoop(bot) {
-    var msgs = bot.messages.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
-    if (msgs.length === 0 || bot.streamers.length === 0) return;
-
-    var infinite = bot.isInfinite;
-    var repeatCount = infinite ? 999999 : Math.max(1, bot.repeat);
-    var interval = bot.interval;
+    // ✅ فلترة القنوات المفعّلة AND لها رسائل
+    var validChannels = bot.channels.filter(function(c){
+        return (c.enabled !== false) && c.messages && c.messages.trim();
+    });
+    if (validChannels.length === 0) return;
 
     bot.isSending = true;
     bot.sent = 0;
-    bot.channelStates = {};
-    for (var i = 0; i < bot.streamers.length; i++) {
-        bot.channelStates[bot.streamers[i]] = { sending:false, sent:0, done:false, failed:false, error:'', retries:0 };
+    // تصفير حالة كل قناة (المعطّلة تبقى idle)
+    for (var i = 0; i < bot.channels.length; i++) {
+        if (bot.channels[i].enabled !== false) {
+            bot.channels[i].status = 'idle';
+        }
+        bot.channels[i].sent = 0;
+        bot.channels[i].error = '';
+        bot.channels[i].retries = 0;
     }
     abortControllers[bot.id] = new AbortController();
     renderBotList();
+    if (activeModalBotId === bot.id) renderChannelsList(bot);
 
-    // تشغيل حلقة لكل قناة
-    if (bot.parallel === false && bot.streamers.length > 1) {
+    // تشغيل حلقة لكل قناة صالحة
+    if (bot.parallel === false && validChannels.length > 1) {
         // تسلسلي
-        for (var s = 0; s < bot.streamers.length; s++) {
+        for (var s = 0; s < validChannels.length; s++) {
             if (!bot.isSending) break;
-            try { await runChannelLoop(bot, bot.streamers[s], msgs, interval, infinite, repeatCount); } catch(e) {}
+            // ✅ تحقق من التفعيل قبل كل قناة
+            if (validChannels[s].enabled === false) continue;
+            try { await runChannelLoop(bot, validChannels[s]); } catch(e) {}
         }
     } else {
         // متوازي
         var loops = [];
-        for (var j = 0; j < bot.streamers.length; j++) {
-            loops.push(runChannelLoop(bot, bot.streamers[j], msgs, interval, infinite, repeatCount));
+        for (var j = 0; j < validChannels.length; j++) {
+            loops.push(runChannelLoop(bot, validChannels[j]));
         }
         await Promise.allSettled(loops);
     }
@@ -1212,64 +1481,105 @@ async function startBotLoop(bot) {
     bot.isSending = false;
     delete abortControllers[bot.id];
     renderBotList();
+    if (activeModalBotId === bot.id) renderChannelsList(bot);
 }
 
-async function runChannelLoop(bot, slug, msgs, interval, infinite, repeatCount) {
-    var state = bot.channelStates[slug];
-    if (!state) return;
-    state.sending = true;
+async function runChannelLoop(bot, ch) {
+    var slug = ch.slug;
+    // ✅ إذا كانت القناة معطّلة، لا تبدأ الإرسال
+    if (ch.enabled === false) {
+        ch.status = 'idle';
+        return;
+    }
+    var msgs = ch.messages.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
+    var infinite = ch.isInfinite;
+    var repeatCount = infinite ? 999999 : Math.max(1, ch.repeat || 1);
+    var interval = ch.interval || 5;
 
     // حلقة خارجية للتعافي
     while (bot.isSending) {
+        // ✅ تحقق من التفعيل في كل دورة
+        if (ch.enabled === false) {
+            ch.status = 'idle';
+            ch.error = '';
+            if (activeModalBotId === bot.id) renderChannelsList(bot);
+            return;
+        }
         try {
-            await runChannelOnce(bot, slug, msgs, interval, infinite, repeatCount, state);
+            await runChannelOnce(bot, ch, msgs, interval, infinite, repeatCount);
             break;
         } catch(e) {
             if (!bot.isSending) break;
+            // ✅ تحقق من التفعيل بعد الخطأ
+            if (ch.enabled === false) {
+                ch.status = 'idle';
+                if (activeModalBotId === bot.id) renderChannelsList(bot);
+                return;
+            }
             if (!infinite) {
                 var msg = e.message;
                 if (e instanceof TypeError || msg.indexOf('Failed to fetch')>=0 || msg==='timeout') msg='خطأ اتصال';
-                state.failed = true;
-                state.error = msg;
+                ch.status = 'off';
+                ch.error = msg;
                 toast('('+bot.username+' → '+slug+') '+msg, 'e');
+                if (activeModalBotId === bot.id) renderChannelsList(bot);
                 break;
             }
-            state.retries++;
+            ch.retries++;
             var emsg = e.message;
             if (e instanceof TypeError || emsg.indexOf('Failed to fetch')>=0 || emsg==='timeout') emsg='خطأ اتصال';
-            state.error = 'إعادة #'+state.retries+': '+emsg;
+            ch.status = 'warning';
+            ch.error = 'إعادة #'+ch.retries+': '+emsg;
+            if (activeModalBotId === bot.id) renderChannelsList(bot);
             var waitMs = NetworkGuard.isOnline ? 5000 : 3000;
             try { await delay(waitMs, abortControllers[bot.id] ? abortControllers[bot.id].signal : undefined); }
             catch(aborted) { bot.isSending = false; break; }
         }
     }
 
-    state.sending = false;
-    if (!state.failed && !bot.isSending) state.done = true;
-    if (activeModalBotId === bot.id) renderStreamerChips(bot);
+    if (!bot.isSending && ch.status !== 'off' && ch.enabled !== false) ch.status = 'on';
+    if (activeModalBotId === bot.id) renderChannelsList(bot);
 }
 
-async function runChannelOnce(bot, slug, msgs, interval, infinite, repeatCount, state) {
+async function runChannelOnce(bot, ch, msgs, interval, infinite, repeatCount) {
+    var slug = ch.slug;
     var cid = null;
     var fa = 0;
+    // ✅ تحقق من التفعيل قبل البدء
+    if (ch.enabled === false) {
+        ch.status = 'idle';
+        return;
+    }
+    ch.status = 'connecting';
+    if (activeModalBotId === bot.id) renderChannelsList(bot);
     // جلب chatroom_id
     while (!cid && bot.isSending) {
+        // ✅ تحقق من التفعيل أثناء جلب chatroom_id
+        if (ch.enabled === false) {
+            ch.status = 'idle';
+            if (activeModalBotId === bot.id) renderChannelsList(bot);
+            return;
+        }
         if (!NetworkGuard.isOnline && infinite) {
-            state.error = 'بانتظار عودة الإنترنت...';
+            ch.status = 'warning';
+            ch.error = 'بانتظار عودة الإنترنت...';
+            if (activeModalBotId === bot.id) renderChannelsList(bot);
             try { await delay(3000, abortControllers[bot.id] ? abortControllers[bot.id].signal : undefined); }
             catch(aborted) { return; }
             continue;
         }
         try {
-            var ch = await fetchChannel(slug, bot);
-            cid = extractChatroomId(ch);
+            var chData = await fetchChannel(slug, bot);
+            cid = extractChatroomId(chData);
             if (!cid) cid = await fetchChatroomId(slug, bot);
         } catch(e) {
             fa++;
             if (!infinite && fa >= 2) throw e;
             if (infinite) {
                 if (fa === 1) { try { await refreshXsrf(); } catch(refE) {} }
-                state.error = NetworkGuard.isOnline ? ('إعادة جلب ('+fa+')') : 'بانتظار الإنترنت...';
+                ch.status = 'warning';
+                ch.error = NetworkGuard.isOnline ? ('إعادة جلب ('+fa+')') : 'بانتظار الإنترنت...';
+                if (activeModalBotId === bot.id) renderChannelsList(bot);
                 var wait = NetworkGuard.isOnline ? Math.min(5000 + fa * 2000, 30000) : 5000;
                 try { await delay(wait, abortControllers[bot.id] ? abortControllers[bot.id].signal : undefined); }
                 catch(aborted) { return; }
@@ -1277,22 +1587,45 @@ async function runChannelOnce(bot, slug, msgs, interval, infinite, repeatCount, 
         }
     }
     if (!cid) return;
-    state.error = '';
+    ch.status = 'on';
+    ch.error = '';
+    if (activeModalBotId === bot.id) renderChannelsList(bot);
 
     var roundNum = 0;
     while (bot.isSending) {
+        // ✅ تحقق من التفعيل في كل دورة إرسال
+        if (ch.enabled === false) {
+            ch.status = 'idle';
+            if (activeModalBotId === bot.id) renderChannelsList(bot);
+            return;
+        }
         if (!infinite && roundNum >= repeatCount) break;
         for (var i = 0; i < msgs.length; i++) {
             if (!bot.isSending) break;
+            // ✅ تحقق من التفعيل قبل كل رسالة
+            if (ch.enabled === false) {
+                ch.status = 'idle';
+                if (activeModalBotId === bot.id) renderChannelsList(bot);
+                return;
+            }
 
             // انتظار عودة الإنترنت
             if (!NetworkGuard.isOnline && infinite) {
-                state.error = 'بانتظار عودة الإنترنت...';
+                ch.status = 'warning';
+                ch.error = 'بانتظار عودة الإنترنت...';
+                if (activeModalBotId === bot.id) renderChannelsList(bot);
                 while (!NetworkGuard.isOnline && bot.isSending) {
+                    // ✅ تحقق من التفعيل أثناء انتظار الإنترنت
+                    if (ch.enabled === false) {
+                        ch.status = 'idle';
+                        if (activeModalBotId === bot.id) renderChannelsList(bot);
+                        return;
+                    }
                     try { await delay(2000, abortControllers[bot.id] ? abortControllers[bot.id].signal : undefined); }
                     catch(aborted) { return; }
                 }
                 if (!bot.isSending) return;
+                ch.status = 'on';
             }
 
             var msgSent = false, failCount = 0, lastErr = null;
@@ -1302,11 +1635,18 @@ async function runChannelOnce(bot, slug, msgs, interval, infinite, repeatCount, 
                     var result = await sendMessage(cid, msgs[i], bot.token, bot.workingSendProxy);
                     if (result.proxyUsed >= 0) bot.workingSendProxy = result.proxyUsed;
                     bot.sent++;
-                    state.sent++;
+                    ch.sent++;
                     msgSent = true;
-                    state.error = '';
-                    state.failed = false;
-                    if (activeModalBotId === bot.id) renderStreamerChips(bot);
+                    ch.status = 'sending';
+                    ch.error = '';
+                    if (activeModalBotId === bot.id) renderChannelsList(bot);
+                    // العودة لحالة on بعد الإرسال
+                    setTimeout(function() {
+                        if (ch.status === 'sending' && bot.isSending) {
+                            ch.status = 'on';
+                            if (activeModalBotId === bot.id) renderChannelsList(bot);
+                        }
+                    }, 800);
                 } catch(e) {
                     failCount++;
                     lastErr = e;
@@ -1318,7 +1658,9 @@ async function runChannelOnce(bot, slug, msgs, interval, infinite, repeatCount, 
                     if (bot.isSending) {
                         var backoff;
                         if (isNetwork && !NetworkGuard.isOnline) {
-                            state.error = 'بانتظار عودة الإنترنت...';
+                            ch.status = 'warning';
+                            ch.error = 'بانتظار عودة الإنترنت...';
+                            if (activeModalBotId === bot.id) renderChannelsList(bot);
                             while (!NetworkGuard.isOnline && bot.isSending) {
                                 try { await delay(3000, abortControllers[bot.id] ? abortControllers[bot.id].signal : undefined); }
                                 catch(aborted) { return; }
@@ -1333,10 +1675,11 @@ async function runChannelOnce(bot, slug, msgs, interval, infinite, repeatCount, 
                         } else {
                             backoff = RETRY_DELAY + Math.min(failCount * 1000, 10000);
                         }
-                        state.error = isCritical ? (e.message+' ('+failCount+')') :
+                        ch.status = 'warning';
+                        ch.error = isCritical ? (e.message+' ('+failCount+')') :
                                       isNetwork ? ('إعادة اتصال ('+failCount+')') :
                                       ('إعادة ('+failCount+')');
-                        if (activeModalBotId === bot.id) renderStreamerChips(bot);
+                        if (activeModalBotId === bot.id) renderChannelsList(bot);
                         try { await delay(backoff, abortControllers[bot.id] ? abortControllers[bot.id].signal : undefined); }
                         catch(aborted) { return; }
                     }
@@ -1601,9 +1944,14 @@ function resumeRunningBots() {
                 if (r.sent) b.sent = r.sent;
                 // إعادة تشغيل البوت
                 setTimeout(function(bot) {
-                    if (bot.streamers.length > 0 && bot.messages.trim()) {
-                        startBotLoop(bot);
+                    // التحقق من وجود قناة صالحة
+                    var hasValid = false;
+                    for (var c = 0; c < bot.channels.length; c++) {
+                        if (bot.channels[c].messages && bot.channels[c].messages.trim()) {
+                            hasValid = true; break;
+                        }
                     }
+                    if (hasValid) startBotLoop(bot);
                 }, 100 + i * 200, b);
             }
         }
@@ -1677,7 +2025,10 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && document.activeElement.id === 'inToken' && !e.shiftKey) {
         e.preventDefault(); verifyAndAdd();
     }
-    if (e.key === 'Escape') closeSettings();
+    if (e.key === 'Escape') {
+        if ($('channelModal').classList.contains('open')) closeChannelSettings();
+        else if ($('settingsModal').classList.contains('open')) closeSettings();
+    }
 });
 
 init();
