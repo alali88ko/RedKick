@@ -317,17 +317,6 @@
         @keyframes pulseGlow{0%,100%{box-shadow:0 0 0 rgba(0,200,83,0)}50%{box-shadow:0 0 16px rgba(0,200,83,0.25)}}
         .keep-alive-badge i { color:#7dffb0; font-size:14px; flex-shrink:0; }
 
-        /* صندوق التلميح */
-        .hint-box {
-            display:flex; align-items:flex-start; gap:8px;
-            padding:10px 12px; margin-top:12px;
-            background:rgba(255,184,0,0.06);
-            border:1px solid rgba(255,184,0,0.2); border-radius:10px;
-            font-size:10px; color:#e0c478; line-height:1.6;
-        }
-        .hint-box i { color:var(--accent3); font-size:13px; flex-shrink:0; margin-top:1px; }
-        .hint-box b { color:#ffd966; }
-
         /* ═══ بطاقة القناة ═══ */
         .channels-list { display:flex; flex-direction:column; gap:6px; max-height:none; }
         .channel-card {
@@ -608,11 +597,6 @@
             <i class="fas fa-shield-heart"></i>
             <span>الإرسال محمي — يستمر في الخلفية ويُستأنف تلقائياً عند العودة</span>
         </div>
-
-        <div class="hint-box" id="hintBox">
-            <i class="fas fa-circle-info"></i>
-            <span><b>للاستمرارية القصوى:</b> ثبّت الموقع كتطبيق (Add to Home Screen) — يعمل كتطبيق مستقل ويبقى نشطاً عند التبديل بين التطبيقات.</span>
-        </div>
     </div>
 
 </div>
@@ -695,7 +679,7 @@ async function fetchXsrf() {
     xsrfToken = '';
     try {
         try { await proxiedFetch('/sanctum/csrf-cookie', {skipAuth:true, timeout:3000}); } catch(e){}
-        var pr = await proxiedFetch('/', {skipAuth:true, timeout:5000});
+        var pr = await proxiedFetch('/', {skipAuth:true, timeout:4000});
         if (pr.res.ok) {
             var html = await pr.res.text(); var m;
             m = html.match(/<meta[^>]*name=["']csrf-token["'][^>]*content=["']([^"']+)["']/i);
@@ -719,7 +703,7 @@ async function fetchChannel(slug, acc) {
     if (!acc) acc = { workingProxy:-1 };
 
     try {
-        var r1 = await proxiedFetch('/api/v2/channels/'+slug, {skipAuth:true, timeout:5000, preferredProxy:acc.workingProxy});
+        var r1 = await proxiedFetch('/api/v2/channels/'+slug, {skipAuth:true, timeout:4000, preferredProxy:acc.workingProxy});
         if (r1.res.ok) {
             acc.workingProxy = r1.proxyUsed;
             var data = await r1.res.json().catch(function(){return null;});
@@ -731,7 +715,7 @@ async function fetchChannel(slug, acc) {
     } catch(e) {}
 
     try {
-        var r2 = await proxiedFetch('/api/v1/channels/'+slug, {skipAuth:true, timeout:5000, preferredProxy:acc.workingProxy});
+        var r2 = await proxiedFetch('/api/v1/channels/'+slug, {skipAuth:true, timeout:4000, preferredProxy:acc.workingProxy});
         if (r2.res.ok) {
             acc.workingProxy = r2.proxyUsed;
             var data2 = await r2.res.json().catch(function(){return null;});
@@ -763,7 +747,7 @@ function extractChatroomId(ch) {
 async function fetchChatroomId(slug, acc) {
     slug = slug.trim().toLowerCase();
     try {
-        var r1 = await proxiedFetch('/api/v2/channels/'+slug+'/chatroom', {skipAuth:true, timeout:5000, preferredProxy:acc.workingProxy});
+        var r1 = await proxiedFetch('/api/v2/channels/'+slug+'/chatroom', {skipAuth:true, timeout:4000, preferredProxy:acc.workingProxy});
         if (r1.res.ok) {
             acc.workingProxy=r1.proxyUsed;
             var d = await r1.res.json().catch(function(){return null;});
@@ -791,7 +775,7 @@ async function sendMessage(chatroomId, content, token, preferredProxy) {
 
     try {
         var r2 = await proxiedFetch('/api/v2/messages/send/'+chatroomId, {
-            method:'POST', token:token, timeout:10000, preferredProxy:proxyPref,
+            method:'POST', token:token, timeout:7000, preferredProxy:proxyPref,
             body: {content:content, type:'message'}
         });
         if (r2.res.ok) { return { success:true, proxyUsed:r2.proxyUsed }; }
@@ -799,7 +783,7 @@ async function sendMessage(chatroomId, content, token, preferredProxy) {
             await refreshXsrf();
             try {
                 var r2b = await proxiedFetch('/api/v2/messages/send/'+chatroomId, {
-                    method:'POST', token:token, timeout:10000, preferredProxy:r2.proxyUsed,
+                    method:'POST', token:token, timeout:7000, preferredProxy:r2.proxyUsed,
                     body: {content:content, type:'message'}
                 });
                 if (r2b.res.ok) { return { success:true, proxyUsed:r2b.proxyUsed }; }
@@ -816,7 +800,7 @@ async function sendMessage(chatroomId, content, token, preferredProxy) {
 
     try {
         var r1 = await proxiedFetch('/api/v1/chat-messages', {
-            method:'POST', token:token, timeout:10000, preferredProxy:proxyPref,
+            method:'POST', token:token, timeout:7000, preferredProxy:proxyPref,
             body: {content:content, chatroom_id:parseInt(chatroomId)}
         });
         if (r1.res.ok) { return { success:true, proxyUsed:r1.proxyUsed }; }
@@ -824,7 +808,7 @@ async function sendMessage(chatroomId, content, token, preferredProxy) {
             await refreshXsrf();
             try {
                 var r1b = await proxiedFetch('/api/v1/chat-messages', {
-                    method:'POST', token:token, timeout:10000, preferredProxy:r1.proxyUsed,
+                    method:'POST', token:token, timeout:7000, preferredProxy:r1.proxyUsed,
                     body: {content:content, chatroom_id:parseInt(chatroomId)}
                 });
                 if (r1b.res.ok) { return { success:true, proxyUsed:r1b.proxyUsed }; }
@@ -1512,8 +1496,30 @@ function stopAllBots() {
 // ═══════════════════════════════════════
 //  حلقة إرسال واحدة لبوت محدد
 // ═══════════════════════════════════════
-var MAX_SEND_RETRIES = 3;
-var RETRY_DELAY = 2000;
+var MAX_SEND_RETRIES = 5;    // ✅ زيادة المحاولات لتفادي التوقف
+var RETRY_DELAY = 1500;      // ✅ تقليل التأخير بين المحاولات
+
+// ═══════════════════════════════════════
+//  دوال مساعدة
+// ═══════════════════════════════════════
+
+// ✅ توليد عدد صحيح عشوائي موزّع بالتساوي ضمن [min, max]
+// يستخدم crypto.getRandomValues لتوزيع أكثر عدلاً (إذا متاحاً)
+function randomInt(min, max) {
+    min = Math.max(1, Math.floor(min));
+    max = Math.max(min, Math.floor(max));
+    var range = max - min + 1;
+    // محاولة استخدام crypto للتوزيع العادل
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        try {
+            var arr = new Uint32Array(1);
+            crypto.getRandomValues(arr);
+            return min + (arr[0] % range);
+        } catch(e) {}
+    }
+    // fallback: Math.random
+    return min + Math.floor(Math.random() * range);
+}
 
 function delay(ms, signal) {
     return new Promise(function(resolve, reject) {
@@ -1734,7 +1740,7 @@ async function runChannelOnce(bot, ch, getMsgs, interval, infinite, repeatCount)
                 return;
             }
 
-            // انتظار عودة الإنترنت
+            // انتظار عودة الإنترنت (فحص سريع كل ثانية)
             if (!NetworkGuard.isOnline && infinite) {
                 ch.status = 'warning';
                 ch.error = 'بانتظار عودة الإنترنت...';
@@ -1746,7 +1752,7 @@ async function runChannelOnce(bot, ch, getMsgs, interval, infinite, repeatCount)
                         if (activeModalBotId === bot.id) renderChannelsList(bot);
                         return;
                     }
-                    try { await delay(2000, abortControllers[bot.id] ? abortControllers[bot.id].signal : undefined); }
+                    try { await delay(1000, abortControllers[bot.id] ? abortControllers[bot.id].signal : undefined); }
                     catch(aborted) { return; }
                 }
                 if (!bot.isSending) return;
@@ -1762,16 +1768,10 @@ async function runChannelOnce(bot, ch, getMsgs, interval, infinite, repeatCount)
                     bot.sent++;
                     ch.sent++;
                     msgSent = true;
-                    ch.status = 'sending';
+                    // ✅ إبقاء الحالة على on مباشرة (بدون setTimeout)
+                    ch.status = 'on';
                     ch.error = '';
                     if (activeModalBotId === bot.id) renderChannelsList(bot);
-                    // العودة لحالة on بعد الإرسال
-                    setTimeout(function() {
-                        if (ch.status === 'sending' && bot.isSending) {
-                            ch.status = 'on';
-                            if (activeModalBotId === bot.id) renderChannelsList(bot);
-                        }
-                    }, 800);
                 } catch(e) {
                     failCount++;
                     lastErr = e;
@@ -1787,18 +1787,18 @@ async function runChannelOnce(bot, ch, getMsgs, interval, infinite, repeatCount)
                             ch.error = 'بانتظار عودة الإنترنت...';
                             if (activeModalBotId === bot.id) renderChannelsList(bot);
                             while (!NetworkGuard.isOnline && bot.isSending) {
-                                try { await delay(3000, abortControllers[bot.id] ? abortControllers[bot.id].signal : undefined); }
+                                try { await delay(1000, abortControllers[bot.id] ? abortControllers[bot.id].signal : undefined); }
                                 catch(aborted) { return; }
                             }
                             if (!bot.isSending) return;
                             continue;
                         } else if (isCritical) {
-                            backoff = Math.min(30000 + (failCount * 5000), 120000);
+                            backoff = Math.min(15000 + (failCount * 3000), 60000);
                             if (failCount === 1) toast('('+bot.username+' → '+slug+') '+e.message+' — إعادة خلال '+Math.round(backoff/1000)+'ث', 'i');
                         } else if (isNetwork) {
-                            backoff = 3000 + Math.min(failCount * 2000, 15000);
+                            backoff = 2000 + Math.min(failCount * 1000, 8000);
                         } else {
-                            backoff = RETRY_DELAY + Math.min(failCount * 1000, 10000);
+                            backoff = RETRY_DELAY + Math.min(failCount * 500, 5000);
                         }
                         ch.status = 'warning';
                         ch.error = isCritical ? (e.message+' ('+failCount+')') :
@@ -1810,17 +1810,15 @@ async function runChannelOnce(bot, ch, getMsgs, interval, infinite, repeatCount)
                     }
                 }
             }
-            // ✅ الفاصل الزمني — عشوائي أو ثابت (أعداد صحيحة فقط)
+            // ✅ الفاصل الزمني — عشوائي موزّع بالتساوي أو ثابت
             if (bot.isSending) {
                 var isLastMsg = (i === msgs.length - 1);
                 var isLastRound = (!infinite && roundNum >= repeatCount - 1);
                 if (!(isLastMsg && isLastRound)) {
                     var waitSec;
                     if (ch.randomDelay) {
-                        // ✅ تأخير عشوائي ذكي: عدد صحيح ضمن [min, max] فقط
-                        var dMin = Math.max(1, Math.floor(ch.delayMin || 5));
-                        var dMax = Math.max(dMin, Math.floor(ch.delayMax || 10));
-                        waitSec = dMin + Math.floor(Math.random() * (dMax - dMin + 1));
+                        // ✅ تأخير عشوائي ذكي وموزّع بالتساوي
+                        waitSec = randomInt(ch.delayMin || 5, ch.delayMax || 10);
                     } else {
                         waitSec = interval;
                     }
@@ -1845,7 +1843,7 @@ var NetworkGuard = {
             window.addEventListener('online', function() { setTimeout(function(){ self.check(); }, 500); });
             window.addEventListener('offline', function() { self.onLost(); });
         } catch(e) {}
-        setInterval(function() { self.check(); }, 5000);
+        setInterval(function() { self.check(); }, 3000); // ✅ فحص أسرع كل 3 ثوانٍ
         this.isOnline = navigator.onLine !== false;
     },
     check: async function() {
@@ -1872,7 +1870,7 @@ var NetworkGuard = {
         return new Promise(function(resolve) {
             try {
                 var ctrl = new AbortController();
-                var t = setTimeout(function(){ ctrl.abort(); resolve(false); }, 4000);
+                var t = setTimeout(function(){ ctrl.abort(); resolve(false); }, 2500); // ✅ timeout أسرع
                 fetch('https://kick.com/api/v1/ping', {
                     method:'GET', signal:ctrl.signal, cache:'no-store', mode:'no-cors'
                 }).then(function(){ clearTimeout(t); resolve(true); })
