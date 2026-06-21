@@ -753,6 +753,9 @@ async function fetchChannel(slug, acc) {
     if (!slug) throw new Error('اسم القناة فارغ');
     if (!acc) acc = { workingProxy:-1 };
 
+    var lastErr = null;
+
+    // المحاولة 1: v2 channels
     try {
         var r1 = await proxiedFetch('/api/v2/channels/'+slug, {skipAuth:true, timeout:6000, preferredProxy:acc.workingProxy});
         if (r1.res.ok) {
@@ -762,9 +765,16 @@ async function fetchChannel(slug, acc) {
                 var dd = data.data || data;
                 if (dd.id || dd.chatroom_id || dd.chatroom || dd.slug) return data;
             }
+        } else if (r1.res.status === 404) {
+            // القناة غير موجودة فعلاً
+            throw new Error('NOT_FOUND');
         }
-    } catch(e) {}
+    } catch(e) {
+        if (e.message === 'NOT_FOUND') throw e;
+        lastErr = e;
+    }
 
+    // المحاولة 2: v1 channels
     try {
         var r2 = await proxiedFetch('/api/v1/channels/'+slug, {skipAuth:true, timeout:6000, preferredProxy:acc.workingProxy});
         if (r2.res.ok) {
@@ -774,10 +784,44 @@ async function fetchChannel(slug, acc) {
                 var dd2 = data2.data || data2;
                 if (dd2.id || dd2.chatroom_id || dd2.chatroom || dd2.slug) return data2;
             }
+        } else if (r2.res.status === 404) {
+            throw new Error('NOT_FOUND');
         }
-    } catch(e) {}
+    } catch(e) {
+        if (e.message === 'NOT_FOUND') throw e;
+        lastErr = e;
+    }
 
-    throw new Error('القناة "'+slug+'" غير موجودة');
+    // المحاولة 3: search endpoint (يجد القنوات بأسماء مشابهة)
+    try {
+        var r3 = await proxiedFetch('/api/search?q='+encodeURIComponent(slug), {skipAuth:true, timeout:6000, preferredProxy:acc.workingProxy});
+        if (r3.res.ok) {
+            acc.workingProxy = r3.proxyUsed;
+            var searchData = await r3.res.json().catch(function(){return null;});
+            if (searchData) {
+                var items = searchData.data || searchData;
+                if (Array.isArray(items)) {
+                    for (var i = 0; i < items.length; i++) {
+                        var item = items[i];
+                        if (item.slug === slug || item.username === slug) return item;
+                        // تطابق جزئي (القناة تبدأ بنفس الاسم)
+                        if (item.slug && item.slug.indexOf(slug) === 0) return item;
+                    }
+                    // إذا وجدنا نتائج، خذ الأولى
+                    if (items.length > 0 && items[0].slug) return items[0];
+                }
+            }
+        }
+    } catch(e) {
+        lastErr = e;
+    }
+
+    // ✅ تمييز نوع الخطأ
+    if (lastErr) {
+        // فشل شبكة/بروكسي — القناة قد تكون موجودة لكن لم نتمكن من الوصول
+        throw new Error('CONNECTION_ERROR');
+    }
+    throw new Error('NOT_FOUND');
 }
 
 function extractChatroomId(ch) {
@@ -1294,18 +1338,34 @@ async function mAddChannel() {
     if (!slug) { toast('أدخل اسم القناة', 'e'); return; }
     if (findChannel(b, slug)) { toast('القناة مضافة مسبقاً', 'i'); return; }
 
-    // ✅ التحقق من القناة فوراً وحفظ chatroom_id
+    // ✅ التحقق من القناة فوراً مع إعادة محاولة (3 مرات)
     var addBtn = inp.nextElementSibling;
     var oldHtml = addBtn.innerHTML;
     addBtn.disabled = true;
     addBtn.innerHTML = '<span class="spinner-sm"></span>';
 
-    try {
-        var chData = await fetchChannel(slug, b);
-        var cid = extractChatroomId(chData);
-        if (!cid) cid = await fetchChatroomId(slug, b);
-        if (!cid) throw new Error('لم يتم العثور على معرف الدردشة');
+    var cid = null;
+    var lastErrType = null;
 
+    // ✅ 3 محاولات للتحقق (يفصل بينها 1.5 ثانية)
+    for (var attempt = 1; attempt <= 3 && !cid; attempt++) {
+        try {
+            var chData = await fetchChannel(slug, b);
+            cid = extractChatroomId(chData);
+            if (!cid) cid = await fetchChatroomId(slug, b);
+        } catch(e) {
+            lastErrType = e.message;
+            if (attempt < 3) {
+                // إعادة محاولة بعد 1.5 ثانية
+                await new Promise(function(r){ setTimeout(r, 1500); });
+            }
+        }
+    }
+
+    addBtn.disabled = false;
+    addBtn.innerHTML = oldHtml;
+
+    if (cid) {
         // ✅ القناة موجودة — أضفها مع chatroom_id محفوظ
         var channel = makeChannel(slug);
         channel.chatroomId = cid;
@@ -1316,13 +1376,15 @@ async function mAddChannel() {
         renderChannelsList(b);
         persist();
         toast('تمت إضافة القناة: ' + slug, 's');
-    } catch(e) {
-        var msg = e.message;
-        if (e instanceof TypeError || msg.indexOf('Failed to fetch')>=0 || msg==='timeout') msg='خطأ اتصال';
-        toast('القناة "' + slug + '" غير موجودة أو خطأ في الاتصال', 'e');
-    } finally {
-        addBtn.disabled = false;
-        addBtn.innerHTML = oldHtml;
+    } else {
+        // ✅ تمييز نوع الخطأ
+        if (lastErrType === 'CONNECTION_ERROR') {
+            toast('خطأ في الاتصال — تحقق من الإنترنت وأعد المحاولة', 'e');
+        } else if (lastErrType === 'NOT_FOUND') {
+            toast('القناة "' + slug + '" غير موجودة', 'e');
+        } else {
+            toast('تعذّر التحقق من القناة — أعد المحاولة', 'e');
+        }
     }
 }
 
