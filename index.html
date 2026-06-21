@@ -916,6 +916,8 @@ function makeChannel(slug) {
         delayMin: 3,            // ✅ الحد الأدنى للتأخير العشوائي
         delayMax: 7,            // ✅ الحد الأقصى للتأخير العشوائي
         randomMessages: false,  // ✅ الرسائل العشوائية
+        chatroomId: null,       // ✅ معرّف الدردشة (يُحفظ عند الإضافة)
+        verified: false,        // ✅ تم التحقق من القناة
         // حالة التشغيل (لا تُحفظ)
         status: 'idle',         // idle | connecting | on | off | sending | failed
         sent: 0,
@@ -958,7 +960,9 @@ function persist() {
                             randomDelay: !!ch.randomDelay,
                             delayMin: ch.delayMin || 3,
                             delayMax: ch.delayMax || 7,
-                            randomMessages: !!ch.randomMessages
+                            randomMessages: !!ch.randomMessages,
+                            chatroomId: ch.chatroomId || null,
+                            verified: !!ch.verified
                         };
                     }),
                     autoRecover: b.autoRecover,
@@ -999,6 +1003,8 @@ function loadFromStorage() {
                         delayMin: ch.delayMin || 3,
                         delayMax: ch.delayMax || 7,
                         randomMessages: !!ch.randomMessages,
+                        chatroomId: ch.chatroomId || null,
+                        verified: !!ch.verified,
                         status: 'idle', sent: 0, error: '', retries: 0
                     });
                 }
@@ -1015,6 +1021,8 @@ function loadFromStorage() {
                         randomDelay: false,
                         delayMin: 3, delayMax: 7,
                         randomMessages: false,
+                        chatroomId: null,
+                        verified: false,
                         status: 'idle', sent: 0, error: '', retries: 0
                     });
                 }
@@ -1272,7 +1280,7 @@ function mToggle(toggleId, fieldName) {
     persist();
 }
 
-function mAddChannel() {
+async function mAddChannel() {
     if (activeModalBotId === null) return;
     var b = findBot(activeModalBotId);
     if (!b) return;
@@ -1285,11 +1293,37 @@ function mAddChannel() {
     var slug = inp.value.trim().toLowerCase().replace(/^\/+|\/+$/g, '').replace(/\s+/g, '');
     if (!slug) { toast('أدخل اسم القناة', 'e'); return; }
     if (findChannel(b, slug)) { toast('القناة مضافة مسبقاً', 'i'); return; }
-    b.channels.push(makeChannel(slug));
-    inp.value = '';
-    inp.focus();
-    renderChannelsList(b);
-    persist();
+
+    // ✅ التحقق من القناة فوراً وحفظ chatroom_id
+    var addBtn = inp.nextElementSibling;
+    var oldHtml = addBtn.innerHTML;
+    addBtn.disabled = true;
+    addBtn.innerHTML = '<span class="spinner-sm"></span>';
+
+    try {
+        var chData = await fetchChannel(slug, b);
+        var cid = extractChatroomId(chData);
+        if (!cid) cid = await fetchChatroomId(slug, b);
+        if (!cid) throw new Error('لم يتم العثور على معرف الدردشة');
+
+        // ✅ القناة موجودة — أضفها مع chatroom_id محفوظ
+        var channel = makeChannel(slug);
+        channel.chatroomId = cid;
+        channel.verified = true;
+        b.channels.push(channel);
+        inp.value = '';
+        inp.focus();
+        renderChannelsList(b);
+        persist();
+        toast('تمت إضافة القناة: ' + slug, 's');
+    } catch(e) {
+        var msg = e.message;
+        if (e instanceof TypeError || msg.indexOf('Failed to fetch')>=0 || msg==='timeout') msg='خطأ اتصال';
+        toast('القناة "' + slug + '" غير موجودة أو خطأ في الاتصال', 'e');
+    } finally {
+        addBtn.disabled = false;
+        addBtn.innerHTML = oldHtml;
+    }
 }
 
 function mRemoveChannel(slug) {
@@ -1688,46 +1722,59 @@ async function runChannelOnce(bot, ch, msgs, interval, infinite, repeatCount) {
         ch.status = 'idle';
         return;
     }
-    ch.status = 'connecting';
-    requestUIUpdate();
-    // جلب chatroom_id
-    while (!cid && bot.isSending) {
-        // ✅ تحقق من التفعيل أثناء جلب chatroom_id
-        if (ch.enabled === false) {
-            ch.status = 'idle';
-            requestUIUpdate();
-            return;
-        }
-        if (!NetworkGuard.isOnline && infinite) {
-            ch.status = 'warning';
-            ch.error = 'بانتظار عودة الإنترنت...';
-            requestUIUpdate();
-            try { await delay(2000, abortControllers[bot.id] ? abortControllers[bot.id].signal : undefined); }
-            catch(aborted) { return; }
-            continue;
-        }
-        try {
-            var chData = await fetchChannel(slug, bot);
-            cid = extractChatroomId(chData);
-            if (!cid) cid = await fetchChatroomId(slug, bot);
-        } catch(e) {
-            fa++;
-            if (!infinite && fa >= 2) throw e;
-            if (infinite) {
-                if (fa === 1) { try { await refreshXsrf(); } catch(refE) {} }
-                ch.status = 'warning';
-                ch.error = NetworkGuard.isOnline ? ('إعادة جلب ('+fa+')') : 'بانتظار الإنترنت...';
+    // ✅ إذا كان chatroom_id محفوظاً (تم التحقق عند الإضافة)، استخدمه مباشرة
+    if (ch.chatroomId && ch.verified) {
+        cid = ch.chatroomId;
+        ch.status = 'on';
+        ch.error = '';
+        requestUIUpdate();
+    } else {
+        // ✅ لم يتم التحقق بعد — جلب chatroom_id (للقنوات القديمة)
+        ch.status = 'connecting';
+        requestUIUpdate();
+        while (!cid && bot.isSending) {
+            if (ch.enabled === false) {
+                ch.status = 'idle';
                 requestUIUpdate();
-                var wait = NetworkGuard.isOnline ? Math.min(3000 + fa * 1500, 20000) : 3000;
-                try { await delay(wait, abortControllers[bot.id] ? abortControllers[bot.id].signal : undefined); }
+                return;
+            }
+            if (!NetworkGuard.isOnline && infinite) {
+                ch.status = 'warning';
+                ch.error = 'بانتظار عودة الإنترنت...';
+                requestUIUpdate();
+                try { await delay(2000, abortControllers[bot.id] ? abortControllers[bot.id].signal : undefined); }
                 catch(aborted) { return; }
+                continue;
+            }
+            try {
+                var chData = await fetchChannel(slug, bot);
+                cid = extractChatroomId(chData);
+                if (!cid) cid = await fetchChatroomId(slug, bot);
+                // ✅ حفظ chatroom_id للاستخدام المستقبلي
+                if (cid) {
+                    ch.chatroomId = cid;
+                    ch.verified = true;
+                    persist();
+                }
+            } catch(e) {
+                fa++;
+                if (!infinite && fa >= 2) throw e;
+                if (infinite) {
+                    if (fa === 1) { try { await refreshXsrf(); } catch(refE) {} }
+                    ch.status = 'warning';
+                    ch.error = NetworkGuard.isOnline ? ('إعادة جلب ('+fa+')') : 'بانتظار الإنترنت...';
+                    requestUIUpdate();
+                    var wait = NetworkGuard.isOnline ? Math.min(3000 + fa * 1500, 20000) : 3000;
+                    try { await delay(wait, abortControllers[bot.id] ? abortControllers[bot.id].signal : undefined); }
+                    catch(aborted) { return; }
+                }
             }
         }
+        if (!cid) return;
+        ch.status = 'on';
+        ch.error = '';
+        requestUIUpdate();
     }
-    if (!cid) return;
-    ch.status = 'on';
-    ch.error = '';
-    requestUIUpdate();
 
     // ✅ نظام البركة العشوائية الذكي للرسائل
     // يضمن: كل رسالة تُرسل مرة واحدة قبل التكرار + لا تكرار متتالٍ عبر الدورات
