@@ -1865,8 +1865,12 @@ async function startSelectedBots() {
         return;
     }
     toast('تشغيل ' + toStart.length + ' بوت', 's');
+    // ✅ تأخير بسيط بين كل بوت لتفادي اختناق الطلبات المتزامنة
     for (var i = 0; i < toStart.length; i++) {
         startBotLoop(toStart[i]);
+        if (i < toStart.length - 1) {
+            await new Promise(function(r){ setTimeout(r, 200); }); // 200ms بين كل بوت
+        }
     }
 }
 
@@ -2179,6 +2183,8 @@ async function runChannelOnce(bot, ch, eff, msgs, interval, infinite, repeatCoun
         // ✅ إرسال الرسالة الحالية
         var msgSent = false, failCount = 0, lastErr = null;
         while (!msgSent && bot.isSending) {
+            // ✅ في الوضع اللانهائي: لا حد أقصى للمحاولات — لا يتوقف أبداً
+            // في الوضع المحدود: MAX_SEND_RETRIES ثم تخطّي
             if (!infinite && failCount >= MAX_SEND_RETRIES) break;
             try {
                 var result = await sendMessage(cid, currentMsg, bot.token, bot.workingSendProxy);
@@ -2215,12 +2221,15 @@ async function runChannelOnce(bot, ch, eff, msgs, interval, infinite, repeatCoun
                         if (!bot.isSending) return;
                         continue;
                     } else if (isCritical) {
-                        backoff = Math.min(5000 + (failCount * 1500), 30000);
+                        // ✅ خطأ حرج: backoff قصير في الوضع اللانهائي
+                        backoff = infinite ? Math.min(3000 + (failCount * 1000), 15000) : Math.min(5000 + (failCount * 1500), 30000);
                         if (failCount === 1) toast('('+bot.username+' → '+slug+') '+e.message+' — إعادة خلال '+Math.round(backoff/1000)+'ث', 'i');
                     } else if (isNetwork) {
-                        backoff = 1000 + Math.min(failCount * 500, 4000);
+                        // ✅ خطأ شبكة: backoff قصير جداً — 500ms فقط
+                        backoff = infinite ? Math.min(500 + (failCount * 200), 3000) : Math.min(1000 + (failCount * 500), 4000);
                     } else {
-                        backoff = RETRY_DELAY + Math.min(failCount * 200, 2000);
+                        // ✅ خطأ عادي: backoff قصير
+                        backoff = infinite ? Math.min(800 + (failCount * 200), 2000) : Math.min(RETRY_DELAY + (failCount * 200), 2000);
                     }
                     ch.status = 'warning';
                     ch.error = isCritical ? (e.message+' ('+failCount+')') :
