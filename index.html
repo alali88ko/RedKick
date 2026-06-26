@@ -906,6 +906,50 @@ function detectMode() {
 var _bestProxy = -1; // البروكسي الأفضل (يُحدّث عند النجاح)
 var _proxyFailCount = {}; // عدّاد فشل كل بروكسي
 
+// ✅ مفتاح حفظ البروكسي الأفضل في localStorage (للبقاء بعد إعادة التحميل)
+var BEST_PROXY_KEY = 'redkick_best_proxy_v1';
+
+function loadBestProxy() {
+    try {
+        var v = parseInt(localStorage.getItem(BEST_PROXY_KEY));
+        if (!isNaN(v) && v >= 0 && v < PROXIES.length) _bestProxy = v;
+    } catch(e) {}
+}
+function saveBestProxy() {
+    try {
+        if (_bestProxy >= 0) localStorage.setItem(BEST_PROXY_KEY, String(_bestProxy));
+    } catch(e) {}
+}
+
+// ✅ تسخين البروكسيات عند بدء التشغيل: يجد بروكسي شغال سريعاً ويحدّث _bestProxy
+async function prewarmProxies() {
+    // جرّب البروكسي المحفوظ أولاً (إن وُجد)
+    var testSlug = 'kick'; // قناة معروفة موجودة دائماً
+    var candidates = [];
+    if (_bestProxy >= 0) candidates.push(_bestProxy);
+    for (var i = 0; i < PROXIES.length; i++) {
+        if (candidates.indexOf(i) === -1) candidates.push(i);
+    }
+    for (var pi = 0; pi < candidates.length; pi++) {
+        var p = candidates[pi];
+        try {
+            var res = await Promise.race([
+                fetch(PROXIES[p].build(KICK_BASE + '/api/v2/channels/' + testSlug), {method:'GET'}),
+                new Promise(function(_, reject){ setTimeout(function(){ reject(new Error('timeout')); }, 4000); })
+            ]);
+            if (res && res.ok) {
+                _bestProxy = p;
+                _proxyFailCount[p] = 0;
+                saveBestProxy();
+                return p;
+            }
+        } catch(e) {
+            _proxyFailCount[p] = (_proxyFailCount[p] || 0) + 1;
+        }
+    }
+    return -1;
+}
+
 function getProxyOrder(preferredProxy) {
     var order = [];
     // ✅ البروكسي المفضّل أولاً (إذا تم تمريره)
@@ -964,6 +1008,7 @@ async function proxiedFetch(kickPath, options) {
             // ✅ نجاح — سجّل البروكسي كأفضل
             _bestProxy = p;
             _proxyFailCount[p] = 0; // تصفير عدّاد الفشل
+            saveBestProxy(); // ✅ حفظ في localStorage للبقاء بعد إعادة التحميل
             return { res: res, proxyUsed: p };
         } catch(e) {
             // ✅ فشل — زِد عدّاد الفشل
@@ -1004,9 +1049,11 @@ async function fetchChannel(slug, acc) {
 
     var lastErr = null;
 
+    var foundButInvalid = false; // ✅ البروكسي ردّ 200 لكن البيانات غير صالحة
+
     // المحاولة 1: v2 channels
     try {
-        var r1 = await proxiedFetch('/api/v2/channels/'+slug, {skipAuth:true, timeout:6000, preferredProxy:acc.workingProxy});
+        var r1 = await proxiedFetch('/api/v2/channels/'+slug, {skipAuth:true, timeout:8000, preferredProxy:acc.workingProxy});
         if (r1.res.ok) {
             acc.workingProxy = r1.proxyUsed;
             var data = await r1.res.json().catch(function(){return null;});
@@ -1014,6 +1061,9 @@ async function fetchChannel(slug, acc) {
                 var dd = data.data || data;
                 if (dd.id || dd.chatroom_id || dd.chatroom || dd.slug) return data;
             }
+            // ✅ البروكسي ردّ 200 لكن بيانات غير صالحة — اعتبره فشلاً للبروكسي
+            foundButInvalid = true;
+            _proxyFailCount[r1.proxyUsed] = (_proxyFailCount[r1.proxyUsed] || 0) + 1;
         } else if (r1.res.status === 404) {
             // القناة غير موجودة فعلاً
             throw new Error('NOT_FOUND');
@@ -1025,7 +1075,7 @@ async function fetchChannel(slug, acc) {
 
     // المحاولة 2: v1 channels
     try {
-        var r2 = await proxiedFetch('/api/v1/channels/'+slug, {skipAuth:true, timeout:6000, preferredProxy:acc.workingProxy});
+        var r2 = await proxiedFetch('/api/v1/channels/'+slug, {skipAuth:true, timeout:8000, preferredProxy:acc.workingProxy});
         if (r2.res.ok) {
             acc.workingProxy = r2.proxyUsed;
             var data2 = await r2.res.json().catch(function(){return null;});
@@ -1033,6 +1083,8 @@ async function fetchChannel(slug, acc) {
                 var dd2 = data2.data || data2;
                 if (dd2.id || dd2.chatroom_id || dd2.chatroom || dd2.slug) return data2;
             }
+            foundButInvalid = true;
+            _proxyFailCount[r2.proxyUsed] = (_proxyFailCount[r2.proxyUsed] || 0) + 1;
         } else if (r2.res.status === 404) {
             throw new Error('NOT_FOUND');
         }
@@ -1043,7 +1095,7 @@ async function fetchChannel(slug, acc) {
 
     // المحاولة 3: search endpoint (يجد القنوات بأسماء مشابهة)
     try {
-        var r3 = await proxiedFetch('/api/search?q='+encodeURIComponent(slug), {skipAuth:true, timeout:6000, preferredProxy:acc.workingProxy});
+        var r3 = await proxiedFetch('/api/search?q='+encodeURIComponent(slug), {skipAuth:true, timeout:8000, preferredProxy:acc.workingProxy});
         if (r3.res.ok) {
             acc.workingProxy = r3.proxyUsed;
             var searchData = await r3.res.json().catch(function(){return null;});
@@ -1060,6 +1112,8 @@ async function fetchChannel(slug, acc) {
                     if (items.length > 0 && items[0].slug) return items[0];
                 }
             }
+            foundButInvalid = true;
+            _proxyFailCount[r3.proxyUsed] = (_proxyFailCount[r3.proxyUsed] || 0) + 1;
         }
     } catch(e) {
         lastErr = e;
@@ -1068,6 +1122,10 @@ async function fetchChannel(slug, acc) {
     // ✅ تمييز نوع الخطأ
     if (lastErr) {
         // فشل شبكة/بروكسي — القناة قد تكون موجودة لكن لم نتمكن من الوصول
+        throw new Error('CONNECTION_ERROR');
+    }
+    if (foundButInvalid) {
+        // ✅ البروكسي ردّ لكن بيانات غير صالحة — القناة ربما موجودة
         throw new Error('CONNECTION_ERROR');
     }
     throw new Error('NOT_FOUND');
@@ -1631,7 +1689,8 @@ function persist() {
                     }),
                     autoRecover: b.autoRecover,
                     parallel: b.parallel,
-                    selected: !!selectedBots[b.id]
+                    selected: !!selectedBots[b.id],
+                    workingProxy: b.workingProxy != null ? b.workingProxy : -1 // ✅ حفظ البروكسي الشغال
                 };
             })
         };
@@ -1698,7 +1757,9 @@ function loadFromStorage() {
                 autoRecover: true,
                 parallel: true,
                 isSending: false, sent: 0,
-                workingProxy: -1, workingSendProxy: -1
+                // ✅ استعادة البروكسي الشغال من الجلسة السابقة (إن وُجد)
+                workingProxy: (typeof b.workingProxy === 'number' && b.workingProxy >= 0) ? b.workingProxy : -1,
+                workingSendProxy: -1
             };
             if (b.selected) selectedBots[b.id] = true;
             accounts.push(bot);
@@ -1968,7 +2029,7 @@ async function mAddChannel() {
     if (!slug) { toast('أدخل اسم القناة', 'e'); return; }
     if (findChannel(b, slug)) { toast('القناة مضافة مسبقاً', 'i'); return; }
 
-    // ✅ التحقق من القناة فوراً مع إعادة محاولة (3 مرات)
+    // ✅ التحقق من القناة فوراً مع إعادة محاولة (5 مرات)
     var addBtn = inp.nextElementSibling;
     var oldHtml = addBtn.innerHTML;
     addBtn.disabled = true;
@@ -1977,17 +2038,27 @@ async function mAddChannel() {
     var cid = null;
     var lastErrType = null;
 
-    // ✅ 3 محاولات للتحقق (يفصل بينها 1.5 ثانية)
-    for (var attempt = 1; attempt <= 3 && !cid; attempt++) {
+    // ✅ 5 محاولات للتحقق (يفصل بينها 1 ثانية) — زيادة الموثوقية بعد إعادة التحميل
+    for (var attempt = 1; attempt <= 5 && !cid; attempt++) {
+        // ✅ في المحاولة الثانية فما بعد، صفّر _bestProxy لتجربة بروكسي جديد
+        if (attempt >= 2) {
+            _bestProxy = -1;
+            b.workingProxy = -1;
+            _proxyFailCount = {};
+        }
         try {
             var chData = await fetchChannel(slug, b);
             cid = extractChatroomId(chData);
             if (!cid) cid = await fetchChatroomId(slug, b);
+            // ✅ نجاح — احفظ workingProxy لهذا البوت
+            if (cid && b.workingProxy >= 0) {
+                persist();
+            }
         } catch(e) {
             lastErrType = e.message;
-            if (attempt < 3) {
-                // إعادة محاولة بعد 1.5 ثانية
-                await new Promise(function(r){ setTimeout(r, 1500); });
+            if (attempt < 5) {
+                // إعادة محاولة بعد 1 ثانية
+                await new Promise(function(r){ setTimeout(r, 1000); });
             }
         }
     }
@@ -2009,7 +2080,7 @@ async function mAddChannel() {
     } else {
         // ✅ تمييز نوع الخطأ
         if (lastErrType === 'CONNECTION_ERROR') {
-            toast('خطأ في الاتصال — تحقق من الإنترنت وأعد المحاولة', 'e');
+            toast('خطأ في الاتصال بالبروكسيات — تحقق من الإنترنت وأعد المحاولة', 'e');
         } else if (lastErrType === 'NOT_FOUND') {
             toast('القناة "' + slug + '" غير موجودة', 'e');
         } else {
@@ -2846,10 +2917,13 @@ async function init() {
     startSplashFire();
 
     detectMode();
+    loadBestProxy(); // ✅ استعادة البروكسي الأفضل من الجلسة السابقة
     loadFromStorage();
     loadUnifiedSettings();
     try { NetworkGuard.start(); } catch(e) {}
     fetchXsrf().catch(function(){});
+    // ✅ تسخين البروكسيات مبكراً — يجد بروكسي شغال قبل أن يحاول المستخدم إضافة قناة
+    prewarmProxies().catch(function(){});
     registerServiceWorker();
     SetupPersistence();
     resumeRunningBots();
