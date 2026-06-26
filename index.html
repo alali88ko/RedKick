@@ -1200,6 +1200,116 @@ async function checkChannelLive(slug, acc) {
 }
 
 // ═══════════════════════════════════════
+//  ✅ تحقق شامل من القناة — يجرب كل بروكسي بشكل فردي
+// ═══════════════════════════════════════
+async function tryFetchWithAllProxies(kickPath, options) {
+    options = options || {};
+    var timeout = options.timeout || 8000;
+    var fullUrl = KICK_BASE + kickPath;
+    var order = getProxyOrder(options.preferredProxy);
+    var notFoundCount = 0;
+    var totalProxies = order.length;
+
+    for (var pi = 0; pi < order.length; pi++) {
+        var p = order[pi];
+        var proxyUrl = PROXIES[p].build(fullUrl);
+        try {
+            var res = await Promise.race([
+                fetch(proxyUrl, {method:'GET', headers:{'Accept':'application/json'}, credentials:'omit'}),
+                new Promise(function(_, reject){ setTimeout(function(){ reject(new Error('timeout')); }, timeout); })
+            ]);
+            if (res && res.ok) {
+                _bestProxy = p;
+                _proxyFailCount[p] = 0;
+                saveBestProxy();
+                return { res: res, proxyUsed: p, ok: true };
+            }
+            // 404 = القناة غير موجودة من هذا البروكسي
+            if (res && res.status === 404) {
+                notFoundCount++;
+                _proxyFailCount[p] = (_proxyFailCount[p] || 0) + 1;
+                continue;
+            }
+            // خطأ HTTP آخر — جرب البروكسي التالي
+            _proxyFailCount[p] = (_proxyFailCount[p] || 0) + 1;
+        } catch(e) {
+            _proxyFailCount[p] = (_proxyFailCount[p] || 0) + 1;
+        }
+    }
+    // ✅ إذا كل البروكسيات ردّت 404، القناة غير موجودة فعلاً
+    if (notFoundCount === totalProxies && totalProxies > 0) {
+        return { ok: false, notFound: true };
+    }
+    return { ok: false, notFound: false };
+}
+
+// ✅ تحقق شامل من القناة مع تجربة كل البروكسيات والـ endpoints
+async function verifyChannelComprehensive(slug, bot) {
+    slug = slug.trim().toLowerCase().replace(/^\/+|\/+$/g, '').replace(/\s+/g, '');
+    if (!slug) return { ok: false, reason: 'empty' };
+
+    var endpoints = [
+        '/api/v2/channels/' + slug,
+        '/api/v1/channels/' + slug,
+        '/api/v2/channels/' + slug + '/chatroom'
+    ];
+
+    // ✅ جرّب كل endpoint مع كل بروكسي
+    for (var ei = 0; ei < endpoints.length; ei++) {
+        var result = await tryFetchWithAllProxies(endpoints[ei], {
+            timeout: 8000,
+            preferredProxy: bot ? bot.workingProxy : undefined
+        });
+
+        if (result && result.ok) {
+            try {
+                var data = await result.res.json();
+                if (data) {
+                    var cid = extractChatroomId(data);
+                    if (cid) {
+                        if (bot) bot.workingProxy = result.proxyUsed;
+                        return { ok: true, chatroomId: cid };
+                    }
+                }
+            } catch(e) {}
+        }
+        // ✅ إذا كل البروكسيات قالت 404، القناة غير موجودة
+        if (result && result.notFound) {
+            return { ok: false, reason: 'not_found' };
+        }
+    }
+
+    // ✅ جرّب search endpoint كآخر محاولة
+    var searchResult = await tryFetchWithAllProxies('/api/search?q=' + encodeURIComponent(slug), {
+        timeout: 8000,
+        preferredProxy: bot ? bot.workingProxy : undefined
+    });
+
+    if (searchResult && searchResult.ok) {
+        try {
+            var searchData = await searchResult.res.json();
+            if (searchData) {
+                var items = searchData.data || searchData;
+                if (Array.isArray(items)) {
+                    for (var i = 0; i < items.length; i++) {
+                        var item = items[i];
+                        if (item.slug === slug || item.username === slug) {
+                            var cid2 = extractChatroomId(item);
+                            if (cid2) {
+                                if (bot) bot.workingProxy = searchResult.proxyUsed;
+                                return { ok: true, chatroomId: cid2 };
+                            }
+                        }
+                    }
+                }
+            }
+        } catch(e) {}
+    }
+
+    return { ok: false, reason: 'connection_error' };
+}
+
+// ═══════════════════════════════════════
 //  إرسال رسالة
 // ═══════════════════════════════════════
 async function sendMessage(chatroomId, content, token, preferredProxy) {
@@ -2029,36 +2139,29 @@ async function mAddChannel() {
     if (!slug) { toast('أدخل اسم القناة', 'e'); return; }
     if (findChannel(b, slug)) { toast('القناة مضافة مسبقاً', 'i'); return; }
 
-    // ✅ التحقق من القناة فوراً مع إعادة محاولة (5 مرات)
+    // ✅ التحقق الشامل من القناة مع 6 محاولات وتأخير تصاعدي
     var addBtn = inp.nextElementSibling;
     var oldHtml = addBtn.innerHTML;
     addBtn.disabled = true;
     addBtn.innerHTML = '<span class="spinner-sm"></span>';
 
-    var cid = null;
-    var lastErrType = null;
+    var chatroomId = null;
+    var lastReason = null;
 
-    // ✅ 5 محاولات للتحقق (يفصل بينها 1 ثانية) — زيادة الموثوقية بعد إعادة التحميل
-    for (var attempt = 1; attempt <= 5 && !cid; attempt++) {
-        // ✅ في المحاولة الثانية فما بعد، صفّر _bestProxy لتجربة بروكسي جديد
-        if (attempt >= 2) {
-            _bestProxy = -1;
-            b.workingProxy = -1;
-            _proxyFailCount = {};
-        }
-        try {
-            var chData = await fetchChannel(slug, b);
-            cid = extractChatroomId(chData);
-            if (!cid) cid = await fetchChatroomId(slug, b);
-            // ✅ نجاح — احفظ workingProxy لهذا البوت
-            if (cid && b.workingProxy >= 0) {
-                persist();
-            }
-        } catch(e) {
-            lastErrType = e.message;
-            if (attempt < 5) {
-                // إعادة محاولة بعد 1 ثانية
-                await new Promise(function(r){ setTimeout(r, 1000); });
+    // ✅ 6 محاولات شاملة (كل محاولة تجرب كل البروكسيات والـ endpoints)
+    // تأخير تصاعدي: 2s, 3s, 5s, 8s, 12s — يعطي البروكسيات وقتاً كافياً لإعادة الضبط
+    var delays = [2000, 3000, 5000, 8000, 12000];
+    for (var attempt = 1; attempt <= 6 && !chatroomId; attempt++) {
+        var result = await verifyChannelComprehensive(slug, b);
+        if (result.ok) {
+            chatroomId = result.chatroomId;
+        } else {
+            lastReason = result.reason;
+            // ✅ إذا القناة غير موجودة فعلاً، لا داعي لإعادة المحاولة
+            if (lastReason === 'not_found') break;
+            if (attempt < 6) {
+                // ✅ تأخير تصاعدي بين المحاولات للسماح بإعادة ضغط rate limits
+                await new Promise(function(r){ setTimeout(r, delays[attempt-1] || 12000); });
             }
         }
     }
@@ -2066,10 +2169,10 @@ async function mAddChannel() {
     addBtn.disabled = false;
     addBtn.innerHTML = oldHtml;
 
-    if (cid) {
-        // ✅ القناة موجودة — أضفها مع chatroom_id محفوظ
+    if (chatroomId) {
+        // ✅ القناة موجودة ومتحقق منها — أضفها مع chatroom_id محفوظ
         var channel = makeChannel(slug);
-        channel.chatroomId = cid;
+        channel.chatroomId = chatroomId;
         channel.verified = true;
         b.channels.push(channel);
         inp.value = '';
@@ -2077,15 +2180,12 @@ async function mAddChannel() {
         renderChannelsList(b);
         persist();
         toast('تمت إضافة القناة: ' + slug, 's');
+    } else if (lastReason === 'not_found') {
+        // ✅ القناة غير موجودة فعلاً — أكدها كل البروكسيات بـ 404
+        toast('القناة "' + slug + '" غير موجودة — تحقق من الاسم', 'e');
     } else {
-        // ✅ تمييز نوع الخطأ
-        if (lastErrType === 'CONNECTION_ERROR') {
-            toast('خطأ في الاتصال بالبروكسيات — تحقق من الإنترنت وأعد المحاولة', 'e');
-        } else if (lastErrType === 'NOT_FOUND') {
-            toast('القناة "' + slug + '" غير موجودة', 'e');
-        } else {
-            toast('تعذّر التحقق من القناة — أعد المحاولة', 'e');
-        }
+        // ✅ فشل الاتصال بكل البروكسيات بعد 6 محاولات
+        toast('تعذّر التحقق من القناة بعد 6 محاولات — تحقق من الإنترنت وأعد المحاولة', 'e');
     }
 }
 
@@ -2524,9 +2624,16 @@ async function runChannelOnce(bot, ch, eff, msgs, interval, infinite, repeatCoun
                 continue;
             }
             try {
-                var chData = await fetchChannel(slug, bot);
-                cid = extractChatroomId(chData);
-                if (!cid) cid = await fetchChatroomId(slug, bot);
+                // ✅ استخدم التحقق الشامل أولاً (يجرب كل البروكسيات)
+                var vResult = await verifyChannelComprehensive(slug, bot);
+                if (vResult.ok) {
+                    cid = vResult.chatroomId;
+                } else {
+                    // ✅ ارجع للطريقة القديمة كاحتياط
+                    var chData = await fetchChannel(slug, bot);
+                    cid = extractChatroomId(chData);
+                    if (!cid) cid = await fetchChatroomId(slug, bot);
+                }
                 // ✅ حفظ chatroom_id للاستخدام المستقبلي
                 if (cid) {
                     ch.chatroomId = cid;
