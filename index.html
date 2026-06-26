@@ -345,6 +345,13 @@
         .field-mini input { padding:8px 10px; font-size:13px; text-align:center; border-radius:9px; }
         .field-mini .unit { font-size:9px; color:var(--muted); margin-top:3px; text-align:center; }
 
+        /* صف التأخير العشوائي الأفقي */
+        .rd-inline { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+        .rd-inline .rd-field { display:flex; align-items:center; gap:6px; flex:1; }
+        .rd-inline .rd-label { font-size:11px; font-weight:700; color:var(--muted); white-space:nowrap; }
+        .rd-inline .rd-field input { width:60px; padding:8px 9px; font-size:13px; text-align:center; border-radius:9px; }
+        .rd-inline .rd-unit { font-size:10px; color:var(--muted); white-space:nowrap; }
+
         /* شريط الإنترنت */
         .net-status {
             position:fixed; top:12px; left:50%; transform:translateX(-50%);
@@ -571,6 +578,7 @@
 
             <div class="modal-divider"></div>
 
+            <!-- ✅ الترتيب الجديد: تكرار لا نهائي ← رسائل عشوائية ← تأخير عشوائي -->
             <div class="toggle-row">
                 <div class="toggle-label">
                     <div class="tlicon"><i class="fas fa-infinity"></i></div>
@@ -581,28 +589,31 @@
 
             <div class="toggle-row">
                 <div class="toggle-label">
+                    <div class="tlicon"><i class="fas fa-dice"></i></div>
+                    <div><span>رسائل عشوائية</span></div>
+                </div>
+                <div class="toggle" id="uTgRandomMessages" onclick="uToggleRandomMessages()"></div>
+            </div>
+
+            <div class="toggle-row">
+                <div class="toggle-label">
                     <div class="tlicon"><i class="fas fa-shuffle"></i></div>
                     <div><span>تأخير عشوائي</span></div>
                 </div>
                 <div class="toggle" id="uTgRandomDelay" onclick="uToggleRandomDelay()"></div>
             </div>
-            <div class="inputs-grid" id="uRandomDelayFields" style="display:none;margin-top:5px">
-                <div class="modal-field field-mini">
-                    <label>من (ث)</label>
+            <!-- ✅ تخطيط أفقي: من (يمين) ← إلى (يسار) على سطر واحد -->
+            <div class="rd-inline" id="uRandomDelayFields" style="display:none;margin-top:5px">
+                <div class="rd-field">
+                    <span class="rd-label">من</span>
                     <input type="number" id="uDelayMin" value="3" min="1" max="999">
+                    <span class="rd-unit">ث</span>
                 </div>
-                <div class="modal-field field-mini">
-                    <label>إلى (ث)</label>
+                <div class="rd-field">
+                    <span class="rd-label">إلى</span>
                     <input type="number" id="uDelayMax" value="7" min="1" max="999">
+                    <span class="rd-unit">ث</span>
                 </div>
-            </div>
-
-            <div class="toggle-row">
-                <div class="toggle-label">
-                    <div class="tlicon"><i class="fas fa-dice"></i></div>
-                    <div><span>رسائل عشوائية</span></div>
-                </div>
-                <div class="toggle" id="uTgRandomMessages" onclick="uToggleRandomMessages()"></div>
             </div>
 
             <div class="modal-actions">
@@ -638,14 +649,15 @@
 
         <div class="modal-divider"></div>
 
-        <div class="toggle-row">
+        <!-- ✅ التعافي التلقائي + الإرسال المتوازي: مفعّلان دائماً ومخفيان عن الواجهة -->
+        <div class="toggle-row" style="display:none">
             <div class="toggle-label">
                 <div class="tlicon"><i class="fas fa-shield-halved"></i></div>
                 <div><span>التعافي التلقائي</span></div>
             </div>
             <div class="toggle on" id="tgAutoRecover" onclick="mToggle('tgAutoRecover','autoRecover')"></div>
         </div>
-        <div class="toggle-row">
+        <div class="toggle-row" style="display:none">
             <div class="toggle-label">
                 <div class="tlicon"><i class="fas fa-bolt"></i></div>
                 <div><span>الإرسال المتوازي</span></div>
@@ -1298,7 +1310,7 @@ function openUnifiedSettings() {
     setToggle('uTgRandomMessages', unifiedSettings.randomMessages);
     setToggle('uTgLiveOnly', unifiedSettings.onlyLiveStreams);
     $('unifiedFields').style.display = unifiedSettings.enabled ? 'block' : 'none';
-    $('uRandomDelayFields').style.display = unifiedSettings.randomDelay ? 'grid' : 'none';
+    $('uRandomDelayFields').style.display = unifiedSettings.randomDelay ? 'flex' : 'none';
     var uIntervalWrap = $('uIntervalWrap');
     if (uIntervalWrap) {
         uIntervalWrap.style.opacity = unifiedSettings.randomDelay ? '0.35' : '1';
@@ -1328,7 +1340,7 @@ function uToggleInfinite() {
 function uToggleRandomDelay() {
     unifiedSettings.randomDelay = !unifiedSettings.randomDelay;
     setToggle('uTgRandomDelay', unifiedSettings.randomDelay);
-    $('uRandomDelayFields').style.display = unifiedSettings.randomDelay ? 'grid' : 'none';
+    $('uRandomDelayFields').style.display = unifiedSettings.randomDelay ? 'flex' : 'none';
     var uIntervalWrap = $('uIntervalWrap');
     if (uIntervalWrap) {
         uIntervalWrap.style.opacity = unifiedSettings.randomDelay ? '0.35' : '1';
@@ -1682,8 +1694,9 @@ function loadFromStorage() {
             var bot = {
                 id: b.id, token: b.token, username: b.username,
                 channels: channels,
-                autoRecover: b.autoRecover !== false,
-                parallel: b.parallel !== false,
+                // ✅ مفعّلان دائماً (مخفيان عن الواجهة)
+                autoRecover: true,
+                parallel: true,
                 isSending: false, sent: 0,
                 workingProxy: -1, workingSendProxy: -1
             };
@@ -1912,8 +1925,12 @@ function openSettings(id) {
     activeModalBotId = id;
     $('modalTitle').textContent = 'إعدادات: ' + b.username;
     $('mChannelInput').value = '';
-    setToggle('tgAutoRecover', b.autoRecover);
-    setToggle('tgParallel', b.parallel);
+    // ✅ التعافي التلقائي والإرسال المتوازي مفعّلان دائماً (مخفيان عن الواجهة)
+    b.autoRecover = true;
+    b.parallel = true;
+    setToggle('tgAutoRecover', true);
+    setToggle('tgParallel', true);
+    persist();
     renderChannelsList(b);
     $('settingsModal').classList.add('open');
 }
